@@ -200,7 +200,7 @@ FName AMeleeWeapon::GetTraceStartName()
 		return FName();
 }
 
-void AMeleeWeapon::SetCombatTraceData(const FCombatTraceData* NewData, const EAttackType AttackType)
+void AMeleeWeapon::SetCombatTraceData(const FCombatTraceData* NewData, const FGameplayTag& Tag)
 {
 	if (NewData)
 	{
@@ -210,7 +210,7 @@ void AMeleeWeapon::SetCombatTraceData(const FCombatTraceData* NewData, const EAt
 	{
 		if (WeaponData)
 		{
-			CurrentTraceData = WeaponData->AttackSet.Find(AttackType);
+			CurrentTraceData = WeaponData->AttackSet.Find(Tag);
 		}
 		else
 			UE_LOG(LogTemp, Error, TEXT("Fail to Set Current Trace Data"));

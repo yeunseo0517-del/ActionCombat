@@ -92,14 +92,13 @@ void ASlashCharacter::StopSprint()
 
 void ASlashCharacter::BasicAttack()
 {
-	if (!IsUnoccupied() && !IsAttacking()) return;
-	Super::BasicAttack();
+	Attack(FGameplayTags::Get().Action_Attack_Basic);
 }
 
 void ASlashCharacter::OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (IsEquipMontage(Montage) || IsHitReactMontage(Montage))
-		SetActionState(EActionState::EAS_Unoccupied);
+		SetCurrentState(FGameplayTag());
 }
 
 bool ASlashCharacter::IsEquipMontage(UAnimMontage* Montage)
@@ -123,11 +122,6 @@ void ASlashCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MoveValue.Y);
 		AddMovementInput(RightDirection, MoveValue.X);
 	}
-}
-
-bool ASlashCharacter::IsUnoccupied()
-{
-	return ActionState == EActionState::EAS_Unoccupied;
 }
 
 void ASlashCharacter::Look(const FInputActionValue& Value)
@@ -175,13 +169,13 @@ void ASlashCharacter::Equip()
 		// ¹«±â ÀåÂø ÇØÁ¦
 		if (CanDisarm())
 		{
-			SetActionState(EActionState::EAS_EquippingWeapon);
+			SetCurrentState(FGameplayTags::Get().State_Player_Equip);
 			PlayEquipMontage(FName("Unequip"));
 		}
 		// ¹«±â ÀåÂø
 		else if (CanArm())
 		{
-			SetActionState(EActionState::EAS_EquippingWeapon);
+			SetCurrentState(FGameplayTags::Get().State_Player_Equip);
 			PlayEquipMontage(FName("Equip"));
 		}
 	}
@@ -269,44 +263,28 @@ void ASlashCharacter::Disarm()
 		EquippedWeapon->Equip(GetMesh(), FName("SpineSocket"), this, this);
 }
 
-void ASlashCharacter::SetActionState(EActionState NewActionState)
-{
-	ActionState = NewActionState;
-}
-
 void ASlashCharacter::SetWeaponStance(EWeaponStance NewWeaponStance)
 {
 	WeaponStance = NewWeaponStance;
 }
 
-bool ASlashCharacter::CanStartAttack()
-{
-	return IsUnoccupied();
-}
-
 void ASlashCharacter::StartAttack()
 {
 	if (!IsUnoccupied()) return;
-	SetActionState(EActionState::EAS_Attacking);
+	SetCurrentState(FGameplayTags::Get().State_Common_Attacking);
 }
 
 
 void ASlashCharacter::AttackEnd()
 {
 	if (!IsAttacking()) return;
-
-	SetActionState(EActionState::EAS_Unoccupied);
-}
-
-bool ASlashCharacter::IsAttacking()
-{
-	return ActionState == EActionState::EAS_Attacking;
+	SetCurrentState(FGameplayTag());
 }
 
 void ASlashCharacter::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
 {
 	Super::GetHit(ImpactPoint, HitEffectData, Hitter);
-	SetActionState(EActionState::EAS_HitReact);
+	SetCurrentState(FGameplayTags::Get().State_Common_HitReact);
 	if (HealthBar)
 	{
 		HealthBar->SetHealthPercent(Attributes->GetHealthPercent());

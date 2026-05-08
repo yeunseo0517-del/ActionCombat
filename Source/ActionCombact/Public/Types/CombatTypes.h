@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Types/GameplayTags.h"
 #include "CombatTypes.generated.h"
 
 UENUM(BlueprintType)
@@ -18,15 +19,6 @@ enum class EWeaponStance : uint8
 	EWS_TwoHand UMETA(DisplayName = "TwoHand"),
 };
 
-UENUM(BlueprintType)
-enum class EAttackType : uint8
-{
-	EAT_None UMETA(DisplayName = "None"),
-	EAT_BasicAttack UMETA(DisplayName = "BasicAttack"),
-	EAT_DashAttack UMETA(DisplayName = "DashAttack"),
-	EAT_WaveAttack UMETA(DisplayName = "WaveAttack")
-};
-
 USTRUCT(BlueprintType)
 struct FCombatState
 {
@@ -36,7 +28,7 @@ struct FCombatState
 	EWeaponType WeaponType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | State")
-	EAttackType AttackType;
+	FGameplayTag ActionTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | State")
 	EWeaponStance WeaponStance;
@@ -44,7 +36,7 @@ struct FCombatState
 	bool operator ==(const FCombatState& Other) const
 	{
 		return WeaponType == Other.WeaponType &&
-			AttackType == Other.AttackType &&
+			ActionTag == Other.ActionTag &&
 			WeaponStance == Other.WeaponStance;
 	}
 };
@@ -53,7 +45,7 @@ FORCEINLINE uint32 GetTypeHash(const FCombatState& Key)
 {
 	uint32 Hash = 0;
 	Hash = HashCombine(Hash, GetTypeHash(Key.WeaponType));
-	Hash = HashCombine(Hash, GetTypeHash(Key.AttackType));
+	Hash = HashCombine(Hash, GetTypeHash(Key.ActionTag));
 	Hash = HashCombine(Hash, GetTypeHash(Key.WeaponStance));
 	return Hash;
 }

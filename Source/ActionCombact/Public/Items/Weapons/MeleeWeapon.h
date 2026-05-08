@@ -57,5 +57,5 @@ public:
 	virtual void SetTraceIndex(int32 Index) override { CurrentTraceIndex = Index; }
 	virtual void ResetTraceIndex() override { CurrentTraceIndex = 0; }
 
-	virtual void SetCombatTraceData(const FCombatTraceData* NewData, const EAttackType AttackType) override;
+	virtual void SetCombatTraceData(const FCombatTraceData* NewData, const FGameplayTag& Tag) override;
 };

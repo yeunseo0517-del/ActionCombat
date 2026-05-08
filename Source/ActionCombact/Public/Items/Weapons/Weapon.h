@@ -92,5 +92,5 @@ public:
 
 	void SetbUseCharacterSocket(bool Value) { bUseCharacterSocket = Value; }
 	virtual void SetTraceIndex(int32 Index) {}
-	virtual void SetCombatTraceData(const FCombatTraceData* NewData, const EAttackType AttackType) {}
+	virtual void SetCombatTraceData(const FCombatTraceData* NewData, const FGameplayTag& Tag) {}
 };

@@ -15,7 +15,7 @@ void UInvincibilitySkill::ActivateSkill(AActor* Owner)
 	if (!StatusComp || StatusComp->IsCooldownActivate(SkillSlot)) return;
 
 	StartCoolDown(Owner);
-	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Owner)) CombatInterface->GetCombatComponent()->ExecuteSkill(FGameplayTags::Get().Skill_DashSlash);
+	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Owner)) CombatInterface->GetCombatComponent()->ExecuteAttack(FGameplayTags::Get().Skill_DashSlash);
 	else UE_LOG(LogTemp, Error, TEXT("Fail to Cast Interface"));
 
 	StatusComp->SkillDurationEnd(SkillSlot);

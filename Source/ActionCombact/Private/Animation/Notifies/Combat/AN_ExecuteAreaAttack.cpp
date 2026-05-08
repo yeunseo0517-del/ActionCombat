@@ -8,5 +8,5 @@
 
 void UAN_ExecuteAreaAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(MeshComp->GetOwner())) CombatInterface->GetCombatComponent()->ExecuteSkill(FGameplayTags::Get().Skill_Area_Shockwave);
+	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(MeshComp->GetOwner())) CombatInterface->GetCombatComponent()->ExecuteAttack(FGameplayTags::Get().Skill_Shockwave);
 }

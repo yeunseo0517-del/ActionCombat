@@ -75,12 +75,12 @@ public:
 	virtual UStatusComponent* GetStatusComponent() override { return StatusComponent; }
 	//
 
-	virtual void BasicAttack();
+	void Attack(const FGameplayTag& Tag);
 	void PlayAttackMontage(UAnimMontage* Montage, FName SectionName);
 
 	virtual void StartAttack() {}
 	virtual void AttackEnd() {}
-	virtual bool CanStartAttack() { return false; }
+	bool CanStartAttack() { return IsUnoccupied(); }
 
 protected:
 	virtual void BeginPlay() override;
@@ -89,6 +89,14 @@ protected:
 	void SwitchToWeapon(AWeapon* NewWeapon);
 	virtual void Die(const FName& Section);
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) {}
+
+	void SetCurrentState(FGameplayTag Tag);
+	bool IsUnoccupied();
+	bool IsAttacking();
+	bool IsHitReacting();
+	bool IsDead();
+	bool IsHostile(AActor* Actor);
+
 
 	/*
 	Animation  Montage function
@@ -117,6 +125,12 @@ protected:
 
 	UPROPERTY()
 	UStatusComponent* StatusComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	FGameplayTagContainer ActionTags;
+
+	UPROPERTY(VisibleAnywhere)
+	FGameplayTag CurrentStateTag = FGameplayTag();
 
 private:
 	void SpawnDefaultWeapon();
@@ -181,4 +195,7 @@ private:
 public:
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 	FORCEINLINE EWeaponStance GetWeaponStance() const { return WeaponStance; }
+	void AddActionTag(const FGameplayTag& Tag);
+	void RemoveActionTag(const FGameplayTag& Tag);
+	bool HasActionTag(const FGameplayTag& Tag);
 };

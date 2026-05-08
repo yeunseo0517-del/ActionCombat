@@ -26,9 +26,6 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void HandleEquipState() override;
-
-	virtual void BasicAttack() override;
-	virtual bool CanStartAttack() override;
 	virtual void StartAttack() override;
 	virtual void AttackEnd() override;
 
@@ -89,6 +86,7 @@ private:
 	void UseQSkill();
 	void UseESkill();
 	void UseRSkill();
+	void BasicAttack();
 
 
 	/*
@@ -106,8 +104,6 @@ private:
 
 	void EquipWeapon(AWeapon* OverlappingWeapon);
 	bool IsEquipMontage(UAnimMontage* Montage);
-	bool IsUnoccupied();
-	bool IsAttacking();
 	bool CanArm();
 	bool CanDisarm();
 	void Arm();
@@ -122,7 +118,6 @@ private:
 	/*
 		State 
 	*/
-	void SetActionState(EActionState NewActionState);
 	void SetWeaponStance(EWeaponStance NewWeaponStance);
 
 	UPROPERTY(VisibleInstanceOnly, Category = State)

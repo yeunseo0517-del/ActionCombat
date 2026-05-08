@@ -39,7 +39,7 @@ void AEnemy::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (IsDead()) return;
-	if (EnemyState == EEnemyState::EES_Patrolling)
+	if (IsPatrolling())
 		CheckPatrolTarget();
 	else
 	{
@@ -73,13 +73,8 @@ void AEnemy::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* HitEffectDa
 void AEnemy::AttackEnd()
 {
 	if (IsDead()) return;
-	SetEnemyState(EEnemyState::EES_NoState);
+	CurrentStateTag = FGameplayTag();
 	CheckCombatTarget();
-}
-
-bool AEnemy::CanStartAttack()
-{
-	return !IsAttacking() && !IsDead() && !IsHitReacting();
 }
 
 void AEnemy::BeginPlay()
@@ -94,22 +89,17 @@ void AEnemy::OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (IsHitReactMontage(Montage))
 	{
-		SetEnemyState(EEnemyState::EES_NoState);
+		SetCurrentState(FGameplayTag());
 		CheckCombatTarget();
 	}
 }
 
 void AEnemy::Die(const FName& Section)
 {
-	SetEnemyState(EEnemyState::EES_Dead);
+	SetCurrentState(FGameplayTags::Get().State_Common_Dead);
 	HideHealthBar();
 	Super::Die(Section);
 	ClearAttackTimer();
-}
-
-void AEnemy::SetEnemyState(EEnemyState NewState)
-{
-	EnemyState = NewState;
 }
 
 void AEnemy::CheckCombatTarget()
@@ -139,7 +129,7 @@ void AEnemy::CheckCombatTarget()
 	{
 		StopMontage();
 		ClearAttackTimer();
-		if (EnemyState != EEnemyState::EES_Patrolling)
+		if (!IsPatrolling())
 			StartPatrolling();
 	}
 }
@@ -147,6 +137,7 @@ void AEnemy::CheckCombatTarget()
 void AEnemy::InitializeEnemy()
 {
 	EnemyController = Cast<AAIController>(GetController());
+	SetCurrentState(FGameplayTags::Get().State_AI_Patrolling);
 	MoveToTarget(PatrolTarget);
 	HideHealthBar();
 }
@@ -173,9 +164,9 @@ void AEnemy::PatrolTimerFinished()
 
 void AEnemy::StartAttackTimer()
 {
-	SetEnemyState(EEnemyState::EES_Attacking);
+	SetCurrentState(FGameplayTags::Get().State_Common_Attacking);
 	const float AttackTime = FMath::RandRange(AttackMin, AttackMax);
-	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::BasicAttack, AttackTime);
+	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::TryAttack, AttackTime);
 }
 
 void AEnemy::ClearAttackTimer()
@@ -186,7 +177,7 @@ void AEnemy::ClearAttackTimer()
 void AEnemy::StartPatrolling()
 {
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	SetEnemyState(EEnemyState::EES_Patrolling);
+	SetCurrentState(FGameplayTags::Get().State_AI_Patrolling);
 	GetCharacterMovement()->MaxWalkSpeed = PatrollingSpeed;
 	MoveToTarget(PatrolTarget);
 }
@@ -218,29 +209,19 @@ bool AEnemy::CanAttack()
 	return IsInsideAttackRadius() && CanStartAttack() && !IsEngaged();
 }
 
-bool AEnemy::IsAttacking()
-{
-	return EnemyState == EEnemyState::EES_Attacking;
-}
-
 bool AEnemy::IsEngaged()
 {
-	return EnemyState == EEnemyState::EES_Engaged;
+	return CurrentStateTag == FGameplayTags::Get().State_AI_Engaged;
 }
 
 bool AEnemy::IsChasing()
 {
-	return EnemyState == EEnemyState::EES_Chasing;
+	return CurrentStateTag == FGameplayTags::Get().State_AI_Chasing;
 }
 
-bool AEnemy::IsHitReacting()
+bool AEnemy::IsPatrolling()
 {
-	return EnemyState == EEnemyState::EES_HitReact;
-}
-
-bool AEnemy::IsDead()
-{
-	return EnemyState == EEnemyState::EES_Dead;
+	return CurrentStateTag == FGameplayTags::Get().State_AI_Patrolling;
 }
 
 bool AEnemy::InTargetRange(AActor* Target, float Radius)
@@ -265,15 +246,15 @@ bool AEnemy::IsInsideAttackRadius()
 	return InTargetRange(CombatTarget, AttackRadius);
 }
 
-void AEnemy::BasicAttack()
+void AEnemy::TryAttack()
 {
-	SetEnemyState(EEnemyState::EES_Engaged);
-	Super::BasicAttack();
+	CurrentStateTag = FGameplayTags::Get().State_AI_Engaged;
+	Attack(FGameplayTags::Get().Action_Attack_Basic);
 }
 
 void AEnemy::EnterHitReact()
 {
-	SetEnemyState(EEnemyState::EES_HitReact);
+	CurrentStateTag = FGameplayTags::Get().State_Common_HitReact;
 	ShowHealthBar();
 	ClearAttackTimer();
 }
@@ -302,7 +283,7 @@ void AEnemy::FaceTarget(AActor* Target)
 void AEnemy::ChaseTarget()
 {
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	SetEnemyState(EEnemyState::EES_Chasing);
+	SetCurrentState(FGameplayTags::Get().State_AI_Chasing);
 	GetCharacterMovement()->MaxWalkSpeed = ChasingSpeed;
 	MoveToTarget(CombatTarget);
 }
@@ -329,11 +310,9 @@ AActor* AEnemy::ChoosePatrolTarget()
 
 void AEnemy::PawnSeen(APawn* SeenPawn)
 {
-	bool bChaseTarget = !IsChasing()
-		&& !IsDead()
-		&& EnemyState < EEnemyState::EES_Attacking
-		&& Cast<ABaseCharacter>(SeenPawn)->GetTeamType() == ETeamType::Player;
-	if (bChaseTarget)
+	bool bIsEnemy = IsHostile(SeenPawn);
+	bool bCanChase = IsUnoccupied() || IsPatrolling();
+	if (bIsEnemy && bCanChase)
 	{
 		ClearPatrolTimer();
 		CombatTarget = SeenPawn;

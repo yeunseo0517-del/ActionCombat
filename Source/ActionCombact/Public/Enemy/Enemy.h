@@ -26,9 +26,7 @@ public:
 	virtual void GetHit(const FVector& ImpactPoint, class UHitEffectDataAsset* HitEffectData, AActor* Hitter) override;
 	//
 
-	virtual void BasicAttack() override;
 	virtual void AttackEnd() override;
-	virtual bool CanStartAttack() override;
 	
 
 protected:
@@ -38,14 +36,6 @@ protected:
 	virtual void Die(const FName& Section) override;
 
 private:
-	/*
-		State
-	*/
-	UPROPERTY(VisibleInstanceOnly)
-	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
-
-	void SetEnemyState(EEnemyState NewState);
-
 	// AI Behavior
 	void InitializeEnemy();
 	void CheckCombatTarget();
@@ -58,12 +48,11 @@ private:
 	void ShowHealthBar();
 	void HideHealthBar();
 	void LoseInterest();
+	void TryAttack();
 	bool CanAttack();
-	bool IsAttacking();
 	bool IsEngaged();
 	bool IsChasing();
-	bool IsHitReacting();
-	bool IsDead();
+	bool IsPatrolling();
 	bool InTargetRange(AActor* Target, float Radius);
 	bool IsOutsideAttackRadius();
 	bool IsOutsideCombatRadius();

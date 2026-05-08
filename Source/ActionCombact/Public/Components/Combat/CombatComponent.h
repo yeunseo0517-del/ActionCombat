@@ -28,18 +28,17 @@ public:
 	void ResetCombo();
 
 	void BasicAttack();
-	void ExecuteSkillAttack(EAttackType AttackType);
 	void AttackEnd(bool bInterrupted);
 	bool IsAttackMontage(UAnimMontage* Montage);
 	void OnWeaponEquipped(AWeapon* NewWeapon);
-	void ExecuteSkill(FGameplayTag SkillTag);
-	void ExecuteAction(FGameplayTag ActionTag);
+	void ExecuteAttack(const FGameplayTag& Tag);
+	void ExecuteAction(const FGameplayTag& Tag);
 
 protected:
 	virtual void BeginPlay() override;
 
 private:
-	void ExecuteAttackSequence(EAttackType AttackType);
+	void ExecuteAttackSequence(FGameplayTag Tag);
 	bool CanAttack();
 	void PlayAttackMontage();
 	bool IsAttacking();
@@ -48,8 +47,8 @@ private:
 	FName GetComboSectionName(UAnimMontage* Montage);
 	FAnimMontageArray* GetMontageArray();
 	FCombatState GetCurrentCombatState();
-	FCombatTraceData* GetCombatTraceData(EAttackType AttackType) const;
-	void SetAttackType(EAttackType AttackType);
+	FCombatTraceData* GetCombatTraceData(const FGameplayTag& Tag) const;
+	void SetCurrentCombatTag(const FGameplayTag& Tag);
 	UAnimMontage* GetCurrentAttackMontage();
 	void StartDash();
 	void EndDash();
@@ -75,18 +74,13 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	int32 ComboCount = 0;
 
-	UPROPERTY()
 	bool bUseCombo = false;
-	UPROPERTY()
 	bool bNextCombo;
-	UPROPERTY()
 	bool bComboTriggerd;
-	
-	UPROPERTY()
 	bool bTracing;
 
 	UPROPERTY(VisibleAnywhere)
-	EAttackType CurrentAttackType = EAttackType::EAT_None;
+	FGameplayTag CurrentCombatTag = FGameplayTag();
 
 public:
 	void SetbTracing(bool Value) { bTracing = Value; }

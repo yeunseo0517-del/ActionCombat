@@ -51,27 +51,13 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 bool UCombatComponent::CanAttack()
 {
-	return Character->CanStartAttack() && CurrentAttackType == EAttackType::EAT_None;
+	return Character->CanStartAttack() && !Character->HasActionTag(FGameplayTags::Get().State_Common_Attacking);
 }
 
-void UCombatComponent::BasicAttack()
-{
-	if (!Character) return;
-
-	UpdateComboState();
-
-	if (IsAttacking())
-	{
-		HandleCombo();
-		return;
-	}
-	ExecuteAttackSequence(EAttackType::EAT_BasicAttack);
-}
-
-void UCombatComponent::ExecuteAttackSequence(EAttackType AttackType)
+void UCombatComponent::ExecuteAttackSequence(FGameplayTag Tag)
 {
 	if (!CanAttack()) return;
-	SetAttackType(AttackType);
+	SetCurrentCombatTag(Tag);
 	SetCombatTraceData();
 	Character->StartAttack();
 	PlayAttackMontage();
@@ -90,7 +76,7 @@ void UCombatComponent::AttackEnd(bool bInterrupted)
 		// 기본 상태로 초기화
 		Character->AttackEnd();
 	}
-	SetAttackType(EAttackType::EAT_None);
+	SetCurrentCombatTag(FGameplayTag());
 	ResetCombo();
 }
 
@@ -104,7 +90,7 @@ void UCombatComponent::HandleCombo()
 
 bool UCombatComponent::IsAttacking()
 {
-	return CurrentAttackType != EAttackType::EAT_None;
+	return CurrentCombatTag.IsValid();
 }
 
 void UCombatComponent::CheckAndTriggerNextCombo()
@@ -165,26 +151,29 @@ void UCombatComponent::OnWeaponEquipped(AWeapon* NewWeapon)
 	UpdateComboState();
 }
 
-void UCombatComponent::ExecuteSkill(FGameplayTag SkillTag)
+void UCombatComponent::ExecuteAttack(const FGameplayTag& Tag)
 {
 	if (!Character) return;
-	if (SkillTag.MatchesTag(FGameplayTags::Get().Skill_Area_Shockwave))
+	if (Tag.MatchesTag(FGameplayTags::Get().Action_Attack_Basic))
 	{
-		ExecuteAttackSequence(AttackType);
+		UpdateComboState();
+
+		if (IsAttacking())
+		{
+			HandleCombo();
+			return;
+		}
 	}
+	ExecuteAttackSequence(Tag);
 }
 
-void UCombatComponent::ExecuteAction(FGameplayTag ActionTag)
+void UCombatComponent::ExecuteAction(const FGameplayTag& Tag)
 {
-	UE_LOG(LogTemp,Warning,TEXT("Get in Execute Action"))
-	
-	UE_LOG(LogTemp, Warning, TEXT("Action Tag is %s"), *ActionTag.ToString())
-	if (ActionTag.MatchesTag(FGameplayTags::Get().Action_Dash_Start))
+	if (Tag.MatchesTag(FGameplayTags::Get().Action_Movement_Dash_Start))
 	{
-		
 		StartDash();
 	}
-	else if (ActionTag.MatchesTag(FGameplayTags::Get().Action_Dash_End))
+	else if (Tag.MatchesTag(FGameplayTags::Get().Action_Movement_Dash_End))
 	{
 		EndDash();
 	}
@@ -192,6 +181,7 @@ void UCombatComponent::ExecuteAction(FGameplayTag ActionTag)
 
 void UCombatComponent::StartDash()
 {
+	Character->AddActionTag(FGameplayTags::Get().Action_Movement_Dash);
 	if (CurrentSkill)
 	{
 		float Distance = CurrentSkill->GetDistance();
@@ -203,6 +193,7 @@ void UCombatComponent::StartDash()
 void UCombatComponent::EndDash()
 {
 	bIsDashing = false;
+	Character->RemoveActionTag(FGameplayTags::Get().Action_Movement_Dash);
 }
 
 FAnimMontageArray* UCombatComponent::GetMontageArray()
@@ -223,7 +214,7 @@ FCombatState UCombatComponent::GetCurrentCombatState()
 
 	CurrentState.WeaponType = EquippedWeapon ? EquippedWeapon->GetWeaponType() : EWeaponType::EWT_Unarmed;
 
-	CurrentState.AttackType = CurrentAttackType;
+	CurrentState.ActionTag = CurrentCombatTag;
 
 	CurrentState.WeaponStance = Character->GetWeaponStance();
 
@@ -238,20 +229,20 @@ UAnimMontage* UCombatComponent::GetCurrentAttackMontage()
 	return nullptr;
 }
 
-FCombatTraceData* UCombatComponent::GetCombatTraceData(EAttackType AttackType) const
+FCombatTraceData* UCombatComponent::GetCombatTraceData(const FGameplayTag& Tag) const
 {
 	if(OverrideCombatData)
-		return OverrideCombatData->AttackSet.Find(AttackType);
+		return OverrideCombatData->AttackSet.Find(Tag);
 	return nullptr;
 }
 
 void UCombatComponent::SetCombatTraceData()
 {
 	if (EquippedWeapon)
-		EquippedWeapon->SetCombatTraceData(GetCombatTraceData(CurrentAttackType), CurrentAttackType);
+		EquippedWeapon->SetCombatTraceData(GetCombatTraceData(CurrentCombatTag), CurrentCombatTag);
 }
 
-void UCombatComponent::SetAttackType(EAttackType AttackType)
+void UCombatComponent::SetCurrentCombatTag(const FGameplayTag& Tag)
 {
-	CurrentAttackType = AttackType;
+	CurrentCombatTag = Tag;
 }

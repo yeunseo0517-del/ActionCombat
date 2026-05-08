@@ -132,6 +132,46 @@ void ABaseCharacter::DisableMeshCollision()
 	}
 }
 
+void ABaseCharacter::AddActionTag(const FGameplayTag& Tag)
+{
+	ActionTags.AddTag(Tag);
+}
+
+void ABaseCharacter::RemoveActionTag(const FGameplayTag& Tag)
+{
+	ActionTags.RemoveTag(Tag);
+}
+
+bool ABaseCharacter::HasActionTag(const FGameplayTag& Tag)
+{
+	return ActionTags.HasTag(Tag);
+}
+
+void ABaseCharacter::SetCurrentState(FGameplayTag Tag)
+{
+	CurrentStateTag = Tag;
+}
+
+bool ABaseCharacter::IsUnoccupied()
+{
+	return !CurrentStateTag.IsValid();
+}
+
+bool ABaseCharacter::IsAttacking()
+{
+	return CurrentStateTag == FGameplayTags::Get().State_Common_Attacking;
+}
+
+bool ABaseCharacter::IsHitReacting()
+{
+	return CurrentStateTag == FGameplayTags::Get().State_Common_HitReact;
+}
+
+bool ABaseCharacter::IsDead()
+{
+	return CurrentStateTag == FGameplayTags::Get().State_Common_Dead;
+}
+
 void ABaseCharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (!Montage) return;
@@ -213,12 +253,18 @@ bool ABaseCharacter::IsAlive()
 	return Attributes->IsAlive();
 }
 
+bool ABaseCharacter::IsHostile(AActor* Actor)
+{
+	if (ITeamInterface* TeamInterface = Cast<ITeamInterface>(Actor))
+	{
+		return TeamInterface->GetTeamType() != TeamType;
+	}
+	return false;
+}
+
 float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (ITeamInterface* TeamInterface = Cast<ITeamInterface>(DamageCauser))
-	{
-		if (TeamInterface->GetTeamType() == TeamType) return 0.f;
-	}
+	if (!IsHostile(DamageCauser)) return 0.f;
 	if (IsInvincible()) return 0.f;
 	Attributes->RecieveDamage(DamageAmount);
 	return DamageAmount;
@@ -236,10 +282,7 @@ bool ABaseCharacter::IsSuperArmor()
 
 void ABaseCharacter::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
 {
-	if (ITeamInterface* TeamInterface = Cast<ITeamInterface>(Hitter))
-	{
-		if (TeamInterface->GetTeamType() == TeamType) return;
-	}
+	if (!IsHostile(Hitter)) return;
 	if (IsInvincible() || IsSuperArmor()) return;
 	StopMontage();
 
@@ -399,11 +442,11 @@ void ABaseCharacter::PlayMontage(UAnimMontage* Montage, FName SectionName)
 	}
 }
 
-void ABaseCharacter::BasicAttack()
+void ABaseCharacter::Attack(const FGameplayTag& Tag)
 {
 	if (Combat)
 	{
-		Combat->BasicAttack();
+		Combat->ExecuteAttack(Tag);
 	}
 }
 

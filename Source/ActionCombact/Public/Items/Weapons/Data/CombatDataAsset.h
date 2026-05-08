@@ -7,6 +7,7 @@
 #include "Types/TraceTypes.h"
 #include "Types/CombatTypes.h"
 #include "Types/SkillTypes.h"
+#include "Types/GameplayTags.h"
 #include "CombatDataAsset.generated.h"
 
 class UNiagaraSystem;
@@ -21,7 +22,7 @@ class ACTIONCOMBACT_API UCombatDataAsset : public UPrimaryDataAsset
 	
 public:
 	UPROPERTY(EditAnywhere, Category = "Combat | Trace")
-	TMap<EAttackType, FCombatTraceData> AttackSet;
+	TMap<FGameplayTag, FCombatTraceData> AttackSet;
 
 	UPROPERTY(EditAnywhere, Category = "Visual Effects")
 	UNiagaraSystem* EnhanceEffect;
