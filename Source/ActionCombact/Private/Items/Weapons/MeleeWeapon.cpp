@@ -1,0 +1,219 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Items/Weapons/MeleeWeapon.h"
+#include "Items/Weapons/Data/CombatDataAsset.h"
+#include "Components/Status/StatusComponent.h"
+
+#include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
+#include "Interfaces/CombatInterface.h"
+#include "Characters/CharacterTypes.h"
+
+AMeleeWeapon::AMeleeWeapon()
+{
+}
+
+void AMeleeWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void AMeleeWeapon::DoTrace()
+{
+	if (!CurrentTraceData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Please check Character's Combat Component and assign the CombatDataAsset"));
+		return;
+	}
+
+	if (ActorsToIgnore.IsEmpty()) SetTraceIgnoreActors(ActorsToIgnore);
+
+	for (AActor* Actor : IgnoreActors)
+		ActorsToIgnore.AddUnique(Actor);
+
+	TArray<FHitResult> HitResults;
+
+	switch (CurrentTraceData->Shape)
+	{
+	case ETraceType::ETT_Sphere:
+	case ETraceType::ETT_BoxSweep:
+		ExecuteSweepTrace(ActorsToIgnore, HitResults);
+		break;
+	case ETraceType::ETT_BoxSingle:
+		DoBoxTraceMulti(GetTraceStart(), GetTraceEnd(), ActorsToIgnore, HitResults);
+		break;
+	default:
+		break;
+	}
+
+	ProcessHitResults(HitResults);
+}
+
+void AMeleeWeapon::ClearIgnoreArray()
+{
+	Super::ClearIgnoreArray();
+	ActorsToIgnore.Empty();
+}
+
+void AMeleeWeapon::ExecuteSweepTrace(const TArray<AActor*>& InActorsToIgnore, TArray<FHitResult>& HitResults)
+{
+	FVector CurrentStart = GetTraceStart();
+	FVector CurrentEnd = GetTraceEnd();
+	FVector CurrentCenter = (CurrentStart + CurrentEnd) * .5f;
+
+	if (!bHasPrevLocation)
+	{
+		UpdatePrevLocations(CurrentStart, CurrentEnd, CurrentCenter);
+		bHasPrevLocation = true;
+		return;
+	}
+
+	switch (CurrentTraceData->Shape)
+	{
+	case ETraceType::ETT_Sphere:
+		DoSphereTrace(PrevStartLocation, CurrentStart, CurrentTraceData->Radius, InActorsToIgnore, HitResults);
+		break;
+	case ETraceType::ETT_BoxSweep:
+		DoBoxTraceMulti(PrevCenter, CurrentCenter, InActorsToIgnore, HitResults);
+		break;
+	default:
+		break;
+	}
+
+	UpdatePrevLocations(CurrentStart, CurrentEnd, CurrentCenter);
+}
+
+void AMeleeWeapon::UpdatePrevLocations(const FVector& Start, const FVector& End, const FVector& Center)
+{
+	PrevStartLocation = Start;
+	PrevEndLocation = End;
+	PrevCenter = Center;
+}
+
+FRotator AMeleeWeapon::GetRotation()
+{
+	ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner());
+	if (CombatInterface && CurrentTraceData->Steps.IsValidIndex(CurrentTraceIndex))
+	{
+		return bUseCharacterSocket ? CombatInterface->GetCombatMesh()->GetSocketRotation(CurrentTraceData->Steps[CurrentTraceIndex].StartSocket)
+			: ItemMesh->GetSocketRotation(CurrentTraceData->Steps[CurrentTraceIndex].StartSocket);
+	}
+	else
+		return FRotator::ZeroRotator;
+}
+
+void AMeleeWeapon::DoBoxTraceMulti(const FVector Start, const FVector End, const TArray<AActor*>& InActorsToIgnore, TArray<FHitResult>& BoxHits)
+{
+	FRotator TraceRotation = GetRotation();
+	FVector BoxExtent;
+	FVector DefaultHalfSize = CurrentTraceData->HalfSize;
+
+	if (CurrentTraceData->Shape == ETraceType::ETT_BoxSweep)
+	{
+		float Length = FVector::Dist(Start, End);
+		BoxExtent = FVector(DefaultHalfSize.X, DefaultHalfSize.Y, Length * .5f);
+	}
+	else
+	{
+		BoxExtent = DefaultHalfSize;
+	}
+
+	UKismetSystemLibrary::BoxTraceMulti(
+		this,
+		Start,
+		End,
+		BoxExtent,
+		TraceRotation,
+		ETraceTypeQuery::TraceTypeQuery1,
+		false,
+		InActorsToIgnore,
+		EDrawDebugTrace::ForDuration,
+		BoxHits,
+		true
+	);
+}
+
+
+void AMeleeWeapon::DoSphereTrace(const FVector PrevLoc, const FVector CurLoc, float InRadius, const TArray<AActor*>& InActorsToIgnore, TArray<FHitResult>& SphereHits)
+{
+	UKismetSystemLibrary::SphereTraceMulti(
+		this,
+		PrevLoc,
+		CurLoc,
+		InRadius,
+		TraceTypeQuery1,
+		false,
+		InActorsToIgnore,
+		EDrawDebugTrace::None,
+		SphereHits,
+		true
+	);
+}
+
+void AMeleeWeapon::SetTraceIgnoreActors(TArray<AActor*>& InActorsToIgnore)
+{
+	InActorsToIgnore.AddUnique(this);
+	InActorsToIgnore.AddUnique(GetOwner());
+}
+
+FVector AMeleeWeapon::GetTrace(FName SocketName) const
+{
+	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner()))
+	{
+		if (bUseCharacterSocket && CombatInterface->GetCombatMesh())
+		{
+			return CombatInterface->GetCombatMesh()->GetSocketLocation(SocketName);
+		}
+		else
+		{
+			return ItemMesh->GetSocketLocation(SocketName);
+		}
+	}
+	return GetActorLocation();
+}
+
+FVector AMeleeWeapon::GetTraceStart() const
+{
+	if (CurrentTraceData && CurrentTraceData->Steps.IsValidIndex(CurrentTraceIndex))
+	{
+		return GetTrace(CurrentTraceData->Steps[CurrentTraceIndex].StartSocket);
+	}
+	else
+		return GetActorLocation();
+}
+
+FVector AMeleeWeapon::GetTraceEnd() const
+{
+	if (CurrentTraceData && CurrentTraceData->Steps.IsValidIndex(CurrentTraceIndex))
+		return GetTrace(CurrentTraceData->Steps[CurrentTraceIndex].EndSocket);
+	else
+		return GetActorLocation();
+}
+
+FName AMeleeWeapon::GetTraceStartName()
+{
+	if (CurrentTraceData && CurrentTraceData->Steps.IsValidIndex(CurrentTraceIndex))
+		return CurrentTraceData->Steps[CurrentTraceIndex].StartSocket;
+	else
+		return FName();
+}
+
+void AMeleeWeapon::SetCombatTraceData(const FCombatTraceData* NewData, const EAttackType AttackType)
+{
+	if (NewData)
+	{
+		CurrentTraceData = NewData;
+	}
+	else
+	{
+		if (WeaponData)
+		{
+			CurrentTraceData = WeaponData->AttackSet.Find(AttackType);
+		}
+		else
+			UE_LOG(LogTemp, Error, TEXT("Fail to Set Current Trace Data"));
+	}
+}
+
