@@ -20,3 +20,9 @@ void UInvincibilitySkill::ActivateSkill(AActor* Owner)
 
 	StatusComp->SkillDurationEnd(SkillSlot);
 }
+
+void UInvincibilitySkill::Init(const FSkillEntry& Config)
+{
+	Super::Init(Config);
+	AttackTag = FGameplayTags::Get().Skill_DashSlash;
+}

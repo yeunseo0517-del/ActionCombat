@@ -1,12 +1,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Types/GameplayTags.h"
 #include "TraceTypes.generated.h"
 
 UENUM(BlueprintType)
 enum class ETraceType : uint8
 {
-	ETT_BoxSingle UMETA(DisplayName = "BoxSinge"),
+	ETT_BoxSingle UMETA(DisplayName = "BoxSingle"),
 	ETT_BoxSweep UMETA(DisplayName = "BoxSweep"),
 	ETT_Sphere UMETA(DisplayName = "Sphere")
 };
@@ -39,6 +40,9 @@ struct FCombatTraceData
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "Shpae == ETraceType::ETT_Sphere", EditConditionHides))
 	float Radius;
+
+	UPROPERTY(EditAnywhere)
+	FGameplayTag AttackTag;
 
 	UPROPERTY(EditAnywhere, Category = "Combo")
 	TArray<FComboTrace> Steps;

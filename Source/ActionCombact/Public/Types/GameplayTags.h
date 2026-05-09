@@ -20,6 +20,9 @@ public:
 	FGameplayTag Type_Melee;
 	FGameplayTag Type_Area;
 
+	FGameplayTag Effect_Invincible;
+	FGameplayTag Effect_SuperArmor;
+
 	FGameplayTag State_Common_Attacking;
 	FGameplayTag State_Common_HitReact;
 	FGameplayTag State_Common_Dead;

@@ -7,6 +7,8 @@
 #include "Types/CombatTypes.h"
 #include "Types/TraceTypes.h"
 #include "Types/SkillTypes.h"
+#include "Types/HitContext.h"
+#include "Types/HitContext.h"
 #include "Weapon.generated.h"
 
 class UHitEffectDataAsset;
@@ -29,12 +31,11 @@ public:
 	void Equip(USceneComponent* InParent, const FName& InSocketName, AActor* NewOwner, APawn* NewInstigator);
 	void DisableSphereCollision();
 	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
-
-	void ClearPreviousData();
+	virtual FHitContext GetHitContext() { return FHitContext(); }
 
 	virtual void DoTrace() {}
 	virtual void ResetTraceIndex() {}
-
+	virtual void ClearPrevLocation() {}
 	void ApplySocketPolicy();
 
 	void UseSkillQ();
@@ -46,15 +47,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
 	void InitializeSkills();
-	virtual void ClearIgnoreArray();
-
-	void SpawnHitSparkParticles(const FHitResult& HitResult);
-
-	void ProcessHitResults(TArray<FHitResult>& HitResults);
-
-	virtual void ClearPrevLocation() {}
 
 	UPROPERTY()
 	TArray<AActor*> IgnoreActors;
@@ -68,9 +61,7 @@ protected:
 	UCombatDataAsset* WeaponData;
 
 private:
-	void HandleHitResult(const FHitResult& HitResult, float InDamage);
-	void ExecuteGetHit(const FHitResult& HitResult);
-	float CalculateDamage();
+	void SetHitEffectData();
 
 	UPROPERTY(EditAnywhere, Category = State)
 	EWeaponType WeaponType;

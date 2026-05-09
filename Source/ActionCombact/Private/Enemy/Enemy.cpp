@@ -46,7 +46,8 @@ void AEnemy::Tick(float DeltaTime)
 		CheckCombatTarget();
 	}
 
-	if (CombatTarget && (IsEngaged() || IsAttacking()))
+	bool bHavetoFaceTarget = IsEngaged() || IsAttacking();
+	if (CombatTarget && bHavetoFaceTarget)
 	{
 		FaceTarget(CombatTarget);
 	}
@@ -62,12 +63,8 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 void AEnemy::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
 {
 	if (IsDead()) return;
-	EnterHitReact();
 	Super::GetHit(ImpactPoint, HitEffectData, Hitter);
-	if (HealthBarWidget)
-	{
-		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
-	}
+	EnterHitReact();
 }
 
 void AEnemy::AttackEnd()
@@ -75,6 +72,11 @@ void AEnemy::AttackEnd()
 	if (IsDead()) return;
 	CurrentStateTag = FGameplayTag();
 	CheckCombatTarget();
+}
+
+bool AEnemy::CanStartAttack()
+{
+	return !IsAttacking() && !IsDead() && !IsHitReacting();
 }
 
 void AEnemy::BeginPlay()
@@ -164,7 +166,7 @@ void AEnemy::PatrolTimerFinished()
 
 void AEnemy::StartAttackTimer()
 {
-	SetCurrentState(FGameplayTags::Get().State_Common_Attacking);
+	SetCurrentState(FGameplayTags::Get().State_AI_Engaged);
 	const float AttackTime = FMath::RandRange(AttackMin, AttackMax);
 	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::TryAttack, AttackTime);
 }
@@ -248,13 +250,17 @@ bool AEnemy::IsInsideAttackRadius()
 
 void AEnemy::TryAttack()
 {
-	CurrentStateTag = FGameplayTags::Get().State_AI_Engaged;
 	Attack(FGameplayTags::Get().Action_Attack_Basic);
 }
 
 void AEnemy::EnterHitReact()
 {
-	CurrentStateTag = FGameplayTags::Get().State_Common_HitReact;
+	if (IsDead()) return;
+	Super::EnterHitReact();
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
+	}
 	ShowHealthBar();
 	ClearAttackTimer();
 }
@@ -310,7 +316,7 @@ AActor* AEnemy::ChoosePatrolTarget()
 
 void AEnemy::PawnSeen(APawn* SeenPawn)
 {
-	bool bIsEnemy = IsHostile(SeenPawn);
+	bool bIsEnemy = (TeamType != Cast<ABaseCharacter>(SeenPawn)->GetTeamType());
 	bool bCanChase = IsUnoccupied() || IsPatrolling();
 	if (bIsEnemy && bCanChase)
 	{

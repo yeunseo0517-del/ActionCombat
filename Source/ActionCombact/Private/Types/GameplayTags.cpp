@@ -19,6 +19,9 @@ void FGameplayTags::InitializeNativeTags()
 	GameplayTags.Type_Melee = Manager.AddNativeGameplayTag(FName("Type.Melee"));
 	GameplayTags.Type_Area = Manager.AddNativeGameplayTag(FName("Type.Area"));
 
+	GameplayTags.Effect_Invincible = Manager.AddNativeGameplayTag(FName("Effect.Invincible"));
+	GameplayTags.Effect_SuperArmor = Manager.AddNativeGameplayTag(FName("Effect.SuperArmor"));
+
 	GameplayTags.State_Common_Attacking = Manager.AddNativeGameplayTag(FName("State.Attacking"));
 	GameplayTags.State_Common_HitReact = Manager.AddNativeGameplayTag(FName("State.Common.HitReact"));
 	GameplayTags.State_Common_Dead = Manager.AddNativeGameplayTag(FName("State.Common.Dead"));

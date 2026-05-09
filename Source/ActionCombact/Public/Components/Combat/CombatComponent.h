@@ -7,12 +7,14 @@
 #include "Types/CombatTypes.h"
 #include "Types/TraceTypes.h"
 #include "Types/GameplayTags.h"
+#include "Types/HitContext.h"
 #include "CombatComponent.generated.h"
 
 class AWeapon;
 class ABaseCharacter;
 class UCombatDataAsset;
 class USkillBase;
+class UHitEffectDataAsset;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ACTIONCOMBACT_API UCombatComponent : public UActorComponent
@@ -33,6 +35,9 @@ public:
 	void OnWeaponEquipped(AWeapon* NewWeapon);
 	void ExecuteAttack(const FGameplayTag& Tag);
 	void ExecuteAction(const FGameplayTag& Tag);
+	void OnAttackWindow();
+
+	void ProcessHitResults(TArray<FHitResult>& HitResults);
 
 protected:
 	virtual void BeginPlay() override;
@@ -53,8 +58,22 @@ private:
 	void StartDash();
 	void EndDash();
 
+	void HandleHitResult(const FHitResult& HitResult);
+	void ExecuteGetHit(const FHitResult& HitResult);
+	void SpawnHitSparkParticles(const FHitResult& HitResult);
+	bool IsHostile(AActor* Actor);
+	float CalculateDamage(float DefaultDamage);
+
+	void ExpandImpactRadius();
+	double CalculateRadiusFromOwner();
+	void SpawnShockwave(double Radius);
+	void DoOverlap();
+
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	UCombatDataAsset* OverrideCombatData;
+
+	UPROPERTY()
+	UHitEffectDataAsset* CurHitEffectData;
 
 	UPROPERTY(VisibleInstanceOnly)
 	AWeapon* EquippedWeapon;
@@ -82,8 +101,24 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	FGameplayTag CurrentCombatTag = FGameplayTag();
 
+	UPROPERTY()
+	FHitContext CurHitContext;
+
+	double CurRadius;
+	double MaxRadius;
+	float Speed;
+	bool bExpandRadius = false;
+
+	UPROPERTY()
+	class UNiagaraComponent* EffectComp;
+
+	UPROPERTY()
+	class UNiagaraSystem* Shockwave;
+
 public:
 	void SetbTracing(bool Value) { bTracing = Value; }
 	void SetCombatTraceData();
 	void SetCurrentSkill(USkillBase* NewSkill) { CurrentSkill = NewSkill; }
+	void SetHitEffectData(UHitEffectDataAsset* NewEffect) { CurHitEffectData = NewEffect; }
+	void SetHitContext(FHitContext& NewContext) { CurHitContext = NewContext; }
 };

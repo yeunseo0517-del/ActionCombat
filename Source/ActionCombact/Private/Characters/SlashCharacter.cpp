@@ -101,6 +101,16 @@ void ASlashCharacter::OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupt
 		SetCurrentState(FGameplayTag());
 }
 
+void ASlashCharacter::EnterHitReact()
+{
+	if (IsDead()) return;
+	Super::EnterHitReact();
+	if (HealthBar)
+	{
+		HealthBar->SetHealthPercent(Attributes->GetHealthPercent());
+	}
+}
+
 bool ASlashCharacter::IsEquipMontage(UAnimMontage* Montage)
 {
 	return Montage == EquipMontage;
@@ -137,7 +147,7 @@ void ASlashCharacter::Look(const FInputActionValue& Value)
 
 void ASlashCharacter::Jump()
 {
-	if (ActionState != EActionState::EAS_Unoccupied) return;
+	if (!IsUnoccupied()) return;
 	Super::Jump();
 }
 
@@ -271,7 +281,7 @@ void ASlashCharacter::SetWeaponStance(EWeaponStance NewWeaponStance)
 void ASlashCharacter::StartAttack()
 {
 	if (!IsUnoccupied()) return;
-	SetCurrentState(FGameplayTags::Get().State_Common_Attacking);
+	Super::StartAttack();
 }
 
 
@@ -279,16 +289,6 @@ void ASlashCharacter::AttackEnd()
 {
 	if (!IsAttacking()) return;
 	SetCurrentState(FGameplayTag());
-}
-
-void ASlashCharacter::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
-{
-	Super::GetHit(ImpactPoint, HitEffectData, Hitter);
-	SetCurrentState(FGameplayTags::Get().State_Common_HitReact);
-	if (HealthBar)
-	{
-		HealthBar->SetHealthPercent(Attributes->GetHealthPercent());
-	}
 }
 
 void ASlashCharacter::HandleEquipState()
@@ -305,6 +305,11 @@ void ASlashCharacter::HandleEquipState()
 		SetWeaponStance(EWeaponStance::EWS_OneHand);
 		SwitchToWeapon(EquippedWeapon);
 	}
+}
+
+bool ASlashCharacter::CanStartAttack()
+{
+	return IsUnoccupied();
 }
 
 bool ASlashCharacter::HasUnarmedWeapon()

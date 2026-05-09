@@ -16,4 +16,5 @@ class ACTIONCOMBACT_API UInvincibilitySkill : public USkillBase
 	
 public:
 	virtual void ActivateSkill(AActor* Owner) override;
+	virtual void Init(const FSkillEntry& Config) override;
 };

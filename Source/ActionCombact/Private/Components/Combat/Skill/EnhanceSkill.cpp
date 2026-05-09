@@ -23,6 +23,7 @@ void UEnhanceSkill::Init(const FSkillEntry& Config)
 {
 	Super::Init(Config);
 	EnhanceDamage = Config.BaseConfig.EnhanceDamage;
+	AttackTag = FGameplayTags::Get().Skill_EnhanceDamage;
 }
 
 void UEnhanceSkill::DeactivateSkill()

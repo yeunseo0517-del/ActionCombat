@@ -7,6 +7,13 @@
 #include "Characters/CharacterTypes.h"
 #include "TeamInterface.generated.h"
 
+UENUM(BlueprintType)
+enum class ETeamType : uint8
+{
+	Player,
+	Enemy
+};
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UTeamInterface : public UInterface

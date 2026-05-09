@@ -27,13 +27,14 @@ public:
 	//
 
 	virtual void AttackEnd() override;
-	
+	virtual bool CanStartAttack() override;
 
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) override;
 	virtual void Die(const FName& Section) override;
+	virtual void EnterHitReact() override;
 
 private:
 	// AI Behavior
@@ -57,7 +58,6 @@ private:
 	bool IsOutsideAttackRadius();
 	bool IsOutsideCombatRadius();
 	bool IsInsideAttackRadius();
-	void EnterHitReact();
 	void MoveToTarget(AActor* Target);
 	void FaceTarget(AActor* Target);
 	void ChaseTarget();

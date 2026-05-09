@@ -3,10 +3,19 @@
 
 #include "Components/Combat/CombatComponent.h"
 #include "Items/Weapons/Data/CombatDataAsset.h"
+#include "Items/Weapons/Data/HitEffectDataAsset.h"
 
 #include "Items/Weapons/Weapon.h"
 #include "Characters/Base/BaseCharacter.h"
 #include "Components/Combat/Skill/SkillBase.h"
+
+#include "Kismet/GameplayStatics.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Engine/OverlapResult.h"
+
+//#include "Interfaces/StatusReceiverInterface.h"
+#include "Components/Status/StatusComponent.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -47,11 +56,23 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		FVector NewLoc = FMath::VInterpTo(CurrentLoc, DashTargetLoc, DeltaTime, 15.f);
 		GetOwner()->SetActorLocation(NewLoc, true);
 	}
+
+	if (bExpandRadius)
+	{
+		SpawnShockwave(CurRadius);
+		DoOverlap();
+
+		CurRadius += Speed;
+		if (CurRadius >= MaxRadius)
+		{
+			bExpandRadius = false;
+		}
+	}
 }
 
 bool UCombatComponent::CanAttack()
 {
-	return Character->CanStartAttack() && !Character->HasActionTag(FGameplayTags::Get().State_Common_Attacking);
+	return Character->CanStartAttack();
 }
 
 void UCombatComponent::ExecuteAttackSequence(FGameplayTag Tag)
@@ -164,6 +185,7 @@ void UCombatComponent::ExecuteAttack(const FGameplayTag& Tag)
 			return;
 		}
 	}
+
 	ExecuteAttackSequence(Tag);
 }
 
@@ -176,6 +198,17 @@ void UCombatComponent::ExecuteAction(const FGameplayTag& Tag)
 	else if (Tag.MatchesTag(FGameplayTags::Get().Action_Movement_Dash_End))
 	{
 		EndDash();
+	}
+}
+
+void UCombatComponent::OnAttackWindow()
+{
+	if (!CurrentSkill) return;
+	FGameplayTag Tag = CurrentSkill->GetTag();
+
+	if (Tag == FGameplayTags::Get().Skill_Shockwave)
+	{
+		ExpandImpactRadius();
 	}
 }
 
@@ -245,4 +278,136 @@ void UCombatComponent::SetCombatTraceData()
 void UCombatComponent::SetCurrentCombatTag(const FGameplayTag& Tag)
 {
 	CurrentCombatTag = Tag;
+}
+
+float UCombatComponent::CalculateDamage(float DefaultDamage)
+{
+	float Damage = DefaultDamage;
+	if (IStatusReceiverInterface* Receiver = Cast<IStatusReceiverInterface>(GetOwner()))
+	{
+		UStatusComponent* StatusComp = Receiver->GetStatusComponent();
+		if (StatusComp)
+		{
+			Damage += StatusComp->GetEnhancedDamage();
+		}
+	}
+	return Damage;
+}
+
+void UCombatComponent::ExpandImpactRadius()
+{
+	CurRadius = CalculateRadiusFromOwner();
+	if (CurrentSkill)
+	{
+		MaxRadius = CurrentSkill->GetMaxRadius();
+		Speed = (MaxRadius - CurRadius) / CurrentSkill->GetDuration();
+	}
+	bExpandRadius = true;
+}
+
+void UCombatComponent::SpawnShockwave(double Radius)
+{
+	if (!Shockwave) return;
+	EffectComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		Shockwave,
+		GetOwner()->GetActorLocation(),
+		FRotator::ZeroRotator,
+		FVector(Radius)
+	);
+}
+
+void UCombatComponent::DoOverlap()
+{
+	TArray<FOverlapResult> Overlap;
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(CurRadius);
+	FCollisionQueryParams Query;
+	Query.AddIgnoredActor(GetOwner());
+	Query.bTraceComplex = false;
+	
+	GetWorld()->OverlapMultiByChannel(
+		Overlap,
+		GetOwner()->GetActorLocation(),
+		FQuat::Identity,
+		ECC_Pawn,
+		Sphere,
+		Query
+	);
+}
+
+double UCombatComponent::CalculateRadiusFromOwner()
+{
+	if (!GetOwner()) return 0.f;
+	IWeaponHolderInterface* Holder = Cast<IWeaponHolderInterface>(GetOwner());
+	if (!Holder) return 0.f;
+	FVector Start = GetOwner()->GetActorLocation();
+	FVector End = Holder->GetTraceStart();
+	return FVector::Dist(Start, End);
+}
+
+void UCombatComponent::HandleHitResult(const FHitResult& HitResult)
+{
+	ACharacter* HitChar = Cast<ACharacter>(CurHitContext.Instigator);
+	if (!HitChar) return;
+	if (HitResult.GetActor())
+	{
+		if (!IsHostile(HitResult.GetActor())) return;
+
+		float Damage = CalculateDamage(CurHitContext.Damage);
+
+		UGameplayStatics::ApplyDamage(
+			HitResult.GetActor(),
+			Damage,
+			HitChar->GetController(),
+			GetOwner(),
+			UDamageType::StaticClass()
+		);
+
+		ExecuteGetHit(HitResult);
+		SpawnHitSparkParticles(HitResult);
+	}
+}
+
+void UCombatComponent::ExecuteGetHit(const FHitResult& HitResult)
+{
+	if (IHitInterface* HitInterface = Cast<IHitInterface>(HitResult.GetActor()))
+	{
+		HitInterface->GetHit(HitResult.ImpactPoint, CurHitEffectData, GetOwner());
+	}
+}
+
+void UCombatComponent::SpawnHitSparkParticles(const FHitResult& HitResult)
+{
+	if (CurHitEffectData && CurHitEffectData->HitSparkSystem)
+	{
+		CurHitEffectData->HitSpark = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			CurHitEffectData->HitSparkSystem,
+			HitResult.ImpactPoint
+		);
+	}
+}
+
+void UCombatComponent::ProcessHitResults(TArray<FHitResult>& HitResults)
+{
+	for (const FHitResult& Hit : HitResults)
+	{
+		AActor* Target = Hit.GetActor();
+		if (!Target) continue;
+		if (CurHitContext.AlreadyHitActors.Contains(Target)) continue;
+		HandleHitResult(Hit);
+		CurHitContext.AlreadyHitActors.Add(Target);
+	}
+}
+
+bool UCombatComponent::IsHostile(AActor* OtherActor)
+{
+	if (ITeamInterface* Hitter = Cast<ITeamInterface>(GetOwner()))
+	{
+		if (ITeamInterface* Other = Cast<ITeamInterface>(OtherActor))
+		{
+			return Hitter->GetTeamType() != Other->GetTeamType();
+		}
+	}
+	return false;
 }

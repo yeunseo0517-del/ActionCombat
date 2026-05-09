@@ -5,16 +5,17 @@
 
 #include "Components/SphereComponent.h"
 #include "Components/Status/StatusComponent.h"
+#include "Components/Combat/CombatComponent.h"
 #include "Components/Combat/Skill/SkillBase.h"
 #include "Items/Weapons/Data/HitEffectDataAsset.h"
 #include "Items/Weapons/Data/CombatDataAsset.h"
 
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "Kismet/GameplayStatics.h"
 
 #include "Interfaces/HitInterface.h"
 #include "Interfaces/StatusReceiverInterface.h"
+#include "Interfaces/CombatInterface.h"
 
 AWeapon::AWeapon()
 {
@@ -27,8 +28,21 @@ void AWeapon::Equip(USceneComponent* InParent, const FName& InSocketName, AActor
 	SetInstigator(NewInstigator);
 	AttachMeshToSocket(InParent, InSocketName);
 	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	SetHitEffectData();
 
 	DisableSphereCollision();
+}
+
+void AWeapon::SetHitEffectData()
+{
+	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner()))
+	{
+		if (HitEffectData)
+		{
+			CombatInterface->GetCombatComponent()->SetHitEffectData(HitEffectData);
+		}
+	}
 }
 
 void AWeapon::DisableSphereCollision()
@@ -43,12 +57,6 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 {
 	FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, true);
 	ItemMesh->AttachToComponent(InParent, TransformRules, InSocketName);
-}
-
-void AWeapon::ClearPreviousData()
-{
-	ClearIgnoreArray();
-	ClearPrevLocation();
 }
 
 void AWeapon::BeginPlay()
@@ -71,11 +79,6 @@ void AWeapon::InitializeSkills()
 		RuntimeSkill->Init(Entry);
 		Skills.Add(RuntimeSkill);
 	}
-}
-
-void AWeapon::ClearIgnoreArray()
-{
-	IgnoreActors.Empty();
 }
 
 USkillBase* AWeapon::GetCurrentSkill(ESkillSlot Slot)
@@ -142,70 +145,4 @@ void AWeapon::PlayNiagaraEffect()
 void AWeapon::DestroyNiagaraEffect()
 {
 	if (BuffComp) BuffComp->Deactivate();
-	
-}
-
-float AWeapon::CalculateDamage()
-{
-	float Damage = WeaponData->DefaultDamage;
-	if (IStatusReceiverInterface* Receiver = Cast<IStatusReceiverInterface>(GetOwner()))
-	{
-		UStatusComponent* StatusComp = Receiver->GetStatusComponent();
-		if (StatusComp)
-		{
-			Damage += StatusComp->GetEnhancedDamage();
-		}
-	}
-	return Damage;
-}
-
-void AWeapon::ProcessHitResults(TArray<FHitResult>& HitResults)
-{
-	for (const FHitResult& Hit : HitResults)
-	{
-		IgnoreActors.AddUnique(Hit.GetActor());
-
-		if (!WeaponData) return;
-		
-		float Damage = CalculateDamage();
-
-		HandleHitResult(Hit, Damage);
-	}
-}
-
-void AWeapon::HandleHitResult(const FHitResult& HitResult, float InDamage)
-{
-	if (HitResult.GetActor())
-	{
-		UGameplayStatics::ApplyDamage(
-			HitResult.GetActor(),
-			InDamage,
-			GetInstigator()->GetController(),
-			this,
-			UDamageType::StaticClass()
-		);
-
-		ExecuteGetHit(HitResult);
-		SpawnHitSparkParticles(HitResult);
-	}
-}
-
-void AWeapon::ExecuteGetHit(const FHitResult& HitResult)
-{
-	if (IHitInterface* HitInterface = Cast<IHitInterface>(HitResult.GetActor()))
-	{
-		HitInterface->GetHit(HitResult.ImpactPoint, HitEffectData, GetOwner());
-	}
-}
-
-void AWeapon::SpawnHitSparkParticles(const FHitResult& HitResult)
-{
-	if (HitEffectData && HitEffectData->HitSparkSystem)
-	{
-		HitEffectData->HitSpark = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			this,
-			HitEffectData->HitSparkSystem,
-			HitResult.ImpactPoint
-		);
-	}
 }

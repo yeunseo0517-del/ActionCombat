@@ -4,12 +4,12 @@
 #include "Items/Weapons/MeleeWeapon.h"
 #include "Items/Weapons/Data/CombatDataAsset.h"
 #include "Components/Status/StatusComponent.h"
+#include "Components/Combat/CombatComponent.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "Interfaces/CombatInterface.h"
-#include "Characters/CharacterTypes.h"
 
 AMeleeWeapon::AMeleeWeapon()
 {
@@ -28,11 +28,8 @@ void AMeleeWeapon::DoTrace()
 		return;
 	}
 
-	if (ActorsToIgnore.IsEmpty()) SetTraceIgnoreActors(ActorsToIgnore);
-
-	for (AActor* Actor : IgnoreActors)
-		ActorsToIgnore.AddUnique(Actor);
-
+	TArray<AActor*> ActorsToIgnore = MakeActorsToIgnore();
+	TSet<AActor*> AlreadyHit;
 	TArray<FHitResult> HitResults;
 
 	switch (CurrentTraceData->Shape)
@@ -48,14 +45,32 @@ void AMeleeWeapon::DoTrace()
 		break;
 	}
 
-	ProcessHitResults(HitResults);
+	for (FHitResult Hit : HitResults)
+	{
+		AlreadyHit.Add(Hit.GetActor());
+	}
+
+	CurHitContext = MakeHitContext(ActorsToIgnore, AlreadyHit);
+
+	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetInstigator()))
+	{
+		CombatInterface->GetCombatComponent()->ProcessHitResults(HitResults);
+	}
 }
 
-void AMeleeWeapon::ClearIgnoreArray()
+FHitContext AMeleeWeapon::MakeHitContext(const TArray<AActor*>& Ignore, const TSet<AActor*>& AlreadyHit)
 {
-	Super::ClearIgnoreArray();
-	ActorsToIgnore.Empty();
+	FHitContext HitContext;
+
+	HitContext.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
+	HitContext.DamageCauser = this;
+	HitContext.AttackTag = CurrentTraceData->AttackTag;
+	HitContext.Damage = WeaponData->DefaultDamage;
+	HitContext.ActorsToIgnore = Ignore;
+
+	return HitContext;
 }
+
 
 void AMeleeWeapon::ExecuteSweepTrace(const TArray<AActor*>& InActorsToIgnore, TArray<FHitResult>& HitResults)
 {
@@ -129,7 +144,7 @@ void AMeleeWeapon::DoBoxTraceMulti(const FVector Start, const FVector End, const
 		ETraceTypeQuery::TraceTypeQuery1,
 		false,
 		InActorsToIgnore,
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,
 		BoxHits,
 		true
 	);
@@ -152,10 +167,12 @@ void AMeleeWeapon::DoSphereTrace(const FVector PrevLoc, const FVector CurLoc, fl
 	);
 }
 
-void AMeleeWeapon::SetTraceIgnoreActors(TArray<AActor*>& InActorsToIgnore)
+TArray<AActor*> AMeleeWeapon::MakeActorsToIgnore()
 {
-	InActorsToIgnore.AddUnique(this);
-	InActorsToIgnore.AddUnique(GetOwner());
+	TArray<AActor*> Actors;
+	Actors.AddUnique(this);
+	Actors.AddUnique(GetOwner());
+	return Actors;
 }
 
 FVector AMeleeWeapon::GetTrace(FName SocketName) const

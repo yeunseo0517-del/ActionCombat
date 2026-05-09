@@ -31,10 +31,16 @@ struct FSkillConfig
 	float EnhanceDamage;
 
 	UPROPERTY(EditAnywhere)
-	float Duration = 5.f;
+	float Duration;
 
 	UPROPERTY(EditAnywhere)
-	float DashDistance = 5.f;
+	float DashDistance;
+
+	UPROPERTY(EditAnywhere)
+	double MaxRadius;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* Niagara;
 };
 
 USTRUCT(BlueprintType)

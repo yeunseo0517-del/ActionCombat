@@ -96,6 +96,11 @@ void ABaseCharacter::Die(const FName& Section)
 	SetLifeSpan(DeathLifeSpan);
 }
 
+void ABaseCharacter::EnterHitReact()
+{
+	SetCurrentState(FGameplayTags::Get().State_Common_HitReact);
+}
+
 void ABaseCharacter::BindDeathDelegate()
 {
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
@@ -120,6 +125,7 @@ void ABaseCharacter::OnMontageBlendingOutStarted(UAnimMontage* Montage, bool bIn
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
 }
@@ -134,17 +140,17 @@ void ABaseCharacter::DisableMeshCollision()
 
 void ABaseCharacter::AddActionTag(const FGameplayTag& Tag)
 {
-	ActionTags.AddTag(Tag);
+	AddTag(ActionTags, Tag);
 }
 
 void ABaseCharacter::RemoveActionTag(const FGameplayTag& Tag)
 {
-	ActionTags.RemoveTag(Tag);
+	RemoveTag(ActionTags, Tag);
 }
 
 bool ABaseCharacter::HasActionTag(const FGameplayTag& Tag)
 {
-	return ActionTags.HasTag(Tag);
+	return HasTag(ActionTags, Tag);
 }
 
 void ABaseCharacter::SetCurrentState(FGameplayTag Tag)
@@ -195,7 +201,9 @@ void ABaseCharacter::EnableTrace()
 	}
 	if (AWeapon* ActiveWeapon = GetActiveWeapon())
 	{
-		ActiveWeapon->ClearPreviousData();
+		ActiveWeapon->ClearPrevLocation();
+		FHitContext HitContext = ActiveWeapon->GetHitContext();
+		Combat->SetHitContext(HitContext);
 	}
 }
 
@@ -253,18 +261,9 @@ bool ABaseCharacter::IsAlive()
 	return Attributes->IsAlive();
 }
 
-bool ABaseCharacter::IsHostile(AActor* Actor)
-{
-	if (ITeamInterface* TeamInterface = Cast<ITeamInterface>(Actor))
-	{
-		return TeamInterface->GetTeamType() != TeamType;
-	}
-	return false;
-}
-
 float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (!IsHostile(DamageCauser)) return 0.f;
+	//UE_LOG(LogTemp, Warning, TEXT("%s took damages"), *DamageCauser->GetName())
 	if (IsInvincible()) return 0.f;
 	Attributes->RecieveDamage(DamageAmount);
 	return DamageAmount;
@@ -272,17 +271,31 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 bool ABaseCharacter::IsInvincible()
 {
-	return StatusComponent && StatusComponent->HasStatus(EStatusType::EST_Invincible);
+	return EffectTags.HasTag(FGameplayTags::Get().Effect_Invincible);
+}
+
+void ABaseCharacter::AddTag(FGameplayTagContainer& Container, const FGameplayTag& Tag)
+{
+	Container.AddTag(Tag);
+}
+
+void ABaseCharacter::RemoveTag(FGameplayTagContainer& Container, const FGameplayTag& Tag)
+{
+	Container.RemoveTag(Tag);
+}
+
+bool ABaseCharacter::HasTag(const FGameplayTagContainer& Container, const FGameplayTag& Tag)
+{
+	return Container.HasTag(Tag);
 }
 
 bool ABaseCharacter::IsSuperArmor()
 {
-	return StatusComponent && StatusComponent->HasStatus(EStatusType::EST_SuperArmor);
+	return EffectTags.HasTag(FGameplayTags::Get().Effect_SuperArmor);
 }
 
 void ABaseCharacter::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
 {
-	if (!IsHostile(Hitter)) return;
 	if (IsInvincible() || IsSuperArmor()) return;
 	StopMontage();
 
@@ -299,6 +312,7 @@ void ABaseCharacter::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* Hit
 
 	PlayHitSound(HitEffectData, ImpactPoint);
 	SpawnHitParticles(ImpactPoint);
+	EnterHitReact();
 }
 
 void ABaseCharacter::StopMontage()
@@ -394,7 +408,11 @@ void ABaseCharacter::HandleStatusStart(EStatusType Status)
 		}
 		break;
 	case EStatusType::EST_Invincible:
+		AddTag(EffectTags, FGameplayTags::Get().Effect_Invincible);
 		ShieldComp->Activate(true);
+		break;
+	case EStatusType::EST_SuperArmor:
+		AddTag(EffectTags, FGameplayTags::Get().Effect_SuperArmor);
 		break;
 	default:
 		break;
@@ -412,7 +430,11 @@ void ABaseCharacter::HandleStatusEnd(EStatusType Status)
 		}
 		break;
 	case EStatusType::EST_Invincible:
+		RemoveTag(EffectTags, FGameplayTags::Get().Effect_Invincible);
 		ShieldComp->DeactivateImmediate();
+		break;
+	case EStatusType::EST_SuperArmor:
+		RemoveTag(EffectTags, FGameplayTags::Get().Effect_SuperArmor);
 		break;
 	default:
 		break;
@@ -453,6 +475,12 @@ void ABaseCharacter::Attack(const FGameplayTag& Tag)
 void ABaseCharacter::PlayAttackMontage(UAnimMontage* Montage, FName SectionName)
 {
 	PlayMontage(Montage, SectionName);
+}
+
+void ABaseCharacter::StartAttack()
+{
+	if (IsDead() || IsHitReacting()) return;
+	SetCurrentState(FGameplayTags::Get().State_Common_Attacking);
 }
 
 void ABaseCharacter::CheckAndTriggerNextCombo()

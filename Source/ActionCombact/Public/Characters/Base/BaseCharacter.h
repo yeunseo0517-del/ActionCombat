@@ -9,7 +9,6 @@
 #include "Interfaces/WeaponHolderInterface.h"
 #include "Interfaces/StatusReceiverInterface.h"
 #include "Interfaces/TeamInterface.h"
-#include "Characters/CharacterTypes.h"
 #include "Types/CombatTypes.h"
 #include "Types/SkillTypes.h"
 #include "BaseCharacter.generated.h"
@@ -78,9 +77,9 @@ public:
 	void Attack(const FGameplayTag& Tag);
 	void PlayAttackMontage(UAnimMontage* Montage, FName SectionName);
 
-	virtual void StartAttack() {}
+	virtual void StartAttack();
 	virtual void AttackEnd() {}
-	bool CanStartAttack() { return IsUnoccupied(); }
+	virtual bool CanStartAttack() { return false; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -89,13 +88,13 @@ protected:
 	void SwitchToWeapon(AWeapon* NewWeapon);
 	virtual void Die(const FName& Section);
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) {}
+	virtual void EnterHitReact();
 
 	void SetCurrentState(FGameplayTag Tag);
 	bool IsUnoccupied();
 	bool IsAttacking();
 	bool IsHitReacting();
 	bool IsDead();
-	bool IsHostile(AActor* Actor);
 
 
 	/*
@@ -130,6 +129,9 @@ protected:
 	FGameplayTagContainer ActionTags;
 
 	UPROPERTY(VisibleAnywhere)
+	FGameplayTagContainer EffectTags;
+
+	UPROPERTY(VisibleAnywhere)
 	FGameplayTag CurrentStateTag = FGameplayTag();
 
 private:
@@ -147,6 +149,9 @@ private:
 	FName GetHitSection(double Theta);
 	bool IsSuperArmor();
 	bool IsInvincible();
+	void AddTag(FGameplayTagContainer& Container, const FGameplayTag& Tag);
+	void RemoveTag(FGameplayTagContainer& Container, const FGameplayTag& Tag);
+	bool HasTag(const FGameplayTagContainer& Container, const FGameplayTag& Tag);
 
 	UFUNCTION()
 	void HandleStatusStart(EStatusType Status);

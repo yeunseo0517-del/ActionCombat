@@ -5,7 +5,10 @@
 #include "Components/Status/StatusComponent.h"
 #include "Components/Combat/CombatComponent.h"
 #include "Interfaces/CombatInterface.h"
+#include "Interfaces/WeaponHolderInterface.h"
 #include "Types/GameplayTags.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 void URadialShockwave::ActivateSkill(AActor* Owner)
 {
@@ -19,4 +22,13 @@ void URadialShockwave::ActivateSkill(AActor* Owner)
 	StatusComp->AddStatus(EStatusType::EST_SuperArmor);
 
 	StatusComp->SkillDurationEnd(SkillSlot);
+}
+
+void URadialShockwave::Init(const FSkillEntry& Config)
+{
+	Super::Init(Config);
+	MaxRadius = Config.BaseConfig.MaxRadius;
+	AttackTag = FGameplayTags::Get().Skill_Shockwave;
+	if(Config.BaseConfig.Niagara)
+		Effect = Config.BaseConfig.Niagara;
 }

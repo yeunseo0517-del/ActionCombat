@@ -15,4 +15,5 @@ class ACTIONCOMBACT_API URadialShockwave : public USkillBase
 	GENERATED_BODY()
 	
 	virtual void ActivateSkill(AActor* Owner) override;
+	virtual void Init(const FSkillEntry& Config) override;
 };

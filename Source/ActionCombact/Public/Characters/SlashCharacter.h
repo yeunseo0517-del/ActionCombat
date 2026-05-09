@@ -26,19 +26,15 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void HandleEquipState() override;
+	virtual bool CanStartAttack() override;
 	virtual void StartAttack() override;
 	virtual void AttackEnd() override;
-
-	virtual void GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter) override;
 
 protected:
 	virtual void BeginPlay() override;
 
-	void CreateHealthBarWidget();
-
-	void CreateSkillWidget();
-
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) override;
+	virtual void EnterHitReact() override;
 
 	/*
 	Enchanced Input
@@ -80,6 +76,8 @@ protected:
 	float SprintWalkSpeed = 1000.f;
 
 private:
+	void CreateHealthBarWidget();
+	void CreateSkillWidget();
 	void StartSprint();
 	void StopSprint();
 	void Equip();
@@ -119,9 +117,6 @@ private:
 		State 
 	*/
 	void SetWeaponStance(EWeaponStance NewWeaponStance);
-
-	UPROPERTY(VisibleInstanceOnly, Category = State)
-	EActionState ActionState = EActionState::EAS_Unoccupied;
 
 	/*
 		Animation Montages
