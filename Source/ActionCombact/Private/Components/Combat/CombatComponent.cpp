@@ -66,6 +66,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		if (CurRadius >= MaxRadius)
 		{
 			bExpandRadius = false;
+			if(EffectComp) EffectComp->Deactivate();
 		}
 	}
 }
@@ -205,7 +206,7 @@ void UCombatComponent::OnAttackWindow()
 {
 	if (!CurrentSkill) return;
 	FGameplayTag Tag = CurrentSkill->GetTag();
-
+	CurHitContext = BuildSkillHitContext();
 	if (Tag == FGameplayTags::Get().Skill_Shockwave)
 	{
 		ExpandImpactRadius();
@@ -246,9 +247,7 @@ FCombatState UCombatComponent::GetCurrentCombatState()
 	FCombatState CurrentState;
 
 	CurrentState.WeaponType = EquippedWeapon ? EquippedWeapon->GetWeaponType() : EWeaponType::EWT_Unarmed;
-
 	CurrentState.ActionTag = CurrentCombatTag;
-
 	CurrentState.WeaponStance = Character->GetWeaponStance();
 
 	return CurrentState;
@@ -300,7 +299,8 @@ void UCombatComponent::ExpandImpactRadius()
 	if (CurrentSkill)
 	{
 		MaxRadius = CurrentSkill->GetMaxRadius();
-		Speed = (MaxRadius - CurRadius) / CurrentSkill->GetDuration();
+		Speed = FMath::Abs((MaxRadius - CurRadius) / CurrentSkill->GetDuration());
+		Shockwave = CurrentSkill->GetEffect();
 	}
 	bExpandRadius = true;
 }
@@ -308,31 +308,20 @@ void UCombatComponent::ExpandImpactRadius()
 void UCombatComponent::SpawnShockwave(double Radius)
 {
 	if (!Shockwave) return;
+
+	FVector RootLocation = GetOwner()->GetActorLocation();
+	RootLocation.Z -= GetOwner()->GetRootComponent()->Bounds.BoxExtent.Z;
 	EffectComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
 		Shockwave,
-		GetOwner()->GetActorLocation(),
+		RootLocation,
 		FRotator::ZeroRotator,
-		FVector(Radius)
+		FVector(1.f)
 	);
-}
 
-void UCombatComponent::DoOverlap()
-{
-	TArray<FOverlapResult> Overlap;
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(CurRadius);
-	FCollisionQueryParams Query;
-	Query.AddIgnoredActor(GetOwner());
-	Query.bTraceComplex = false;
-	
-	GetWorld()->OverlapMultiByChannel(
-		Overlap,
-		GetOwner()->GetActorLocation(),
-		FQuat::Identity,
-		ECC_Pawn,
-		Sphere,
-		Query
-	);
+	if (!EffectComp) return;
+	EffectComp->SetFloatParameter(TEXT("Lifetime"), 1.f);
+	EffectComp->SetFloatParameter(TEXT("Radius"), Radius);
 }
 
 double UCombatComponent::CalculateRadiusFromOwner()
@@ -341,73 +330,125 @@ double UCombatComponent::CalculateRadiusFromOwner()
 	IWeaponHolderInterface* Holder = Cast<IWeaponHolderInterface>(GetOwner());
 	if (!Holder) return 0.f;
 	FVector Start = GetOwner()->GetActorLocation();
-	FVector End = Holder->GetTraceStart();
+	FVector End = Holder->GetTraceEnd();
 	return FVector::Dist(Start, End);
 }
 
-void UCombatComponent::HandleHitResult(const FHitResult& HitResult)
+void UCombatComponent::DoOverlap()
 {
-	ACharacter* HitChar = Cast<ACharacter>(CurHitContext.Instigator);
-	if (!HitChar) return;
-	if (HitResult.GetActor())
-	{
-		if (!IsHostile(HitResult.GetActor())) return;
-
-		float Damage = CalculateDamage(CurHitContext.Damage);
-
-		UGameplayStatics::ApplyDamage(
-			HitResult.GetActor(),
-			Damage,
-			HitChar->GetController(),
-			GetOwner(),
-			UDamageType::StaticClass()
-		);
-
-		ExecuteGetHit(HitResult);
-		SpawnHitSparkParticles(HitResult);
-	}
-}
-
-void UCombatComponent::ExecuteGetHit(const FHitResult& HitResult)
-{
-	if (IHitInterface* HitInterface = Cast<IHitInterface>(HitResult.GetActor()))
-	{
-		HitInterface->GetHit(HitResult.ImpactPoint, CurHitEffectData, GetOwner());
-	}
-}
-
-void UCombatComponent::SpawnHitSparkParticles(const FHitResult& HitResult)
-{
-	if (CurHitEffectData && CurHitEffectData->HitSparkSystem)
-	{
-		CurHitEffectData->HitSpark = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			this,
-			CurHitEffectData->HitSparkSystem,
-			HitResult.ImpactPoint
-		);
-	}
+	TArray<FOverlapResult> OverlapResults;
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(CurRadius);
+	FCollisionQueryParams Query;
+	Query.AddIgnoredActor(GetOwner());
+	Query.bTraceComplex = false;
+	
+	GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
+		GetOwner()->GetActorLocation(),
+		FQuat::Identity,
+		ECC_Pawn,
+		Sphere,
+		Query
+	);
+	
+	ProcessOverlapResults(OverlapResults);
 }
 
 void UCombatComponent::ProcessHitResults(TArray<FHitResult>& HitResults)
 {
 	for (const FHitResult& Hit : HitResults)
 	{
-		AActor* Target = Hit.GetActor();
-		if (!Target) continue;
-		if (CurHitContext.AlreadyHitActors.Contains(Target)) continue;
-		HandleHitResult(Hit);
-		CurHitContext.AlreadyHitActors.Add(Target);
+		TryProcessTarget(Hit.GetActor(), Hit.ImpactPoint);
 	}
+}
+
+void UCombatComponent::ProcessOverlapResults(const TArray<FOverlapResult>& OverlapResults)
+{
+	for (const FOverlapResult& Overlap : OverlapResults)
+	{
+		TryProcessTarget(Overlap.GetActor(), Overlap.GetActor()->GetActorLocation());
+	}
+}
+
+void UCombatComponent::TryProcessTarget(AActor* Target, FVector ImpactPoint)
+{
+	if (!Target) return;
+	if (CurHitContext.AlreadyHitActors.Contains(Target)) return;
+	HandleHitResult(Target, ImpactPoint);
+	CurHitContext.AlreadyHitActors.Add(Target);
+}
+
+void UCombatComponent::HandleHitResult(AActor* HitActor, FVector ImpactPoint)
+{
+	if (!HitActor) return;
+	if (ProcessDamageApplication(HitActor))
+	{
+		ExecuteGetHit(HitActor, ImpactPoint);
+		SpawnHitSparkParticles(ImpactPoint);
+	}
+}
+
+bool UCombatComponent::ProcessDamageApplication(AActor* Target)
+{
+	if (!Target) return false;
+	if (!IsHostile(Target)) return false;
+	float Damage = CalculateDamage(CurHitContext.Damage);
+	AController* InstigatorController = nullptr;
+	if (APawn* Owner = Cast<APawn>(CurHitContext.Instigator))
+		InstigatorController = Owner->GetController();
+	UGameplayStatics::ApplyDamage(
+		Target,
+		Damage,
+		InstigatorController,
+		CurHitContext.DamageCauser,
+		UDamageType::StaticClass()
+	);
+	return true;
+}
+
+void UCombatComponent::ExecuteGetHit(AActor* Hit, FVector ImpactPoint)
+{
+	if (IHitInterface* HitInterface = Cast<IHitInterface>(Hit))
+	{
+		HitInterface->GetHit(ImpactPoint, CurHitEffectData, GetOwner());
+	}
+}
+
+
+FHitContext UCombatComponent::BuildSkillHitContext()
+{
+	FHitContext HitContext;
+	HitContext.Instigator = GetOwner();
+	HitContext.DamageCauser = GetOwner();
+	HitContext.AttackTag = CurrentSkill->GetTag();
+	HitContext.Damage = CurrentSkill->GetSkillDamage();
+
+	return HitContext;
 }
 
 bool UCombatComponent::IsHostile(AActor* OtherActor)
 {
-	if (ITeamInterface* Hitter = Cast<ITeamInterface>(GetOwner()))
+	if (ITeamInterface* Hitter = Cast<ITeamInterface>(CurHitContext.Instigator))
 	{
 		if (ITeamInterface* Other = Cast<ITeamInterface>(OtherActor))
 		{
+			FString Hit = UEnum::GetValueAsString(Hitter->GetTeamType());
+			FString Ot = UEnum::GetValueAsString(Other->GetTeamType());
+			UE_LOG(LogTemp,Warning,TEXT("Hit Actor: %s, Get Hit Actor: %s"), *Hit, *Ot)
 			return Hitter->GetTeamType() != Other->GetTeamType();
 		}
 	}
 	return false;
+}
+
+void UCombatComponent::SpawnHitSparkParticles(FVector ImpactPoint)
+{
+	if (CurHitEffectData && CurHitEffectData->HitSparkSystem)
+	{
+		CurHitEffectData->HitSpark = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			CurHitEffectData->HitSparkSystem,
+			ImpactPoint
+		);
+	}
 }

@@ -126,6 +126,27 @@ void AWeapon::UseSkillR()
 	}
 }
 
+FHitContext AWeapon::BuildWeaponHitContext(const TArray<AActor*>& Ignore, const TSet<AActor*>& AlreadyHit)
+{
+	FHitContext HitContext;
+
+	HitContext.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
+	HitContext.DamageCauser = this;
+	HitContext.AttackTag = CurrentTraceData->AttackTag;
+	HitContext.Damage = WeaponData->DefaultDamage;
+	HitContext.ActorsToIgnore = Ignore;
+
+	return HitContext;
+}
+
+TArray<AActor*> AWeapon::BuildActorsToIgnore()
+{
+	TArray<AActor*> Actors;
+	Actors.AddUnique(this);
+	Actors.AddUnique(GetOwner());
+	return Actors;
+}
+
 void AWeapon::PlayNiagaraEffect()
 {
 	if (WeaponData && WeaponData->EnhanceEffect)

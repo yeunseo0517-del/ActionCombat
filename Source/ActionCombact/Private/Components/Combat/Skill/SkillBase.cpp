@@ -14,15 +14,12 @@ void USkillBase::StartCoolDown(AActor* Owner)
 	UStatusComponent* StatusComp = GetStatusComponent(Owner);
 	if (!StatusComp) return;
 
-	StatusComp->ActivateSkill(SkillSlot, Cooldown);
+	StatusComp->ActivateSkill(SkillData.SkillSlot, SkillData.BaseConfig.Cooldown);
 }
 
 void USkillBase::Init(const FSkillEntry& Config)
 {
-	Duration = Config.BaseConfig.Duration;
-	Cooldown = Config.BaseConfig.Cooldown;
-	SkillSlot = Config.SkillSlot;
-	MoveDistance = Config.BaseConfig.DashDistance;
+	SkillData = Config;
 }
 
 UStatusComponent* USkillBase::GetStatusComponent(AActor* Owner) const

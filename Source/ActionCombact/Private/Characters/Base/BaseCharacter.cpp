@@ -263,7 +263,6 @@ bool ABaseCharacter::IsAlive()
 
 float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("%s took damages"), *DamageCauser->GetName())
 	if (IsInvincible()) return 0.f;
 	Attributes->RecieveDamage(DamageAmount);
 	return DamageAmount;

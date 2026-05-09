@@ -28,7 +28,7 @@ void AMeleeWeapon::DoTrace()
 		return;
 	}
 
-	TArray<AActor*> ActorsToIgnore = MakeActorsToIgnore();
+	TArray<AActor*> ActorsToIgnore = BuildActorsToIgnore();
 	TSet<AActor*> AlreadyHit;
 	TArray<FHitResult> HitResults;
 
@@ -45,30 +45,17 @@ void AMeleeWeapon::DoTrace()
 		break;
 	}
 
-	for (FHitResult Hit : HitResults)
+	for (const FHitResult& Hit : HitResults)
 	{
 		AlreadyHit.Add(Hit.GetActor());
 	}
 
-	CurHitContext = MakeHitContext(ActorsToIgnore, AlreadyHit);
+	CurHitContext = BuildWeaponHitContext(ActorsToIgnore, AlreadyHit);
 
 	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetInstigator()))
 	{
 		CombatInterface->GetCombatComponent()->ProcessHitResults(HitResults);
 	}
-}
-
-FHitContext AMeleeWeapon::MakeHitContext(const TArray<AActor*>& Ignore, const TSet<AActor*>& AlreadyHit)
-{
-	FHitContext HitContext;
-
-	HitContext.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
-	HitContext.DamageCauser = this;
-	HitContext.AttackTag = CurrentTraceData->AttackTag;
-	HitContext.Damage = WeaponData->DefaultDamage;
-	HitContext.ActorsToIgnore = Ignore;
-
-	return HitContext;
 }
 
 
@@ -110,29 +97,24 @@ void AMeleeWeapon::UpdatePrevLocations(const FVector& Start, const FVector& End,
 FRotator AMeleeWeapon::GetRotation()
 {
 	ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner());
-	if (CombatInterface && CurrentTraceData->Steps.IsValidIndex(CurrentTraceIndex))
+	USceneComponent* Mesh = ItemMesh;
+	if (CanGetTrace() && bUseCharacterSocket)
 	{
-		return bUseCharacterSocket ? CombatInterface->GetCombatMesh()->GetSocketRotation(CurrentTraceData->Steps[CurrentTraceIndex].StartSocket)
-			: ItemMesh->GetSocketRotation(CurrentTraceData->Steps[CurrentTraceIndex].StartSocket);
+		Mesh = CombatInterface->GetCombatMesh();
 	}
-	else
-		return FRotator::ZeroRotator;
+	return Mesh ? Mesh->GetSocketRotation(CurrentTraceData->Steps[CurrentTraceIndex].StartSocket) : FRotator::ZeroRotator;
 }
 
 void AMeleeWeapon::DoBoxTraceMulti(const FVector Start, const FVector End, const TArray<AActor*>& InActorsToIgnore, TArray<FHitResult>& BoxHits)
 {
 	FRotator TraceRotation = GetRotation();
-	FVector BoxExtent;
 	FVector DefaultHalfSize = CurrentTraceData->HalfSize;
+	FVector BoxExtent = DefaultHalfSize;
 
 	if (CurrentTraceData->Shape == ETraceType::ETT_BoxSweep)
 	{
 		float Length = FVector::Dist(Start, End);
 		BoxExtent = FVector(DefaultHalfSize.X, DefaultHalfSize.Y, Length * .5f);
-	}
-	else
-	{
-		BoxExtent = DefaultHalfSize;
 	}
 
 	UKismetSystemLibrary::BoxTraceMulti(
@@ -150,7 +132,6 @@ void AMeleeWeapon::DoBoxTraceMulti(const FVector Start, const FVector End, const
 	);
 }
 
-
 void AMeleeWeapon::DoSphereTrace(const FVector PrevLoc, const FVector CurLoc, float InRadius, const TArray<AActor*>& InActorsToIgnore, TArray<FHitResult>& SphereHits)
 {
 	UKismetSystemLibrary::SphereTraceMulti(
@@ -167,33 +148,27 @@ void AMeleeWeapon::DoSphereTrace(const FVector PrevLoc, const FVector CurLoc, fl
 	);
 }
 
-TArray<AActor*> AMeleeWeapon::MakeActorsToIgnore()
-{
-	TArray<AActor*> Actors;
-	Actors.AddUnique(this);
-	Actors.AddUnique(GetOwner());
-	return Actors;
-}
-
 FVector AMeleeWeapon::GetTrace(FName SocketName) const
 {
+	USceneComponent* Mesh = ItemMesh;
 	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner()))
 	{
 		if (bUseCharacterSocket && CombatInterface->GetCombatMesh())
 		{
-			return CombatInterface->GetCombatMesh()->GetSocketLocation(SocketName);
-		}
-		else
-		{
-			return ItemMesh->GetSocketLocation(SocketName);
+			Mesh = CombatInterface->GetCombatMesh();
 		}
 	}
-	return GetActorLocation();
+	return Mesh ? Mesh->GetSocketLocation(SocketName) : GetActorLocation();
+}
+
+bool AMeleeWeapon::CanGetTrace() const
+{
+	return CurrentTraceData && CurrentTraceData->Steps.IsValidIndex(CurrentTraceIndex);
 }
 
 FVector AMeleeWeapon::GetTraceStart() const
 {
-	if (CurrentTraceData && CurrentTraceData->Steps.IsValidIndex(CurrentTraceIndex))
+	if (CanGetTrace())
 	{
 		return GetTrace(CurrentTraceData->Steps[CurrentTraceIndex].StartSocket);
 	}
@@ -203,7 +178,7 @@ FVector AMeleeWeapon::GetTraceStart() const
 
 FVector AMeleeWeapon::GetTraceEnd() const
 {
-	if (CurrentTraceData && CurrentTraceData->Steps.IsValidIndex(CurrentTraceIndex))
+	if (CanGetTrace())
 		return GetTrace(CurrentTraceData->Steps[CurrentTraceIndex].EndSocket);
 	else
 		return GetActorLocation();
@@ -211,7 +186,7 @@ FVector AMeleeWeapon::GetTraceEnd() const
 
 FName AMeleeWeapon::GetTraceStartName()
 {
-	if (CurrentTraceData && CurrentTraceData->Steps.IsValidIndex(CurrentTraceIndex))
+	if (CanGetTrace())
 		return CurrentTraceData->Steps[CurrentTraceIndex].StartSocket;
 	else
 		return FName();

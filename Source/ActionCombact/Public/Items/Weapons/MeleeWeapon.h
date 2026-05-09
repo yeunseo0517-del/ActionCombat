@@ -29,9 +29,6 @@ private:
 	void DoSphereTrace(const FVector Start, const FVector End, const float Radius, const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& Hits);
 	void DoBoxTraceMulti(const FVector Start, const FVector End, const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& Hits);
 	FRotator GetRotation();
-
-	TArray<AActor*> MakeActorsToIgnore();
-	FHitContext MakeHitContext(const TArray<AActor*>& Ignore, const TSet<AActor*>& AlreadyHit);
 	FVector GetTrace(FName SocketName) const;
 
 	bool bHasPrevLocation = false;
@@ -39,13 +36,13 @@ private:
 	FVector PrevEndLocation;
 	FVector PrevCenter;
 	int32 CurrentTraceIndex = 0;
-	const FCombatTraceData* CurrentTraceData = nullptr;
 
 	FHitContext CurHitContext = FHitContext();
 
 public:
 	virtual FVector GetTraceStart() const override;
 	virtual FVector GetTraceEnd() const override;
+	bool CanGetTrace() const;
 	virtual FName GetTraceStartName() override;
 
 	virtual FHitContext GetHitContext() override { return CurHitContext; }

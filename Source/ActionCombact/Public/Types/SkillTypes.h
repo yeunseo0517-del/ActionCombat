@@ -31,6 +31,9 @@ struct FSkillConfig
 	float EnhanceDamage;
 
 	UPROPERTY(EditAnywhere)
+	float SkillDamage;
+
+	UPROPERTY(EditAnywhere)
 	float Duration;
 
 	UPROPERTY(EditAnywhere)

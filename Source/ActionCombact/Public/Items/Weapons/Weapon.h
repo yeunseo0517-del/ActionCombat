@@ -48,6 +48,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void InitializeSkills();
+	FHitContext BuildWeaponHitContext(const TArray<AActor*>& Ignore, const TSet<AActor*>& AlreadyHit);
+	TArray<AActor*> BuildActorsToIgnore();
 
 	UPROPERTY()
 	TArray<AActor*> IgnoreActors;
@@ -59,6 +61,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Combat|Data Asset")
 	UCombatDataAsset* WeaponData;
+
+	const FCombatTraceData* CurrentTraceData = nullptr;
 
 private:
 	void SetHitEffectData();

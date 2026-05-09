@@ -19,12 +19,7 @@ class ACTIONCOMBACT_API USkillBase : public UObject
 	
 public:
 	virtual void ActivateSkill(AActor* Owner) PURE_VIRTUAL(USkillBase::ActivateSkill, );
-	virtual const FGameplayTag& GetTag() { return AttackTag; }
 	virtual void Init(const FSkillEntry& Config);
-	float GetDistance() const { return MoveDistance; }
-	float GetDuration() const { return Duration; }
-	float GetMaxRadius() const { return MaxRadius; }
-	UNiagaraSystem* GetEffect() const { return Effect; }
 	
 
 protected:
@@ -34,13 +29,14 @@ protected:
 	UPROPERTY()
 	AActor* CachedOwner;
 
+	FSkillEntry SkillData;
 	FGameplayTag AttackTag;
-	ESkillSlot SkillSlot;
-	float Duration;
-	float Cooldown;
-	float MoveDistance;
-	float MaxRadius;
 
-	UPROPERTY()
-	UNiagaraSystem* Effect;
+public:
+	virtual const FGameplayTag& GetTag() { return AttackTag; }
+	float GetSkillDamage() const { return SkillData.BaseConfig.SkillDamage; }
+	float GetDistance() const { return SkillData.BaseConfig.DashDistance; }
+	float GetDuration() const { return SkillData.BaseConfig.Duration; }
+	float GetMaxRadius() const { return SkillData.BaseConfig.MaxRadius; }
+	UNiagaraSystem* GetEffect() const { return SkillData.BaseConfig.Niagara; }
 };

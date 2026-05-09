@@ -58,16 +58,20 @@ private:
 	void StartDash();
 	void EndDash();
 
-	void HandleHitResult(const FHitResult& HitResult);
-	void ExecuteGetHit(const FHitResult& HitResult);
-	void SpawnHitSparkParticles(const FHitResult& HitResult);
+	void HandleHitResult(AActor* HitActor, FVector ImpactPoint);
+	void ExecuteGetHit(AActor* Hit, FVector ImpactPoint);
+	void SpawnHitSparkParticles(FVector ImpactPoint);
 	bool IsHostile(AActor* Actor);
 	float CalculateDamage(float DefaultDamage);
 
+	void TryProcessTarget(AActor* Target, FVector ImpactPoint);
 	void ExpandImpactRadius();
 	double CalculateRadiusFromOwner();
 	void SpawnShockwave(double Radius);
 	void DoOverlap();
+	void ProcessOverlapResults(const TArray<FOverlapResult>& OverlapResults);
+	FHitContext BuildSkillHitContext();
+	bool ProcessDamageApplication(AActor* Target);
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	UCombatDataAsset* OverrideCombatData;

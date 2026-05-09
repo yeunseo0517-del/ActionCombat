@@ -24,7 +24,5 @@ private:
 	UFUNCTION()
 	void DeactivateSkill();
 
-	float EnhanceDamage;
-
 	FTimerHandle EnhanceTimer;
 };
