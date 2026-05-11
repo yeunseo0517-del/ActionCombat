@@ -2,26 +2,46 @@
 
 
 #include "Components/Combat/Projectiles/BaseProjectile.h"
+#include "Components/SphereComponent.h"
+#include "Components/Combat/CombatComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "Interfaces/CombatInterface.h"
 
 // Sets default values
 ABaseProjectile::ABaseProjectile()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
+	SetRootComponent(CollisionComp);
+
+	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Projectile Movement"));
+	ProjectileMovement->InitialSpeed = 2000.f;
+	ProjectileMovement->MaxSpeed = 3000.f;
+	ProjectileMovement->bRotationFollowsVelocity = true;
+	ProjectileMovement->ProjectileGravityScale = 0.f;
+	ProjectileMovement->bShouldBounce = false;
 }
 
-// Called when the game starts or when spawned
-void ABaseProjectile::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
 void ABaseProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
+
+void ABaseProjectile::Init(const FProjectile& Config)
+{
+	ProjectileMovement->InitialSpeed = Config.Speed;
+	ProjectileMovement->MaxSpeed = Config.Speed;
+}
+
+void ABaseProjectile::FireInDirection(FVector Dir)
+{
+	ProjectileMovement->Velocity = Dir * ProjectileMovement->InitialSpeed;
+}
+
+void ABaseProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+
 

@@ -36,8 +36,7 @@ public:
 	void ExecuteAttack(const FGameplayTag& Tag);
 	void ExecuteAction(const FGameplayTag& Tag);
 	void OnAttackWindow();
-
-	void ProcessHitResults(TArray<FHitResult>& HitResults);
+	void TryProcessTarget(AActor* Target, FVector ImpactPoint);
 
 protected:
 	virtual void BeginPlay() override;
@@ -58,19 +57,16 @@ private:
 	void StartDash();
 	void EndDash();
 
+	bool HasProjectile();
+	bool HasShockwave();
+	void SpawnRadialShockwave();
+	void SpawnProjectile();
+
 	void HandleHitResult(AActor* HitActor, FVector ImpactPoint);
 	void ExecuteGetHit(AActor* Hit, FVector ImpactPoint);
 	void SpawnHitSparkParticles(FVector ImpactPoint);
 	bool IsHostile(AActor* Actor);
 	float CalculateDamage(float DefaultDamage);
-
-	void TryProcessTarget(AActor* Target, FVector ImpactPoint);
-	void ExpandImpactRadius();
-	double CalculateRadiusFromOwner();
-	void SpawnShockwave(double Radius);
-	void DoOverlap();
-	void ProcessOverlapResults(const TArray<FOverlapResult>& OverlapResults);
-	FHitContext BuildSkillHitContext();
 	bool ProcessDamageApplication(AActor* Target);
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
@@ -108,21 +104,12 @@ private:
 	UPROPERTY()
 	FHitContext CurHitContext;
 
-	double CurRadius;
-	double MaxRadius;
-	float Speed;
-	bool bExpandRadius = false;
-
-	UPROPERTY()
-	class UNiagaraComponent* EffectComp;
-
-	UPROPERTY()
-	class UNiagaraSystem* Shockwave;
-
 public:
 	void SetbTracing(bool Value) { bTracing = Value; }
 	void SetCombatTraceData();
-	void SetCurrentSkill(USkillBase* NewSkill) { CurrentSkill = NewSkill; }
+	FGameplayTag GetCurrentCombatTag() { return CurrentCombatTag; }
+	void SetCurrentSkill(USkillBase* NewSkill) { CurrentSkill = NewSkill; UE_LOG(LogTemp, Warning, TEXT("CurrentSkill Ptr: %p"), CurrentSkill);
+	}
 	void SetHitEffectData(UHitEffectDataAsset* NewEffect) { CurHitEffectData = NewEffect; }
 	void SetHitContext(FHitContext& NewContext) { CurHitContext = NewContext; }
 };

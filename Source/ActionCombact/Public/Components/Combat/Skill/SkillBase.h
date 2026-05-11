@@ -6,6 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "Types/SkillTypes.h"
 #include "Types/GameplayTags.h"
+#include "Types/HitContext.h"
 #include "NiagaraComponent.h"
 #include "SkillBase.generated.h"
 
@@ -19,8 +20,8 @@ class ACTIONCOMBACT_API USkillBase : public UObject
 	
 public:
 	virtual void ActivateSkill(AActor* Owner) PURE_VIRTUAL(USkillBase::ActivateSkill, );
-	virtual void Init(const FSkillEntry& Config);
-	
+	virtual void Init(const FSkillEntry& Config, int32 SlotKey, int32 SkillID);
+	bool IsSkillOnCooldown() const;
 
 protected:
 	class UStatusComponent* GetStatusComponent(AActor* Owner) const;
@@ -30,13 +31,16 @@ protected:
 	AActor* CachedOwner;
 
 	FSkillEntry SkillData;
+	int32 SlotKey;
+	int32 SkillID;
 	FGameplayTag AttackTag;
+	float DefaultDamage;
 
 public:
 	virtual const FGameplayTag& GetTag() { return AttackTag; }
-	float GetSkillDamage() const { return SkillData.BaseConfig.SkillDamage; }
-	float GetDistance() const { return SkillData.BaseConfig.DashDistance; }
-	float GetDuration() const { return SkillData.BaseConfig.Duration; }
-	float GetMaxRadius() const { return SkillData.BaseConfig.MaxRadius; }
-	UNiagaraSystem* GetEffect() const { return SkillData.BaseConfig.Niagara; }
+	const FEnhanceDamage& GetEnhanceConfig() { return SkillData.BaseConfig.EnhanceConfig; }
+	const FDash& GetDashConfig() { return SkillData.BaseConfig.DashConfig; }
+	const FShockwave& GetShockConfig() { return SkillData.BaseConfig.ShockConfig; }
+	const FProjectile& GetProjectileConfig() { return SkillData.BaseConfig.ProjectileConfig; }
+	FHitContext GetSkillHitContext();
 };

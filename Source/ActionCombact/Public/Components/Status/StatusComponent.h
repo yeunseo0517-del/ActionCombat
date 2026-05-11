@@ -8,8 +8,8 @@
 #include "StatusComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatusChanged, EStatusType, Status);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCooldownChanged, ESkillSlot, Slot, float, EndTime, float, Cooldown);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillActivated, ESkillSlot, Slot);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCooldownChanged, int32, SlotKey, float, EndTime, float, Cooldown);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillActivated, int32, SlotKey);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ACTIONCOMBACT_API UStatusComponent : public UActorComponent
@@ -19,18 +19,15 @@ class ACTIONCOMBACT_API UStatusComponent : public UActorComponent
 public:
 	UStatusComponent();
 
-
-
-public:	
 	void AddStatus(EStatusType Status);
 	void RemoveStatus(EStatusType Status);
 	bool HasStatus(EStatusType Status);
 	void AddEnhancedDamage(float Value);
 	void RemoveEnhancedDamage(float Value);
 	float GetEnhancedDamage();
-	bool IsCooldownActivate(ESkillSlot Slot);
-	void ActivateSkill(ESkillSlot Slot, float Cooldown);
-	void SkillDurationEnd(ESkillSlot Slot);
+	bool IsSkillOnCooldown(int32 SkillID);
+	void ActivateSkill(int32 Slot, int32 SkillID, float Cooldown);
+	void SkillDurationEnd(int32 InSlotKey);
 
 
 	void PrintCurrentStatuses();
@@ -54,10 +51,10 @@ public:
 	TMap<EStatusType, int32> StatusCount;
 
 	UPROPERTY()
-	TMap<ESkillSlot, float> CooldownEndTime;
+	TMap<int32, float> CooldownEndTime;
 
 private:
-	void StartCooldown(ESkillSlot Slot, float Cooldown);
+	void StartCooldown(int32 Slot, int32 SkillID, float Cooldown);
 
 	TArray<float> EnhancedDamageSources;
 	FString GetStatusTypeString(EStatusType Type);

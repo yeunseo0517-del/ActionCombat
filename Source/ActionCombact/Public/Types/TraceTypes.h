@@ -7,8 +7,8 @@
 UENUM(BlueprintType)
 enum class ETraceType : uint8
 {
-	ETT_BoxSingle UMETA(DisplayName = "BoxSingle"),
-	ETT_BoxSweep UMETA(DisplayName = "BoxSweep"),
+	ETT_BoxSingle UMETA(DisplayName = "Box Single"),
+	ETT_BoxSweep UMETA(DisplayName = "Box Sweep"),
 	ETT_Sphere UMETA(DisplayName = "Sphere")
 };
 
@@ -31,9 +31,6 @@ struct FCombatTraceData
 
 	UPROPERTY(EditAnywhere)
 	ETraceType Shape;
-
-	UPROPERTY(EditAnywhere)
-	float Range;
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "Shape == ETraceType::ETT_BoxSingle || Shape == ETraceType::ETT_BoxSweep", EditConditionHides))
 	FVector HalfSize;

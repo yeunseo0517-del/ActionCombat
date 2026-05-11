@@ -54,7 +54,6 @@ void ASlashCharacter::BeginPlay()
 			Subsystem->AddMappingContext(SlashCharacterContext, 0);
 		}
 	}
-
 	CreateHealthBarWidget();
 	CreateSkillWidget();
 }
@@ -64,10 +63,7 @@ void ASlashCharacter::CreateHealthBarWidget()
 	if (HealthBarClass && !HealthBar)
 	{
 		HealthBar = CreateWidget<UHealthBar>(GetWorld(), HealthBarClass);
-		if (HealthBar)
-		{
-			HealthBar->AddToViewport();
-		}
+		if (HealthBar) HealthBar->AddToViewport();
 	}
 }
 

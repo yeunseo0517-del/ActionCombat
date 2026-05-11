@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Characters/CharacterTypes.h"
 #include "TeamInterface.generated.h"
 
 UENUM(BlueprintType)

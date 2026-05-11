@@ -31,5 +31,5 @@ public:
 	float DefaultDamage;
 
 	UPROPERTY(EditAnywhere, Category = "Skills")
-	TArray<FSkillEntry> SkillEntries;
+	TMap<ESkillSlot, FSkillEntry> SkillLoadout;
 };

@@ -14,18 +14,18 @@ void URadialShockwave::ActivateSkill(AActor* Owner)
 {
 	if (!Owner) return;
 	UStatusComponent* StatusComp = GetStatusComponent(Owner);
-	if (!StatusComp || StatusComp->IsCooldownActivate(SkillData.SkillSlot)) return;
+	if (!StatusComp || StatusComp->IsSkillOnCooldown(SkillID)) return;
 
 	StartCoolDown(Owner);
 	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Owner)) CombatInterface->GetCombatComponent()->ExecuteAttack(AttackTag);
-	else UE_LOG(LogTemp, Error, TEXT("Fail to Cast Interface"));
 	StatusComp->AddStatus(EStatusType::EST_SuperArmor);
 
-	StatusComp->SkillDurationEnd(SkillData.SkillSlot);
+	StatusComp->SkillDurationEnd(SlotKey);
 }
 
-void URadialShockwave::Init(const FSkillEntry& Config)
+void URadialShockwave::Init(const FSkillEntry& Config, int32 InSlotKey, int32 InSkillID)
 {
-	Super::Init(Config);
+	Super::Init(Config, InSlotKey, InSkillID);
 	AttackTag = FGameplayTags::Get().Skill_Shockwave;
+	DefaultDamage = Config.BaseConfig.ShockConfig.SkillDamage;
 }

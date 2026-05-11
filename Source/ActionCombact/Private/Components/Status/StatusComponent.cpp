@@ -8,22 +8,22 @@ UStatusComponent::UStatusComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UStatusComponent::StartCooldown(ESkillSlot Slot, float Cooldown)
+void UStatusComponent::StartCooldown(int32 Slot, int32 SkillID, float Cooldown)
 {
 	float Now = GetWorld()->GetTimeSeconds();
 	float EndTime = Now + Cooldown;
-	CooldownEndTime.Add(Slot, EndTime);
+	CooldownEndTime.Add(SkillID, EndTime);
 	OnCooldownStart.Broadcast(Slot, EndTime, Cooldown);
 }
 
-void UStatusComponent::SkillDurationEnd(ESkillSlot Slot)
+void UStatusComponent::SkillDurationEnd(int32 InSlotKey)
 {
-	OnSkillDeactivated.Broadcast(Slot);
+	OnSkillDeactivated.Broadcast(InSlotKey);
 }
 
-bool UStatusComponent::IsCooldownActivate(ESkillSlot Slot)
+bool UStatusComponent::IsSkillOnCooldown(int32 SkillID)
 {
-	if (float* EndTime = CooldownEndTime.Find(Slot))
+	if (float* EndTime = CooldownEndTime.Find(SkillID))
 	{
 		return *EndTime > GetWorld()->GetTimeSeconds();
 	}
@@ -31,10 +31,10 @@ bool UStatusComponent::IsCooldownActivate(ESkillSlot Slot)
 }
 
 
-void UStatusComponent::ActivateSkill(ESkillSlot Slot, float Cooldown)
+void UStatusComponent::ActivateSkill(int32 Slot, int32 SkillID, float Cooldown)
 {
 	OnSkillActivated.Broadcast(Slot);
-	StartCooldown(Slot, Cooldown);
+	StartCooldown(Slot, SkillID, Cooldown);
 }
 
 void UStatusComponent::AddStatus(EStatusType Status)

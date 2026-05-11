@@ -8,6 +8,14 @@
 
 void USkillHUDWidget::NativeConstruct()
 {
+	Super::NativeConstruct();
+
+	TArray<USkillWidget*> TempSlots = { Slot_Q, Slot_E, Slot_R };
+	for (int32 i = 0; i < TempSlots.Num(); ++i)
+	{
+		if (TempSlots[i]) SlotMap.Add(i, TempSlots[i]);
+	}
+
 	if (APawn* OwningPawn = GetOwningPlayerPawn())
 	{
 		if (IStatusReceiverInterface* Receiver = Cast<IStatusReceiverInterface>(OwningPawn))
@@ -23,23 +31,26 @@ void USkillHUDWidget::NativeConstruct()
 	}
 }
 
-void USkillHUDWidget::HandleSkillActivated(ESkillSlot InSlot)
+void USkillHUDWidget::HandleSkillActivated(int32 InSlotKey)
 {
-	if (InSlot == ESkillSlot::Q && Slot_Q) Slot_Q->SkillActivated();
-	if (InSlot == ESkillSlot::E && Slot_E) Slot_E->SkillActivated();
-	if (InSlot == ESkillSlot::R && Slot_R) Slot_R->SkillActivated();
+	if (USkillWidget* Widget = SlotMap.FindRef(InSlotKey))
+	{
+		Widget->SkillActivated();
+	}
 }
 
-void USkillHUDWidget::HandleCooldownStart(ESkillSlot InSlot, float EndTime, float SkillDuration)
+void USkillHUDWidget::HandleCooldownStart(int32 InSlotKey, float EndTime, float SkillDuration)
 {
-	if (InSlot == ESkillSlot::Q && Slot_Q) Slot_Q->CooldownStart(EndTime, SkillDuration);
-	if (InSlot == ESkillSlot::E && Slot_E) Slot_E->CooldownStart(EndTime, SkillDuration);
-	if (InSlot == ESkillSlot::R && Slot_R) Slot_R->CooldownStart(EndTime, SkillDuration);
+	if (USkillWidget* Widget = SlotMap.FindRef(InSlotKey))
+	{
+		Widget->CooldownStart(EndTime, SkillDuration);
+	}
 }
 
-void USkillHUDWidget::HandleSkillDeactivated(ESkillSlot InSlot)
+void USkillHUDWidget::HandleSkillDeactivated(int32 InSlotKey)
 {
-	if (InSlot == ESkillSlot::Q && Slot_Q) Slot_Q->SkillDeactivated();
-	if (InSlot == ESkillSlot::E && Slot_E) Slot_E->SkillDeactivated();
-	if (InSlot == ESkillSlot::R && Slot_R) Slot_R->SkillDeactivated();
+	if (USkillWidget* Widget = SlotMap.FindRef(InSlotKey))
+	{
+		Widget->SkillDeactivated();
+	}
 }

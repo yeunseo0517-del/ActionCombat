@@ -16,6 +16,7 @@ public:
 	FGameplayTag Skill_DashSlash;
 	FGameplayTag Skill_Shockwave;
 	FGameplayTag Skill_EnhanceDamage;
+	FGameplayTag Skill_Projectile;
 
 	FGameplayTag Type_Melee;
 	FGameplayTag Type_Area;

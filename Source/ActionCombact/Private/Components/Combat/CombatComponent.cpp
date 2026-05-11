@@ -2,20 +2,20 @@
 
 
 #include "Components/Combat/CombatComponent.h"
+#include "Components/Combat/Skill/SkillBase.h"
+#include "Components/Status/StatusComponent.h"
+#include "Components/Combat/AreaEffects/RadialShockwaves.h"
+#include "Components/Combat/Projectiles/BaseProjectile.h"
 #include "Items/Weapons/Data/CombatDataAsset.h"
 #include "Items/Weapons/Data/HitEffectDataAsset.h"
 
 #include "Items/Weapons/Weapon.h"
-#include "Characters/Base/BaseCharacter.h"
-#include "Components/Combat/Skill/SkillBase.h"
+#include "Characters/BaseCharacter.h"
+#include "AIController.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "Engine/OverlapResult.h"
-
-//#include "Interfaces/StatusReceiverInterface.h"
-#include "Components/Status/StatusComponent.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -53,21 +53,8 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	if (bIsDashing)
 	{
 		FVector CurrentLoc = GetOwner()->GetActorLocation();
-		FVector NewLoc = FMath::VInterpTo(CurrentLoc, DashTargetLoc, DeltaTime, 15.f);
+		FVector NewLoc = FMath::VInterpConstantTo(CurrentLoc, DashTargetLoc, DeltaTime, 4000.f);
 		GetOwner()->SetActorLocation(NewLoc, true);
-	}
-
-	if (bExpandRadius)
-	{
-		SpawnShockwave(CurRadius);
-		DoOverlap();
-
-		CurRadius += Speed;
-		if (CurRadius >= MaxRadius)
-		{
-			bExpandRadius = false;
-			if(EffectComp) EffectComp->Deactivate();
-		}
 	}
 }
 
@@ -205,23 +192,78 @@ void UCombatComponent::ExecuteAction(const FGameplayTag& Tag)
 void UCombatComponent::OnAttackWindow()
 {
 	if (!CurrentSkill) return;
+	UE_LOG(LogTemp, Warning, TEXT("On Attack Window"))
 	FGameplayTag Tag = CurrentSkill->GetTag();
-	CurHitContext = BuildSkillHitContext();
-	if (Tag == FGameplayTags::Get().Skill_Shockwave)
-	{
-		ExpandImpactRadius();
-	}
+	CurHitContext = CurrentSkill->GetSkillHitContext();
+
+	UE_LOG(LogTemp, Warning, TEXT("Skill Ptr: %p"), CurrentSkill);
+	UE_LOG(LogTemp, Warning, TEXT("Class: %s"), *CurrentSkill->GetClass()->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("ProjectileClass: %s"),
+		CurrentSkill->GetProjectileConfig().ProjectileClass ? TEXT("VALID") : TEXT("NULL"));
+
+	if (HasShockwave()) SpawnRadialShockwave();
+	if (HasProjectile()) SpawnProjectile(); else UE_LOG(LogTemp, Warning, TEXT("No Projectile class"))
+}
+
+bool UCombatComponent::HasProjectile()
+{
+	return CurrentSkill && CurrentSkill->GetProjectileConfig().ProjectileClass;
+}
+
+bool UCombatComponent::HasShockwave()
+{
+	return CurrentSkill && CurrentSkill->GetShockConfig().ShockwaveClass;
+}
+
+void UCombatComponent::SpawnRadialShockwave()
+{
+	if (!CurrentSkill) return;
+	FActorSpawnParameters Params;
+	Params.Owner = GetOwner();
+	Params.Instigator = Cast<APawn>(GetOwner());
+	FVector RootLocation = GetOwner()->GetActorLocation();
+	RootLocation.Z -= GetOwner()->GetRootComponent()->Bounds.BoxExtent.Z;
+
+	FShockwave ShockConfig = CurrentSkill->GetShockConfig();
+	ARadialShockwaves* Shock = GetWorld()->SpawnActor<ARadialShockwaves>(
+		ShockConfig.ShockwaveClass, RootLocation, FRotator::ZeroRotator, Params
+	);
+
+	Shock->Init(ShockConfig.MaxRadius, ShockConfig.Duration);
+	Shock->ExpandImpactRadius();
+}
+
+void UCombatComponent::SpawnProjectile()
+{
+	if (!CurrentSkill) return;
+	FActorSpawnParameters Params;
+	Params.Owner = GetOwner();
+	Params.Instigator = Cast<APawn>(GetOwner());
+	FVector StartLoc = GetOwner()->GetActorLocation();
+
+	FProjectile ProjectileConfig = CurrentSkill->GetProjectileConfig();
+	ABaseProjectile* Projectile = GetWorld()->SpawnActor<ABaseProjectile>(
+		ProjectileConfig.ProjectileClass, StartLoc, GetOwner()->GetActorRotation(), Params
+	);
+	Projectile->Init(ProjectileConfig);
+	Projectile->FireInDirection(GetOwner()->GetActorForwardVector());
 }
 
 void UCombatComponent::StartDash()
 {
 	Character->AddActionTag(FGameplayTags::Get().Action_Movement_Dash);
+	if (AAIController* AI = Cast<AAIController>(Character->GetController()))
+	{
+		AI->StopMovement();
+	}
+
 	if (CurrentSkill)
 	{
-		float Distance = CurrentSkill->GetDistance();
+		float Distance = CurrentSkill->GetDashConfig().DashDistance;
 		DashTargetLoc = GetOwner()->GetActorLocation() + (GetOwner()->GetActorForwardVector() * Distance);
 		bIsDashing = true;
 	}
+	else UE_LOG(LogTemp, Warning, TEXT("No"))
 }
 
 void UCombatComponent::EndDash()
@@ -293,83 +335,6 @@ float UCombatComponent::CalculateDamage(float DefaultDamage)
 	return Damage;
 }
 
-void UCombatComponent::ExpandImpactRadius()
-{
-	CurRadius = CalculateRadiusFromOwner();
-	if (CurrentSkill)
-	{
-		MaxRadius = CurrentSkill->GetMaxRadius();
-		Speed = FMath::Abs((MaxRadius - CurRadius) / CurrentSkill->GetDuration());
-		Shockwave = CurrentSkill->GetEffect();
-	}
-	bExpandRadius = true;
-}
-
-void UCombatComponent::SpawnShockwave(double Radius)
-{
-	if (!Shockwave) return;
-
-	FVector RootLocation = GetOwner()->GetActorLocation();
-	RootLocation.Z -= GetOwner()->GetRootComponent()->Bounds.BoxExtent.Z;
-	EffectComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-		GetWorld(),
-		Shockwave,
-		RootLocation,
-		FRotator::ZeroRotator,
-		FVector(1.f)
-	);
-
-	if (!EffectComp) return;
-	EffectComp->SetFloatParameter(TEXT("Lifetime"), 1.f);
-	EffectComp->SetFloatParameter(TEXT("Radius"), Radius);
-}
-
-double UCombatComponent::CalculateRadiusFromOwner()
-{
-	if (!GetOwner()) return 0.f;
-	IWeaponHolderInterface* Holder = Cast<IWeaponHolderInterface>(GetOwner());
-	if (!Holder) return 0.f;
-	FVector Start = GetOwner()->GetActorLocation();
-	FVector End = Holder->GetTraceEnd();
-	return FVector::Dist(Start, End);
-}
-
-void UCombatComponent::DoOverlap()
-{
-	TArray<FOverlapResult> OverlapResults;
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(CurRadius);
-	FCollisionQueryParams Query;
-	Query.AddIgnoredActor(GetOwner());
-	Query.bTraceComplex = false;
-	
-	GetWorld()->OverlapMultiByChannel(
-		OverlapResults,
-		GetOwner()->GetActorLocation(),
-		FQuat::Identity,
-		ECC_Pawn,
-		Sphere,
-		Query
-	);
-	
-	ProcessOverlapResults(OverlapResults);
-}
-
-void UCombatComponent::ProcessHitResults(TArray<FHitResult>& HitResults)
-{
-	for (const FHitResult& Hit : HitResults)
-	{
-		TryProcessTarget(Hit.GetActor(), Hit.ImpactPoint);
-	}
-}
-
-void UCombatComponent::ProcessOverlapResults(const TArray<FOverlapResult>& OverlapResults)
-{
-	for (const FOverlapResult& Overlap : OverlapResults)
-	{
-		TryProcessTarget(Overlap.GetActor(), Overlap.GetActor()->GetActorLocation());
-	}
-}
-
 void UCombatComponent::TryProcessTarget(AActor* Target, FVector ImpactPoint)
 {
 	if (!Target) return;
@@ -412,18 +377,6 @@ void UCombatComponent::ExecuteGetHit(AActor* Hit, FVector ImpactPoint)
 	{
 		HitInterface->GetHit(ImpactPoint, CurHitEffectData, GetOwner());
 	}
-}
-
-
-FHitContext UCombatComponent::BuildSkillHitContext()
-{
-	FHitContext HitContext;
-	HitContext.Instigator = GetOwner();
-	HitContext.DamageCauser = GetOwner();
-	HitContext.AttackTag = CurrentSkill->GetTag();
-	HitContext.Damage = CurrentSkill->GetSkillDamage();
-
-	return HitContext;
 }
 
 bool UCombatComponent::IsHostile(AActor* OtherActor)

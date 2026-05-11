@@ -16,7 +16,7 @@ class ACTIONCOMBACT_API UEnhanceSkill : public USkillBase
 	
 public:
 	virtual void ActivateSkill(AActor* Owner) override;
-	virtual void Init(const FSkillEntry& Config) override;
+	virtual void Init(const FSkillEntry& Config, int32 SlotKey, int32 SkillID) override;
 
 protected:
 

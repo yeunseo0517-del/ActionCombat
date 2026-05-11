@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
-#include "Characters/Base/BaseCharacter.h"
+#include "Characters/BaseCharacter.h"
 #include "SlashCharacter.generated.h"
 
 class USpringArmComponent;

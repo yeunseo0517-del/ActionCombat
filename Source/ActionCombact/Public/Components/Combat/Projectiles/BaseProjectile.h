@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Types/SkillTypes.h"
 #include "BaseProjectile.generated.h"
 
 UCLASS()
@@ -12,15 +13,25 @@ class ACTIONCOMBACT_API ABaseProjectile : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ABaseProjectile();
+	virtual void Tick(float DeltaTime) override;
+	virtual void Init(const FProjectile& Config);
+	void FireInDirection(FVector Dir);
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	void OnOverlap();
+	void ProcessOverlapResults(const TArray<FOverlapResult>& OverlapResults);
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(VisibleAnywhere)
+	class UPrimitiveComponent* CollisionComp;
 
+	UPROPERTY(VisibleAnywhere)
+	class UProjectileMovementComponent* ProjectileMovement;
+
+	UPROPERTY()
+	class UNiagaraComponent* EffectComp;
+
+	UPROPERTY()
+	class UNiagaraSystem* Effect;
 };

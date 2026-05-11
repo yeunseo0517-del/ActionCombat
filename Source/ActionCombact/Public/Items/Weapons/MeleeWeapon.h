@@ -23,6 +23,7 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void DoTrace() override;
+	void ProcessOverlapResults(TArray<FHitResult>& HitResults);
 private:
 	void ExecuteSweepTrace(const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& Hits);
 	void UpdatePrevLocations(const FVector& Start, const FVector& End, const FVector& Center);

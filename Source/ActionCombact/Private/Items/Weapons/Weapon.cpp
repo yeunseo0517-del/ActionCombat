@@ -69,23 +69,24 @@ void AWeapon::BeginPlay()
 void AWeapon::InitializeSkills()
 {
 	Skills.Empty();
-
-	for (int i = 0; i < WeaponData->SkillEntries.Num(); ++i)
+	int SkillCount = 0;
+	for (auto& It : WeaponData->SkillLoadout)
 	{
-		FSkillEntry& Entry = WeaponData->SkillEntries[i];
-		Entry.SkillSlot = static_cast<ESkillSlot>(i);
+		ESkillSlot Slot = It.Key;
+		FSkillEntry& Entry = It.Value;
 
 		USkillBase* RuntimeSkill = NewObject<USkillBase>(this, Entry.SkillClass);
-		RuntimeSkill->Init(Entry);
+		RuntimeSkill->Init(Entry, int32(Slot), SkillCount);
 		Skills.Add(RuntimeSkill);
+		SkillCount++;
 	}
 }
 
 USkillBase* AWeapon::GetCurrentSkill(ESkillSlot Slot)
 {
-	if (Skills[int(Slot)])
+	if (!Skills.IsEmpty() && Skills[int32(Slot)])
 	{
-		return Skills[int(Slot)];
+		return Skills[int32(Slot)];
 	}
 	return nullptr;
 }
@@ -104,7 +105,7 @@ void AWeapon::ApplySocketPolicy()
 
 void AWeapon::UseSkillQ()
 {
-	if (Skills.IsValidIndex(0))
+	if (!Skills.IsEmpty() && Skills.IsValidIndex(0))
 	{
 		Skills[0]->ActivateSkill(GetOwner());
 	}
@@ -112,7 +113,7 @@ void AWeapon::UseSkillQ()
 
 void AWeapon::UseSkillE()
 {
-	if (Skills.IsValidIndex(1))
+	if (!Skills.IsEmpty() && Skills.IsValidIndex(1))
 	{
 		Skills[1]->ActivateSkill(GetOwner());
 	}
@@ -120,7 +121,7 @@ void AWeapon::UseSkillE()
 
 void AWeapon::UseSkillR()
 {
-	if (Skills.IsValidIndex(2))
+	if (!Skills.IsEmpty() && Skills.IsValidIndex(2))
 	{
 		Skills[2]->ActivateSkill(GetOwner());
 	}

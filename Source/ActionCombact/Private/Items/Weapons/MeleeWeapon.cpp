@@ -51,10 +51,17 @@ void AMeleeWeapon::DoTrace()
 	}
 
 	CurHitContext = BuildWeaponHitContext(ActorsToIgnore, AlreadyHit);
+	ProcessOverlapResults(HitResults);
+}
 
-	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetInstigator()))
+void AMeleeWeapon::ProcessOverlapResults(TArray<FHitResult>& HitResults)
+{
+	for (const FHitResult& Hit : HitResults)
 	{
-		CombatInterface->GetCombatComponent()->ProcessHitResults(HitResults);
+		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetInstigator()))
+		{
+			CombatInterface->GetCombatComponent()->TryProcessTarget(Hit.GetActor(), Hit.ImpactPoint);
+		}
 	}
 }
 

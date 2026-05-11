@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Recurse -Include \"*.h\",\"*.cpp\" -Path \"Source\\\\\" | Select-Object -ExpandProperty FullName | Sort-Object)"
+    ]
+  }
+}

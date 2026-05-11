@@ -18,6 +18,18 @@ class ACTIONCOMBACT_API USkillHUDWidget : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
+	virtual void NativeConstruct() override;
+
+private:
+	UFUNCTION()
+	void HandleSkillActivated(int32 SlotKey);
+
+	UFUNCTION()
+	void HandleCooldownStart(int32 SlotKey, float EndTime, float SkillDuration);
+
+	UFUNCTION()
+	void HandleSkillDeactivated(int32 SlotKey);
+
 	UPROPERTY(meta = (BindWidget))
 	USkillWidget* Slot_Q;
 
@@ -27,15 +39,5 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	USkillWidget* Slot_R;
 
-	virtual void NativeConstruct() override;
-
-private:
-	UFUNCTION()
-	void HandleSkillActivated(ESkillSlot InSlot);
-
-	UFUNCTION()
-	void HandleCooldownStart(ESkillSlot InSlot, float EndTime, float SkillDuration);
-
-	UFUNCTION()
-	void HandleSkillDeactivated(ESkillSlot InSlot);
+	TMap<int32, USkillWidget*> SlotMap;
 };

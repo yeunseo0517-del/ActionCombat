@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/Base/BaseCharacter.h"
+#include "Characters/BaseCharacter.h"
 #include "GameFramework/Character.h"
 #include "Enemy.generated.h"
 
@@ -28,85 +28,41 @@ public:
 
 	virtual void AttackEnd() override;
 	virtual bool CanStartAttack() override;
-
+	
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) override;
 	virtual void Die(const FName& Section) override;
 	virtual void EnterHitReact() override;
+	virtual void UpdateBattleStrategy() {}
 
-private:
-	// AI Behavior
-	void InitializeEnemy();
-	void CheckCombatTarget();
-	void CheckPatrolTarget();
-	void ClearPatrolTimer();
-	void PatrolTimerFinished();
+	void MoveToTarget(AActor* Target);
+	bool InTargetRange(AActor* Target, float Radius);
+	bool IsInsideAttackRadius();
 	void StartAttackTimer();
 	void ClearAttackTimer();
-	void StartPatrolling();
-	void ShowHealthBar();
-	void HideHealthBar();
-	void LoseInterest();
-	void TryAttack();
-	bool CanAttack();
+	void FaceTarget();
 	bool IsEngaged();
 	bool IsChasing();
-	bool IsPatrolling();
-	bool InTargetRange(AActor* Target, float Radius);
-	bool IsOutsideAttackRadius();
-	bool IsOutsideCombatRadius();
-	bool IsInsideAttackRadius();
-	void MoveToTarget(AActor* Target);
-	void FaceTarget(AActor* Target);
-	void ChaseTarget();
-	AActor* ChoosePatrolTarget();
+	virtual void ChaseTarget();
+	virtual bool CanAttack();
+	void TryAttack();
 
-	UFUNCTION()
-	void PawnSeen(APawn* SeenPawn); // Callback for OnPawnSeen in UPawnSensingComponent
-
-
-	UPROPERTY(VisibleAnywhere)
-	UHealthBarComponent* HealthBarWidget;
-
-	UPROPERTY(VisibleAnywhere)
-	UPawnSensingComponent* PawnSensing;
-
-	UPROPERTY(VisibleInstanceOnly)
-	AActor* CombatTarget;
-
-	UPROPERTY(EditAnywhere)
-	double AttackRadius = 300, CombatRadius = 500;
-
-	/*
-		AI Navigation
-	*/
 	UPROPERTY()
 	class AAIController* EnemyController;
 
-	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	AActor* PatrolTarget;
-
-	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	TArray<AActor*> PatrolTargets;
-
-	UPROPERTY(EditAnywhere)
-	double PatrolRadius = 250.f;
-
-	/*
-		Timer
-	*/
-	FTimerHandle PatrolTimer;
-
-	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	float PatrolWaitMin = 5.f, PatrolWaitMax = 10.f;
+	UPROPERTY(VisibleInstanceOnly)
+	AActor* CombatTarget;
 
 	FTimerHandle AttackTimer;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float AttackMin = 0.5f, AttackMax = 1.f;
 
-	UPROPERTY(EditAnywhere, Category = Combat)
-	float PatrollingSpeed = 125.f, ChasingSpeed = 300.f;
+	UPROPERTY(EditAnywhere)
+	double AttackRadius = 300.f;
+
+	UPROPERTY(EditAnywhere)
+	double AcceptanceRadius = 150.f;
 };
