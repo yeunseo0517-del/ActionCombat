@@ -47,6 +47,7 @@ G --> H[UI / Character Reaction]
 
 캐릭터나 무기는 구체적인 전투 로직을 내장하지 않고, 런타임에 적절한 스킬을 조립하고 선택하는 'Selection Layer' 역할만 수행합니다.
 
+
 ### 핵심 설계 의도
 - 관심사 분리
   전투 로직은 캐릭터 본체가 아닌 Skill Class에 고립시켜 캐릭터 코드의 비대화를 방지합니다.
@@ -88,6 +89,16 @@ flowchart TD
     I --> J["Weapon mesh 또는 Character mesh<br/>(bUseCharacterSocket)"]
     J --> K["실제 Trace 실행"]
 ```
+
+Unarmed 및 모든 근접 공격을 단일 Weapon 파이프라인으로 통합하고,
+공격 콤보는 Trace Step 단위로 정의된 socket sampling 규칙을 교체하는 방식으로 처리했습니다.
+
+각 공격 Step은 다음 정보를 포함합니다:
+- Start / End socket pair (또는 단일 socket)
+- Character mesh / Weapon mesh source 선택
+- Trace 방식(Box / Sphere / Sweep)
+애니메이션 Notify State(ANS_SwitchSocket)를 통해
+현재 콤보 Step index를 갱신하고, 해당 Step의 TraceData로 자동 전환됩니다.
 
 ## 결과
 - 콤보 공격 구조 확장 쉬움
