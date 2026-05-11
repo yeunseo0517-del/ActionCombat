@@ -56,6 +56,21 @@ USkillBase::ActivateSkill(Owner);
 ## 2. Data-driven Trace System
 공격 판정은 코드가 아니라 데이터로 정의됩니다.
 
+```mermaid
+flowchart TD
+    A["CurrentCombatTag + WeaponType + Stance"] --> B["CombatComponent::SetCombatTraceData()"]
+    B --> C{"OverrideCombatData 존재?"}
+    C -->|Yes| D["OverrideCombatData.AttackSet[Tag]"]
+    C -->|No| E["WeaponData.AttackSet[Tag]"]
+    D --> F["FCombatTraceData"]
+    E --> F
+    F --> G["Shape / AttackTag / Steps[start,end]"]
+    G --> H["ANS_SwitchSocket -> CurrentTraceIndex"]
+    H --> I["MeleeWeapon이 현재 step socket pair 읽음"]
+    I --> J["Weapon mesh 또는 Character mesh<br/>(bUseCharacterSocket)"]
+    J --> K["실제 Trace 실행"]
+```
+
 - Steps 기반 Socket Pair 구조
 - ANS가 Index만 변경
 - WeaponData / OverrideData 지원
