@@ -44,7 +44,27 @@ E --> F[Damage / Team Check]
 F --> G[StatusComponent]
 G --> H[UI / Character Reaction]
 ```
+
 캐릭터나 무기는 구체적인 전투 로직을 내장하지 않고, 런타임에 적절한 스킬을 조립하고 선택하는 'Selection Layer' 역할만 수행합니다.
+
+### 핵심 설계 의도
+- 관심사 분리
+  전투 로직은 캐릭터 본체가 아닌 Skill Class에 고립시켜 캐릭터 코드의 비대화를 방지합니다.
+- Interface 기반 추상화
+  호출자는 실행될 스킬의 세부 구현을 알 필요가 없습니다.
+- 높은 재사용성
+  Player, Boss, Minion 등 모두가 동일한 실행 구조를 공유하므로, 새로운 타입의 캐릭터를 추가하더라도 전투 시스템을 수정 없이 재사용할 수 있습니다.
+
+```cpp
+Input / AI / Weapon
+        ↓
+   Skill Selection
+        ↓
+   USkillBase::Activate()
+        ↓
+ Combat Execution Trigger
+```
+
 ---
 
 ## 2. Data-driven Trace System
