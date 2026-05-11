@@ -88,11 +88,6 @@ flowchart TD
     C -->|No| E["WeaponData.AttackSet[Tag]"]
     D --> F["FCombatTraceData"]
     E --> F
-    F --> G["Shape / AttackTag / Steps[start,end]"]
-    G --> H["ANS_SwitchSocket -> CurrentTraceIndex"]
-    H --> I["MeleeWeapon이 현재 step socket pair 읽음"]
-    I --> J["Weapon mesh 또는 Character mesh<br/>(bUseCharacterSocket)"]
-    J --> K["실제 Trace 실행"]
 ```
 
 <img width="464" height="444" alt="image" src="https://github.com/user-attachments/assets/2c0767bf-fdb6-4376-adeb-240fb56dd9a9" />
