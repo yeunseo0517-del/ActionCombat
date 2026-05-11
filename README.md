@@ -22,6 +22,9 @@ UE5 C++ 기반 액션 전투 프로토타입
 플레이어와 보스는 스킬 생성 방식이 다르지만  
 최종 실행 구조는 동일합니다.
 
+- 플레이어는 무기가 SkillEntries를 읽어 스킬을 생성
+- 보스는 SkillPool을 읽어 거리 기반으로 스킬을 선택
+
 ### Player
 Weapon → SkillEntries → Runtime Skill 생성
 
@@ -34,13 +37,17 @@ USkillBase::ActivateSkill(Owner);
 
 ```mermaid
 flowchart LR
-A[Input / AI] --> B[Orchestration Layer]
-B --> C[Skill / Weapon 선택]
-C --> D[CombatComponent]
-D --> E[HitContext 생성]
-E --> F[Damage / Team Check]
-F --> G[StatusComponent]
-G --> H[UI / Character Reaction]
+    A["Player Input / AI Decision"] --> B["Orchestration Layer"]
+    B --> C["Weapon or Boss Skill Pool"]
+    C --> D["Runtime Skill / Attack Selection"]
+    D --> E["CombatComponent"]
+    E --> F["Trace or Area Attack"]
+    F --> G["HitContext"]
+    G --> H["Damage / Team Check / GetHit"]
+
+    D --> I["StatusComponent"]
+    I --> J["Cooldown / Buff / Broadcast"]
+    J --> K["Character Reaction / HUD Update"]
 ```
 
 캐릭터나 무기는 구체적인 전투 로직을 내장하지 않고, 런타임에 적절한 스킬을 조립하고 선택하는 'Selection Layer' 역할만 수행합니다.
@@ -52,7 +59,7 @@ G --> H[UI / Character Reaction]
 - Interface 기반 추상화
   호출자는 실행될 스킬의 세부 구현을 알 필요가 없습니다.
 - 높은 재사용성
-  Player, Boss, Minion 등 모두가 동일한 실행 구조를 공유하므로, 새로운 타입의 캐릭터를 추가하더라도 전투 시스템을 수정 없이 재사용할 수 있습니다.
+  스킬 구현체가 특정 캐릭터 클래스에 묶이지 않습니다. 또한 Player, Boss, Minion 등 모두가 동일한 실행 구조를 공유하므로, 새로운 타입의 캐릭터를 추가하더라도 전투 시스템을 수정 없이 재사용할 수 있습니다.
 
 ```cpp
 Input / AI / Weapon
@@ -63,6 +70,8 @@ Input / AI / Weapon
         ↓
  Combat Execution Trigger
 ```
+
+
 
 ---
 
