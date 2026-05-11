@@ -28,8 +28,7 @@ UE5 C++ 기반 액션 전투 프로토타입
 ### Player
 Weapon → SkillEntries → Runtime Skill 생성
 
-### Boss
-SkillPool → AI 선택 로직 → Runtime Skill 생성
+### Boss :SkillPool → AI 선택 로직 → Runtime Skill 생성
 
 ```cpp
 USkillBase::ActivateSkill(Owner);
