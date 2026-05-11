@@ -1,5 +1,3 @@
-<img width="1226" height="440" alt="image" src="https://github.com/user-attachments/assets/034a0608-ef2d-4542-922f-53a057428352" /># ActionCombact
-
 UE5 C++ 기반 액션 전투 프로토타입
 
 플레이어, 일반 적, 보스가 서로 다른 방식으로 행동하지만  
@@ -90,18 +88,29 @@ flowchart TD
     J --> K["실제 Trace 실행"]
 ```
 
-Unarmed 및 모든 근접 공격을 단일 Weapon 파이프라인으로 통합하고,
-공격 콤보는 Trace Step 단위로 정의된 socket sampling 규칙을 교체하는 방식으로 처리했습니다.
-
-<img width="1226" height="440" alt="image" src="https://github.com/user-attachments/assets/3ec7ed11-b2c6-4688-9dd5-bfa08b5abd68" />
+<img width="464" height="444" alt="image" src="https://github.com/user-attachments/assets/2c0767bf-fdb6-4376-adeb-240fb56dd9a9" />
 
 
 각 공격 Step은 다음 정보를 포함합니다:
+
 - Start / End socket pair (또는 단일 socket)
 - Character mesh / Weapon mesh source 선택
 - Trace 방식(Box / Sphere / Sweep)
+
 애니메이션 Notify State(ANS_SwitchSocket)를 통해
 현재 콤보 Step index를 갱신하고, 해당 Step의 TraceData로 자동 전환됩니다.
+
+Unarmed 및 모든 근접 공격을 단일 Weapon 파이프라인으로 통합하고,
+공격 콤보는 Trace Step 단위로 정의된 socket sampling 규칙을 교체하는 방식으로 처리했습니다.
+
+콤보 진행에 따라 Trace Step이 변경되며,
+각 Step은 Left/Right Punch에 해당하는 socket pair를 교체하는 방식으로 구성됩니다.
+
+이를 통해:
+
+- 좌/우 주먹 공격을 별도 무기 없이 처리
+- 무기 시스템과 동일한 Trace pipeline 재사용
+- 콤보 확장을 데이터 기반으로 처리
 
 ## 결과
 - Socket 개수/구조 변화가 코드 수정 없이 데이터로 해결됨
