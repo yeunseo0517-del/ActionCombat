@@ -12,28 +12,10 @@ UE5 C++ 기반 액션 전투 프로토타입
 
 # 핵심 설계 포인트
 
-- Runtime Skill 구조 (Player / Boss 오케스트레이션 분리)
-- Data-driven Trace 기반 공격 판정 시스템
-- 통합 Combat Processing Pipeline
-- StatusComponent 기반 상태/쿨다운/UI 분리
-
----
-
-
-# 전체 전투 흐름
-
-```mermaid
-flowchart LR
-A[Input / AI] --> B[Orchestration Layer]
-B --> C[Skill / Weapon 선택]
-C --> D[CombatComponent]
-D --> E[HitContext 생성]
-E --> F[Damage / Team Check]
-F --> G[StatusComponent]
-G --> H[UI / Character Reaction]
-```
-
-# 핵심 설계 포인트
+1. Runtime Skill 구조 (Player / Boss 오케스트레이션 분리)
+2. Data-driven Trace 기반 공격 판정 시스템
+3. 통합 Combat Processing Pipeline
+4. StatusComponent 기반 상태/쿨다운/UI 분리
 
 ---
 
@@ -51,10 +33,26 @@ SkillPool → AI 선택 로직 → Runtime Skill 생성
 ```cpp
 USkillBase::ActivateSkill(Owner);
 ```
+
+```mermaid
+flowchart LR
+A[Input / AI] --> B[Orchestration Layer]
+B --> C[Skill / Weapon 선택]
+C --> D[CombatComponent]
+D --> E[HitContext 생성]
+E --> F[Damage / Team Check]
+F --> G[StatusComponent]
+G --> H[UI / Character Reaction]
+```
+캐릭터나 무기는 구체적인 전투 로직을 내장하지 않고, 런타임에 적절한 스킬을 조립하고 선택하는 'Selection Layer' 역할만 수행합니다.
 ---
 
 ## 2. Data-driven Trace System
 공격 판정은 코드가 아니라 데이터로 정의됩니다.
+
+- Steps 기반 Socket Pair 구조
+- ANS가 Index만 변경
+- WeaponData / OverrideData 지원
 
 ```mermaid
 flowchart TD
@@ -70,10 +68,6 @@ flowchart TD
     I --> J["Weapon mesh 또는 Character mesh<br/>(bUseCharacterSocket)"]
     J --> K["실제 Trace 실행"]
 ```
-
-- Steps 기반 Socket Pair 구조
-- ANS가 Index만 변경
-- WeaponData / OverrideData 지원
 
 ## 결과
 - 콤보 공격 구조 확장 쉬움
