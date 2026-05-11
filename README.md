@@ -32,3 +32,35 @@ F --> G[StatusComponent]
 G --> H[UI / Character Reaction]
 
 ---
+
+# 핵심 설계 포인트
+
+---
+
+## 1. Runtime Skill Composition (Player vs Boss)
+
+플레이어와 보스는 스킬 생성 방식이 다르지만  
+최종 실행 구조는 동일합니다.
+
+### Player
+Weapon → SkillEntries → Runtime Skill 생성
+
+### Boss
+SkillPool → AI 선택 로직 → Runtime Skill 생성
+
+```cpp
+USkillBase::ActivateSkill(Owner);
+
+---
+
+## 2. Data-driven Trace System
+공격 판정은 코드가 아니라 데이터로 정의됩니다.
+
+- Steps 기반 Socket Pair 구조
+- ANS가 Index만 변경
+- WeaponData / OverrideData 지원
+
+## 결과
+- 콤보 공격 구조 확장 쉬움
+- 무기 1개로 다양한 공격 표현 가능
+- 예외 코드 제거
