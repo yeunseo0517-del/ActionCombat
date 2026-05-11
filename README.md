@@ -32,17 +32,3 @@ F --> G[StatusComponent]
 G --> H[UI / Character Reaction]
 
 ---
-
-## 1. Runtime Skill Composition (Player vs Boss)
-
-플레이어와 보스는 스킬 생성 방식이 다르지만  
-최종 실행 구조는 동일합니다.
-
-### Player
-Weapon → SkillEntries → Runtime Skill 생성
-
-### Boss
-SkillPool → AI 선택 로직 → Runtime Skill 생성
-
-```cpp
-USkillBase::ActivateSkill(Owner);
