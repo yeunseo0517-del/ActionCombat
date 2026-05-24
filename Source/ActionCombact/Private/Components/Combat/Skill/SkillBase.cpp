@@ -25,7 +25,6 @@ FHitContext USkillBase::GetSkillHitContext()
 	HitContext.DamageCauser = CachedOwner;
 	HitContext.AttackTag = AttackTag;
 	HitContext.Damage = DefaultDamage;
-
 	return HitContext;
 }
 

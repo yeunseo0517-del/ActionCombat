@@ -13,7 +13,6 @@ void UInvincibilitySkill::ActivateSkill(AActor* Owner)
 	if (!Owner) return;
 	UStatusComponent* StatusComp = GetStatusComponent(Owner);
 	if (!StatusComp || StatusComp->IsSkillOnCooldown(SkillID)) return;
-	UE_LOG(LogTemp, Warning, TEXT("Start Dash"))
 	StartCoolDown(Owner);
 	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Owner)) CombatInterface->GetCombatComponent()->ExecuteAttack(AttackTag);
 	else UE_LOG(LogTemp, Error, TEXT("Fail to Cast Interface"));
@@ -25,4 +24,5 @@ void UInvincibilitySkill::Init(const FSkillEntry& Config, int32 InSlotKey, int32
 {
 	Super::Init(Config, InSlotKey, InSkillID);
 	AttackTag = FGameplayTags::Get().Skill_DashSlash;
+	DefaultDamage = Config.BaseConfig.ShockConfig.SkillDamage;
 }

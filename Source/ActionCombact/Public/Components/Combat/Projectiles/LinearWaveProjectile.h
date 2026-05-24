@@ -17,7 +17,7 @@ class ACTIONCOMBACT_API ALinearWaveProjectile : public ABaseProjectile
 public:
 	ALinearWaveProjectile();
 	virtual void Tick(float DeltaTime) override;
-	virtual void Init(const FProjectile& Config) override;
+	virtual void InitProjectile(const FProjectile& Config, FVector Dir) override;
 
 private:
 	virtual void BeginPlay() override;
@@ -27,6 +27,9 @@ private:
 	FVector LastLocation;
 	FVector StartLocation;
 	float MaxDist;
+
+	UPROPERTY()
+	class USphereComponent* SphereComp;
 
 	UPROPERTY()
 	UNiagaraComponent* LinearWaveComp;

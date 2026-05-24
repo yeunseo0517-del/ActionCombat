@@ -50,7 +50,7 @@ void AMeleeWeapon::DoTrace()
 		AlreadyHit.Add(Hit.GetActor());
 	}
 
-	CurHitContext = BuildWeaponHitContext(ActorsToIgnore, AlreadyHit);
+	CurHitContext = BuildWeaponHitContext(AlreadyHit);
 	ProcessOverlapResults(HitResults);
 }
 

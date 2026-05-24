@@ -29,14 +29,16 @@ void ARadialShockwaves::Tick(float DeltaTime)
 		{
 			bExpandRadius = false;
 			if (EffectComp) EffectComp->Deactivate();
+			Destroy();
 		}
 	}
 }
 
-void ARadialShockwaves::Init(double InMaxRadius, float InDuration)
+void ARadialShockwaves::InitShockwave(double InMaxRadius, float InDuration)
 {
 	MaxRadius = InMaxRadius;
 	Duration = InDuration;
+	ExpandImpactRadius();
 }
 
 void ARadialShockwaves::BeginPlay()

@@ -17,16 +17,12 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 
-// Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
 }
-
 
 void UCombatComponent::BeginPlay()
 {
@@ -36,8 +32,6 @@ void UCombatComponent::BeginPlay()
 	UpdateComboState();
 }
 
-
-// Called every frame
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -49,7 +43,6 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			EquippedWeapon->DoTrace();
 		}
 	}
-
 	if (bIsDashing)
 	{
 		FVector CurrentLoc = GetOwner()->GetActorLocation();
@@ -74,13 +67,14 @@ void UCombatComponent::ExecuteAttackSequence(FGameplayTag Tag)
 
 void UCombatComponent::AttackEnd(bool bInterrupted)
 {
+	AttackLockCount = FMath::Max(0, AttackLockCount - 1);
 	// 평타 콤보로 의도적으로 중간에 끊어 이은 부분은 적용되지 않도록
 	if (bInterrupted && bComboTriggerd)
 	{
 		bComboTriggerd = false;
 		return;
 	}
-	if (Character)
+	if (Character && AttackLockCount == 0)
 	{
 		// 기본 상태로 초기화
 		Character->AttackEnd();
@@ -99,7 +93,7 @@ void UCombatComponent::HandleCombo()
 
 bool UCombatComponent::IsAttacking()
 {
-	return CurrentCombatTag.IsValid();
+	return AttackLockCount > 0;
 }
 
 void UCombatComponent::CheckAndTriggerNextCombo()
@@ -173,7 +167,7 @@ void UCombatComponent::ExecuteAttack(const FGameplayTag& Tag)
 			return;
 		}
 	}
-
+	AttackLockCount++;
 	ExecuteAttackSequence(Tag);
 }
 
@@ -192,17 +186,11 @@ void UCombatComponent::ExecuteAction(const FGameplayTag& Tag)
 void UCombatComponent::OnAttackWindow()
 {
 	if (!CurrentSkill) return;
-	UE_LOG(LogTemp, Warning, TEXT("On Attack Window"))
 	FGameplayTag Tag = CurrentSkill->GetTag();
 	CurHitContext = CurrentSkill->GetSkillHitContext();
 
-	UE_LOG(LogTemp, Warning, TEXT("Skill Ptr: %p"), CurrentSkill);
-	UE_LOG(LogTemp, Warning, TEXT("Class: %s"), *CurrentSkill->GetClass()->GetName());
-	UE_LOG(LogTemp, Warning, TEXT("ProjectileClass: %s"),
-		CurrentSkill->GetProjectileConfig().ProjectileClass ? TEXT("VALID") : TEXT("NULL"));
-
 	if (HasShockwave()) SpawnRadialShockwave();
-	if (HasProjectile()) SpawnProjectile(); else UE_LOG(LogTemp, Warning, TEXT("No Projectile class"))
+	if (HasProjectile()) SpawnProjectile();
 }
 
 bool UCombatComponent::HasProjectile()
@@ -228,9 +216,7 @@ void UCombatComponent::SpawnRadialShockwave()
 	ARadialShockwaves* Shock = GetWorld()->SpawnActor<ARadialShockwaves>(
 		ShockConfig.ShockwaveClass, RootLocation, FRotator::ZeroRotator, Params
 	);
-
-	Shock->Init(ShockConfig.MaxRadius, ShockConfig.Duration);
-	Shock->ExpandImpactRadius();
+	Shock->InitShockwave(ShockConfig.MaxRadius, ShockConfig.Duration);
 }
 
 void UCombatComponent::SpawnProjectile()
@@ -245,8 +231,7 @@ void UCombatComponent::SpawnProjectile()
 	ABaseProjectile* Projectile = GetWorld()->SpawnActor<ABaseProjectile>(
 		ProjectileConfig.ProjectileClass, StartLoc, GetOwner()->GetActorRotation(), Params
 	);
-	Projectile->Init(ProjectileConfig);
-	Projectile->FireInDirection(GetOwner()->GetActorForwardVector());
+	Projectile->InitProjectile(ProjectileConfig, GetOwner()->GetActorForwardVector());
 }
 
 void UCombatComponent::StartDash()
@@ -256,14 +241,12 @@ void UCombatComponent::StartDash()
 	{
 		AI->StopMovement();
 	}
-
 	if (CurrentSkill)
 	{
 		float Distance = CurrentSkill->GetDashConfig().DashDistance;
 		DashTargetLoc = GetOwner()->GetActorLocation() + (GetOwner()->GetActorForwardVector() * Distance);
 		bIsDashing = true;
 	}
-	else UE_LOG(LogTemp, Warning, TEXT("No"))
 }
 
 void UCombatComponent::EndDash()
@@ -385,9 +368,9 @@ bool UCombatComponent::IsHostile(AActor* OtherActor)
 	{
 		if (ITeamInterface* Other = Cast<ITeamInterface>(OtherActor))
 		{
-			FString Hit = UEnum::GetValueAsString(Hitter->GetTeamType());
-			FString Ot = UEnum::GetValueAsString(Other->GetTeamType());
-			UE_LOG(LogTemp,Warning,TEXT("Hit Actor: %s, Get Hit Actor: %s"), *Hit, *Ot)
+			FString HitName = UEnum::GetValueAsString(Hitter->GetTeamType());
+			FString OtherName = UEnum::GetValueAsString(Other->GetTeamType());
+			UE_LOG(LogTemp,Warning,TEXT("Hit Actor: %s, Get Hit Actor: %s"), *HitName, *OtherName)
 			return Hitter->GetTeamType() != Other->GetTeamType();
 		}
 	}

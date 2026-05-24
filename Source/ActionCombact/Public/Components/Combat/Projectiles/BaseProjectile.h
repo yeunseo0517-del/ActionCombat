@@ -15,13 +15,11 @@ class ACTIONCOMBACT_API ABaseProjectile : public AActor
 public:	
 	ABaseProjectile();
 	virtual void Tick(float DeltaTime) override;
-	virtual void Init(const FProjectile& Config);
-	void FireInDirection(FVector Dir);
+	virtual void InitProjectile(const FProjectile& Config, FVector Dir);
 
 protected:
 	virtual void BeginPlay() override;
-	void OnOverlap();
-	void ProcessOverlapResults(const TArray<FOverlapResult>& OverlapResults);
+	void SetupCollision(UPrimitiveComponent* Collision);
 
 	UPROPERTY(VisibleAnywhere)
 	class UPrimitiveComponent* CollisionComp;
@@ -34,4 +32,7 @@ protected:
 
 	UPROPERTY()
 	class UNiagaraSystem* Effect;
+
+private:
+	void FireInDirection(FVector Dir);
 };

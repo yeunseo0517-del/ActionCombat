@@ -15,7 +15,7 @@ class ACTIONCOMBACT_API ARadialShockwaves : public AActor
 public:
 	ARadialShockwaves();
 	virtual void Tick(float DeltaTime) override;
-	void Init(double MaxRadius, float Duration);
+	void InitShockwave(double MaxRadius, float Duration);
 	void ExpandImpactRadius();
 
 protected:

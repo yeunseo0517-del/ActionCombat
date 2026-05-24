@@ -6,14 +6,23 @@
 #include "Components/Combat/CombatComponent.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Components/SphereComponent.h"
 
 ALinearWaveProjectile::ALinearWaveProjectile()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
+	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
+	SetupCollision(SphereComp);
 }
 
 void ALinearWaveProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (LinearWaveComp)
+	{
+		LinearWaveComp->SetWorldLocation(GetActorLocation());
+	}
 	float Dist = FVector::Dist(StartLocation, GetActorLocation());
 	if (Dist >= MaxDist)
 	{
@@ -26,29 +35,35 @@ void ALinearWaveProjectile::Tick(float DeltaTime)
 
 	TArray<FHitResult> Hits;
 	FCollisionShape Shape = FCollisionShape::MakeSphere(80.f);
-
-	GetWorld()->SweepMultiByChannel(Hits, Prev, Current, FQuat::Identity, ECC_Pawn, Shape);
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(GetOwner());
+	GetWorld()->SweepMultiByChannel(Hits, Prev, Current, FQuat::Identity, ECC_Pawn, Shape, Params);
 	ProcessHitResults(Hits);
 	LastLocation = Current;
 }
 
-void ALinearWaveProjectile::Init(const FProjectile& Config)
+void ALinearWaveProjectile::InitProjectile(const FProjectile& Config, FVector Dir)
 {
-	Super::Init(Config);
+	Super::InitProjectile(Config, Dir);
 	MaxDist = Config.Range;
+
+	if (!LinearWave) return;
+	SpawnLinearProjectile();
 }
 
 void ALinearWaveProjectile::BeginPlay()
 {
+	Super::BeginPlay();
 	LastLocation = GetActorLocation();
 	StartLocation = GetActorLocation();
 }
 
 void ALinearWaveProjectile::ProcessHitResults(const TArray<FHitResult>& Hits)
 {
-	for (auto& Hit : Hits)
+	for (const auto& Hit : Hits)
 	{
-		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Hit.GetActor()))
+		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner()))
 		{
 			CombatInterface->GetCombatComponent()->TryProcessTarget(Hit.GetActor(), Hit.ImpactPoint);
 		}
@@ -57,10 +72,9 @@ void ALinearWaveProjectile::ProcessHitResults(const TArray<FHitResult>& Hits)
 
 void ALinearWaveProjectile::SpawnLinearProjectile()
 {
-	if (!LinearWave) return;
-
 	FVector SocketLocation = GetActorLocation();
-	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner())) CombatInterface->GetCombatMesh()->GetSocketLocation(FName("FX_SpecialAttacks"));
+	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner())) SocketLocation = CombatInterface->GetCombatMesh()->GetSocketLocation(FName("FX_SpecialAttacks"));
+	else UE_LOG(LogTemp, Warning, TEXT("Fail to Cast"));
 	LinearWaveComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
 		LinearWave,
@@ -68,7 +82,4 @@ void ALinearWaveProjectile::SpawnLinearProjectile()
 		FRotator::ZeroRotator,
 		FVector(1.f)
 	);
-
-	if (!LinearWaveComp) return;
-	LinearWaveComp->SetFloatParameter(TEXT("Lifetime"), 1.f);
 }

@@ -2,7 +2,6 @@
 
 
 #include "Components/Combat/Projectiles/BaseProjectile.h"
-#include "Components/SphereComponent.h"
 #include "Components/Combat/CombatComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Interfaces/CombatInterface.h"
@@ -10,9 +9,7 @@
 // Sets default values
 ABaseProjectile::ABaseProjectile()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
-	SetRootComponent(CollisionComp);
+	PrimaryActorTick.bCanEverTick = true;
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Projectile Movement"));
 	ProjectileMovement->InitialSpeed = 2000.f;
@@ -27,10 +24,11 @@ void ABaseProjectile::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void ABaseProjectile::Init(const FProjectile& Config)
+void ABaseProjectile::InitProjectile(const FProjectile& Config, FVector Dir)
 {
 	ProjectileMovement->InitialSpeed = Config.Speed;
 	ProjectileMovement->MaxSpeed = Config.Speed;
+	FireInDirection(Dir);
 }
 
 void ABaseProjectile::FireInDirection(FVector Dir)
@@ -41,6 +39,13 @@ void ABaseProjectile::FireInDirection(FVector Dir)
 void ABaseProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void ABaseProjectile::SetupCollision(UPrimitiveComponent* InCollision)
+{
+	CollisionComp = InCollision;
+	SetRootComponent(CollisionComp);
+	ProjectileMovement->UpdatedComponent = CollisionComp;
 }
 
 

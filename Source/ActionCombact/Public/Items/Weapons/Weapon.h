@@ -48,7 +48,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void InitializeSkills();
-	FHitContext BuildWeaponHitContext(const TArray<AActor*>& Ignore, const TSet<AActor*>& AlreadyHit);
+	FHitContext BuildWeaponHitContext(const TSet<AActor*>& AlreadyHit);
 	TArray<AActor*> BuildActorsToIgnore();
 
 	UPROPERTY()

@@ -23,13 +23,14 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Die(const FName& Section) override;
 	virtual void EnterHitReact() override;
-	virtual void UpdateBattleStrategy() override;
+	virtual void UpdateMovement() override;
+	virtual void TryAttack() override;
 	virtual void ChaseTarget() override;
 	virtual bool CanAttack() override;
 
 private:
 	void InitializeEnemy();
-	void UpdateMovement();
+	void UpdateBattleStrategy();
 	bool IsOutsideAttackRadius();
 	bool IsOutsideCombatRadius();
 	bool IsPatrolling();

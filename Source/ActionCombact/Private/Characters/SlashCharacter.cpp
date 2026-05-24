@@ -276,7 +276,7 @@ void ASlashCharacter::SetWeaponStance(EWeaponStance NewWeaponStance)
 
 void ASlashCharacter::StartAttack()
 {
-	if (!IsUnoccupied()) return;
+	if (!CanStartAttack()) return;
 	Super::StartAttack();
 }
 

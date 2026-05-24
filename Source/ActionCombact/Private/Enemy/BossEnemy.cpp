@@ -18,7 +18,12 @@ ABossEnemy::ABossEnemy()
 void ABossEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (!CombatTarget) return;
+	UpdateMovement();
+}
+
+void ABossEnemy::UpdateMovement()
+{
+	if (IsDead() || !CombatTarget) return;
 	if (CanAttack())
 	{
 		UpdateBattleStrategy();
@@ -61,14 +66,14 @@ void ABossEnemy::InitializeSkills()
 	for (auto& It : SkillPool)
 	{
 		ESkillRange Range = It.Key;
-		UE_LOG(LogTemp, Warning, TEXT("Range Key: %d"), (int32)It.Key);
-		UE_LOG(LogTemp, Warning, TEXT("Entries Num: %d"), It.Value.Entries.Num());
+		//UE_LOG(LogTemp, Warning, TEXT("Range Key: %d"), (int32)It.Key);
+		//UE_LOG(LogTemp, Warning, TEXT("Entries Num: %d"), It.Value.Entries.Num());
 		for (int32 i = 0; i < It.Value.Entries.Num(); ++i)
 		{
 			FSkillEntry& Entry = It.Value.Entries[i];
 			USkillBase* RuntimeSkill = NewObject<USkillBase>(this, Entry.SkillClass);
 			RuntimeSkill->Init(Entry, int32(Range), SkillCount);
-			UE_LOG(LogTemp, Warning, TEXT("Init Class: %s"), *GetNameSafe(Entry.SkillClass));
+			//UE_LOG(LogTemp, Warning, TEXT("Init Class: %s"), *GetNameSafe(Entry.SkillClass));
 			FRuntimeSkillArray& Wrapper = RuntimeSkillPool.FindOrAdd(Range);
 			Wrapper.Skills.Add(RuntimeSkill);
 			SkillCount++;
@@ -91,40 +96,41 @@ USkillBase* ABossEnemy::SelectSkill(ESkillRange Range)
 	return AvailableSkills[RandomVal];
 }
 
-bool ABossEnemy::TryActivateSkill(ESkillRange Range)
-{
-	if (USkillBase* SelectedSkill = SelectSkill(Range))
-	{
-		if (Combat) { Combat->SetCurrentSkill(SelectedSkill); UE_LOG(LogTemp, Warning, TEXT("CurrentSkill Ptr: %p"), SelectedSkill);}
-		SelectedSkill->ActivateSkill(this);
-		return true;
-	}
-	return false;
-}
-
 void ABossEnemy::UpdateBattleStrategy()
 {
+	if (!CanAttack()) return;
+	SelectedSkill = nullptr;
+
 	float Distance = FVector::Dist(GetActorLocation(), CombatTarget->GetActorLocation());
-	bool bHasAvailableSkill = false;
 	if (Distance > FarRange)
 	{
-		bHasAvailableSkill = TryActivateSkill(ESkillRange::Far);
+		SelectedSkill = SelectSkill(ESkillRange::Far);
 	}
 	else
 	{
-		bHasAvailableSkill = TryActivateSkill(ESkillRange::Mid);
+		SelectedSkill = SelectSkill(ESkillRange::Mid);
 	}
-	
-	if (!bHasAvailableSkill)
+
+	if (SelectedSkill || IsInsideAttackRadius())
 	{
-		if (IsInsideAttackRadius())
-		{
-			StartAttackTimer();
-		}
-		else
-		{
-			ChaseTarget();
-		}
+		StartAttackTimer();
+	}
+	else
+	{
+		ChaseTarget();
+	}
+}
+
+void ABossEnemy::TryAttack()
+{
+	if (SelectedSkill)
+	{
+		if (Combat) Combat->SetCurrentSkill(SelectedSkill);
+		SelectedSkill->ActivateSkill(this);
+	}
+	else
+	{
+		Attack(FGameplayTags::Get().Action_Attack_Basic);
 	}
 }
 

@@ -41,14 +41,15 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void InitializeEnemy();
+	virtual void UpdateMovement() override;
 	virtual void UpdateBattleStrategy() override;
+	virtual void TryAttack() override;
 	virtual void EnterHitReact() override;
 
 private:
 	void CreateHealthBarWidget();
 	void InitializeSkills();
 	USkillBase* SelectSkill(ESkillRange Range);
-	bool TryActivateSkill(ESkillRange Range);
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<class UHealthBar> HealthBarClass;
@@ -64,4 +65,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Skills")
 	TMap<ESkillRange, FRuntimeSkillArray> RuntimeSkillPool;
+
+	UPROPERTY(VisibleAnywhere, Category = "Skills")
+	USkillBase* SelectedSkill;
 };

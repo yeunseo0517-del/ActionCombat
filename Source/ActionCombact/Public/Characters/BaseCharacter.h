@@ -131,7 +131,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	FGameplayTagContainer EffectTags;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = State)
 	FGameplayTag CurrentStateTag = FGameplayTag();
 
 private:

@@ -35,6 +35,7 @@ protected:
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) override;
 	virtual void Die(const FName& Section) override;
 	virtual void EnterHitReact() override;
+	virtual void UpdateMovement() {}
 	virtual void UpdateBattleStrategy() {}
 
 	void MoveToTarget(AActor* Target);
@@ -47,7 +48,7 @@ protected:
 	bool IsChasing();
 	virtual void ChaseTarget();
 	virtual bool CanAttack();
-	void TryAttack();
+	virtual void TryAttack() {}
 
 	UPROPERTY()
 	class AAIController* EnemyController;

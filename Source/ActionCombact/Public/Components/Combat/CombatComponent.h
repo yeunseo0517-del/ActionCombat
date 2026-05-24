@@ -93,6 +93,8 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	int32 ComboCount = 0;
 
+	UPROPERTY(VisibleInstanceOnly, Category = State)
+	int32 AttackLockCount = 0;
 	bool bUseCombo = false;
 	bool bNextCombo;
 	bool bComboTriggerd;
@@ -108,8 +110,7 @@ public:
 	void SetbTracing(bool Value) { bTracing = Value; }
 	void SetCombatTraceData();
 	FGameplayTag GetCurrentCombatTag() { return CurrentCombatTag; }
-	void SetCurrentSkill(USkillBase* NewSkill) { CurrentSkill = NewSkill; UE_LOG(LogTemp, Warning, TEXT("CurrentSkill Ptr: %p"), CurrentSkill);
-	}
+	void SetCurrentSkill(USkillBase* NewSkill) { CurrentSkill = NewSkill; }
 	void SetHitEffectData(UHitEffectDataAsset* NewEffect) { CurHitEffectData = NewEffect; }
 	void SetHitContext(FHitContext& NewContext) { CurHitContext = NewContext; }
 };

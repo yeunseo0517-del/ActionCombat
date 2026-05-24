@@ -15,6 +15,5 @@ struct FHitContext
 	FGameplayTag AttackTag;
 	float Damage = 0.f;
 
-	TArray<AActor*> ActorsToIgnore;
 	TSet<AActor*> AlreadyHitActors;
 };

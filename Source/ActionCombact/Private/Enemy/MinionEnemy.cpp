@@ -120,6 +120,12 @@ void AMinionEnemy::UpdateBattleStrategy()
 	}
 }
 
+void AMinionEnemy::TryAttack()
+{
+	if (!CanStartAttack()) return;
+	Attack(FGameplayTags::Get().Action_Attack_Basic);
+}
+
 void AMinionEnemy::ChaseTarget()
 {
 	Super::ChaseTarget();

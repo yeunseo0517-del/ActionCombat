@@ -127,7 +127,7 @@ void AWeapon::UseSkillR()
 	}
 }
 
-FHitContext AWeapon::BuildWeaponHitContext(const TArray<AActor*>& Ignore, const TSet<AActor*>& AlreadyHit)
+FHitContext AWeapon::BuildWeaponHitContext(const TSet<AActor*>& AlreadyHit)
 {
 	FHitContext HitContext;
 
@@ -135,7 +135,6 @@ FHitContext AWeapon::BuildWeaponHitContext(const TArray<AActor*>& Ignore, const 
 	HitContext.DamageCauser = this;
 	HitContext.AttackTag = CurrentTraceData->AttackTag;
 	HitContext.Damage = WeaponData->DefaultDamage;
-	HitContext.ActorsToIgnore = Ignore;
 
 	return HitContext;
 }

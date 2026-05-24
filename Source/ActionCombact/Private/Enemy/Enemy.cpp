@@ -43,7 +43,7 @@ void AEnemy::AttackEnd()
 {
 	if (IsDead()) return;
 	CurrentStateTag = FGameplayTag();
-	UpdateBattleStrategy();
+	UpdateMovement();
 }
 
 bool AEnemy::CanStartAttack()
@@ -62,7 +62,7 @@ void AEnemy::OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted)
 
 	if (IsHitReactMontage(Montage))
 	{
-		UpdateBattleStrategy();
+		UpdateMovement();
 	}
 }
 
@@ -74,6 +74,7 @@ void AEnemy::Die(const FName& Section)
 
 void AEnemy::StartAttackTimer()
 {
+	if (GetWorldTimerManager().IsTimerActive(AttackTimer)) return;
 	SetCurrentState(FGameplayTags::Get().State_AI_Engaged);
 	const float AttackTime = FMath::RandRange(AttackMin, AttackMax);
 	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::TryAttack, AttackTime);
@@ -87,11 +88,6 @@ void AEnemy::ClearAttackTimer()
 bool AEnemy::CanAttack()
 {
 	return CanStartAttack() && !IsEngaged();
-}
-
-void AEnemy::TryAttack()
-{
-	Attack(FGameplayTags::Get().Action_Attack_Basic);
 }
 
 bool AEnemy::IsEngaged()
