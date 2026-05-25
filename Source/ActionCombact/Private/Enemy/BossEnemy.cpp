@@ -66,14 +66,11 @@ void ABossEnemy::InitializeSkills()
 	for (auto& It : SkillPool)
 	{
 		ESkillRange Range = It.Key;
-		//UE_LOG(LogTemp, Warning, TEXT("Range Key: %d"), (int32)It.Key);
-		//UE_LOG(LogTemp, Warning, TEXT("Entries Num: %d"), It.Value.Entries.Num());
 		for (int32 i = 0; i < It.Value.Entries.Num(); ++i)
 		{
 			FSkillEntry& Entry = It.Value.Entries[i];
 			USkillBase* RuntimeSkill = NewObject<USkillBase>(this, Entry.SkillClass);
 			RuntimeSkill->Init(Entry, int32(Range), SkillCount);
-			//UE_LOG(LogTemp, Warning, TEXT("Init Class: %s"), *GetNameSafe(Entry.SkillClass));
 			FRuntimeSkillArray& Wrapper = RuntimeSkillPool.FindOrAdd(Range);
 			Wrapper.Skills.Add(RuntimeSkill);
 			SkillCount++;

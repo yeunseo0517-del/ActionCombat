@@ -22,7 +22,8 @@ public:
 private:
 	virtual void BeginPlay() override;
 	void ProcessHitResults(const TArray<FHitResult>& Hits);
-	void SpawnLinearProjectile();
+	void SpawnProjectileNiagara();
+	void SetupTransform();
 
 	FVector LastLocation;
 	FVector StartLocation;
@@ -34,6 +35,12 @@ private:
 	UPROPERTY()
 	UNiagaraComponent* LinearWaveComp;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, category = "Visual Effects")
 	UNiagaraSystem* LinearWave;
+
+	UPROPERTY(EditAnywhere, category = "Settings")
+	FName StartSocketName;
+
+	UPROPERTY(EditAnywhere, category = "Settings")
+	float Radius;
 };

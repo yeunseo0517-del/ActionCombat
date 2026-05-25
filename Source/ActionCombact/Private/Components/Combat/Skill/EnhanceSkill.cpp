@@ -15,15 +15,14 @@ void UEnhanceSkill::ActivateSkill(AActor* Owner)
 	StartCoolDown(Owner);
 
 	StatusComp->AddStatus(EStatusType::EST_EnhancedDamage);
-	StatusComp->AddEnhancedDamage(SkillData.BaseConfig.EnhanceConfig.SkillDamage);
-	Owner->GetWorldTimerManager().SetTimer(EnhanceTimer, this, &UEnhanceSkill::DeactivateSkill, SkillData.BaseConfig.EnhanceConfig.Duration, false);
+	StatusComp->AddEnhancedDamage(SkillData.SubConfig.EnhanceConfig.SkillDamage);
+	Owner->GetWorldTimerManager().SetTimer(EnhanceTimer, this, &UEnhanceSkill::DeactivateSkill, SkillData.SubConfig.EnhanceConfig.Duration, false);
 }
 
 void UEnhanceSkill::Init(const FSkillEntry& Config, int32 InSlotKey, int32 InSkillID)
 {
 	Super::Init(Config, InSlotKey, InSkillID);
-	AttackTag = FGameplayTags::Get().Skill_EnhanceDamage;
-	DefaultDamage = Config.BaseConfig.EnhanceConfig.SkillDamage;
+	DefaultDamage = Config.SubConfig.EnhanceConfig.SkillDamage;
 }
 
 void UEnhanceSkill::DeactivateSkill()
@@ -33,5 +32,5 @@ void UEnhanceSkill::DeactivateSkill()
 
 	StatusComp->SkillDurationEnd(SlotKey);
 	StatusComp->RemoveStatus(EStatusType::EST_EnhancedDamage);
-	StatusComp->RemoveEnhancedDamage(SkillData.BaseConfig.EnhanceConfig.SkillDamage);
+	StatusComp->RemoveEnhancedDamage(SkillData.SubConfig.EnhanceConfig.SkillDamage);
 }

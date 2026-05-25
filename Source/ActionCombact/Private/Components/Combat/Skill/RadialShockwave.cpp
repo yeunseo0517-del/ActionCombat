@@ -26,6 +26,5 @@ void URadialShockwave::ActivateSkill(AActor* Owner)
 void URadialShockwave::Init(const FSkillEntry& Config, int32 InSlotKey, int32 InSkillID)
 {
 	Super::Init(Config, InSlotKey, InSkillID);
-	AttackTag = FGameplayTags::Get().Skill_Shockwave;
-	DefaultDamage = Config.BaseConfig.ShockConfig.SkillDamage;
+	DefaultDamage = Config.SubConfig.ShockConfig.SkillDamage;
 }

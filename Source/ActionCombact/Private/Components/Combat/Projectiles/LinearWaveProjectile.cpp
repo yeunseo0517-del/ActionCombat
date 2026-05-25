@@ -19,10 +19,10 @@ ALinearWaveProjectile::ALinearWaveProjectile()
 void ALinearWaveProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (LinearWaveComp)
+	/*if (LinearWaveComp)
 	{
 		LinearWaveComp->SetWorldLocation(GetActorLocation());
-	}
+	}*/
 	float Dist = FVector::Dist(StartLocation, GetActorLocation());
 	if (Dist >= MaxDist)
 	{
@@ -34,7 +34,7 @@ void ALinearWaveProjectile::Tick(float DeltaTime)
 	FVector Prev = LastLocation;
 
 	TArray<FHitResult> Hits;
-	FCollisionShape Shape = FCollisionShape::MakeSphere(80.f);
+	FCollisionShape Shape = FCollisionShape::MakeSphere(Radius);
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 	Params.AddIgnoredActor(GetOwner());
@@ -48,8 +48,9 @@ void ALinearWaveProjectile::InitProjectile(const FProjectile& Config, FVector Di
 	Super::InitProjectile(Config, Dir);
 	MaxDist = Config.Range;
 
+	SetupTransform();
 	if (!LinearWave) return;
-	SpawnLinearProjectile();
+	SpawnProjectileNiagara();
 }
 
 void ALinearWaveProjectile::BeginPlay()
@@ -70,16 +71,28 @@ void ALinearWaveProjectile::ProcessHitResults(const TArray<FHitResult>& Hits)
 	}
 }
 
-void ALinearWaveProjectile::SpawnLinearProjectile()
+void ALinearWaveProjectile::SetupTransform()
 {
 	FVector SocketLocation = GetActorLocation();
-	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner())) SocketLocation = CombatInterface->GetCombatMesh()->GetSocketLocation(FName("FX_SpecialAttacks"));
-	else UE_LOG(LogTemp, Warning, TEXT("Fail to Cast"));
-	LinearWaveComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-		GetWorld(),
+	FVector SocketRotation = FVector::ZeroVector;
+	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner()))
+	{
+		SocketLocation = CombatInterface->GetCombatMesh()->GetSocketLocation(StartSocketName);
+		SocketRotation = CombatInterface->GetCombatMesh()->GetSocketRotation(StartSocketName).Vector();
+	}
+	SetActorLocation(SocketLocation);
+	SetActorRotation(SocketRotation.Rotation());
+}
+
+void ALinearWaveProjectile::SpawnProjectileNiagara()
+{
+	LinearWaveComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
 		LinearWave,
-		SocketLocation,
+		SphereComp,
+		NAME_None,
+		FVector::ZeroVector,
 		FRotator::ZeroRotator,
-		FVector(1.f)
+		EAttachLocation::KeepRelativeOffset,
+		true
 	);
 }

@@ -37,10 +37,10 @@ protected:
 	float DefaultDamage;
 
 public:
-	virtual const FGameplayTag& GetTag() { return AttackTag; }
-	const FEnhanceDamage& GetEnhanceConfig() { return SkillData.BaseConfig.EnhanceConfig; }
-	const FDash& GetDashConfig() { return SkillData.BaseConfig.DashConfig; }
-	const FShockwave& GetShockConfig() { return SkillData.BaseConfig.ShockConfig; }
-	const FProjectile& GetProjectileConfig() { return SkillData.BaseConfig.ProjectileConfig; }
+	virtual const FGameplayTag& GetTag() const { return AttackTag; }
+	const FEnhanceDamage& GetEnhanceConfig() const { return SkillData.SubConfig.EnhanceConfig; }
+	const FDash& GetDashConfig() const { return SkillData.SubConfig.DashConfig; }
+	const FShockwave& GetShockConfig() const { return SkillData.SubConfig.ShockConfig; }
+	const FProjectile& GetProjectileConfig() const { return SkillData.SubConfig.ProjectileConfig; }
 	FHitContext GetSkillHitContext();
 };

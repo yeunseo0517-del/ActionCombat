@@ -23,6 +23,5 @@ void UInvincibilitySkill::ActivateSkill(AActor* Owner)
 void UInvincibilitySkill::Init(const FSkillEntry& Config, int32 InSlotKey, int32 InSkillID)
 {
 	Super::Init(Config, InSlotKey, InSkillID);
-	AttackTag = FGameplayTags::Get().Skill_DashSlash;
-	DefaultDamage = Config.BaseConfig.ShockConfig.SkillDamage;
+	DefaultDamage = Config.SubConfig.ShockConfig.SkillDamage;
 }

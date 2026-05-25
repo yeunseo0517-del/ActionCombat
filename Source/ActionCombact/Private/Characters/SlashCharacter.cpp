@@ -192,10 +192,6 @@ void ASlashCharacter::UseQSkill()
 	if (EquippedWeapon && !HasUnarmedWeapon())
 	{
 		EquippedWeapon->UseSkillQ();
-		if (Combat)
-		{
-			Combat->SetCurrentSkill(EquippedWeapon->GetCurrentSkill(ESkillSlot::Q));
-		}
 	}
 }
 

@@ -14,7 +14,7 @@ void USkillBase::StartCoolDown(AActor* Owner)
 	UStatusComponent* StatusComp = GetStatusComponent(Owner);
 	if (!StatusComp) return;
 
-	StatusComp->ActivateSkill(SlotKey, SkillID, SkillData.BaseConfig.Cooldown);
+	StatusComp->ActivateSkill(SlotKey, SkillID, SkillData.Cooldown);
 }
 
 FHitContext USkillBase::GetSkillHitContext()
@@ -33,6 +33,7 @@ void USkillBase::Init(const FSkillEntry& Config, int32 InSlotKey, int32 InSkillI
 	SkillData = Config;
 	SlotKey = InSlotKey;
 	SkillID = InSkillID;
+	AttackTag = Config.SkillTag;
 }
 
 bool USkillBase::IsSkillOnCooldown() const

@@ -20,6 +20,5 @@ void UProjectileSkill::ActivateSkill(AActor* Owner)
 void UProjectileSkill::Init(const FSkillEntry& Config, int32 InSlotKey, int32 InSkillID)
 {
 	Super::Init(Config, InSlotKey, InSkillID);
-	AttackTag = FGameplayTags::Get().Skill_Projectile;
-	DefaultDamage = Config.BaseConfig.ProjectileConfig.SkillDamage;
+	DefaultDamage = Config.SubConfig.ProjectileConfig.SkillDamage;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTags.h"
 #include "SkillTypes.generated.h"
 
 UENUM(BlueprintType)
@@ -89,9 +90,6 @@ struct FSkillConfig
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-	float Cooldown = 8.f;
-
-	UPROPERTY(EditAnywhere)
 	FEnhanceDamage EnhanceConfig;
 
 	UPROPERTY(EditAnywhere)
@@ -110,8 +108,14 @@ struct FSkillEntry
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere)
+	FGameplayTag SkillTag;
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<class USkillBase> SkillClass;
 
 	UPROPERTY(EditAnywhere)
-	FSkillConfig BaseConfig;
+	float Cooldown = 8.f;
+
+	UPROPERTY(EditAnywhere)
+	FSkillConfig SubConfig;
 };

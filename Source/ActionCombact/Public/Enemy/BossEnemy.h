@@ -60,6 +60,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	double FarRange = 1500.f, MidRange = 800.f;
 
+	// Àû ½ºÅ³
 	UPROPERTY(EditAnywhere, Category = "Skills")
 	TMap<ESkillRange, FSkillArrayWrapper> SkillPool;
 

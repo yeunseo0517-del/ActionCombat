@@ -17,6 +17,8 @@ public:
 	FGameplayTag Skill_Shockwave;
 	FGameplayTag Skill_EnhanceDamage;
 	FGameplayTag Skill_Projectile;
+	FGameplayTag Skill_Projectile_FireBall;
+	FGameplayTag Skill_Projectile_GroundCrash;
 
 	FGameplayTag Type_Melee;
 	FGameplayTag Type_Area;
@@ -31,7 +33,6 @@ public:
 	FGameplayTag State_AI_Patrolling;
 	FGameplayTag State_AI_Chasing;
 	FGameplayTag State_AI_Engaged;
-
 
 private:
 	static FGameplayTags GameplayTags;

@@ -16,6 +16,8 @@ void FGameplayTags::InitializeNativeTags()
 	GameplayTags.Skill_DashSlash = Manager.AddNativeGameplayTag(FName("Skill.DashSlash"));
 	GameplayTags.Skill_Shockwave = Manager.AddNativeGameplayTag(FName("Skill.Shockwave"));
 	GameplayTags.Skill_Projectile = Manager.AddNativeGameplayTag(FName("Skill.Projectile"));
+	GameplayTags.Skill_Projectile_FireBall = Manager.AddNativeGameplayTag(FName("Skill.Projectile.FireBall"));
+	GameplayTags.Skill_Projectile_GroundCrash = Manager.AddNativeGameplayTag(FName("Skill.Projectile.GroundCrash"));
 
 	GameplayTags.Type_Melee = Manager.AddNativeGameplayTag(FName("Type.Melee"));
 	GameplayTags.Type_Area = Manager.AddNativeGameplayTag(FName("Type.Area"));

@@ -186,7 +186,6 @@ void UCombatComponent::ExecuteAction(const FGameplayTag& Tag)
 void UCombatComponent::OnAttackWindow()
 {
 	if (!CurrentSkill) return;
-	FGameplayTag Tag = CurrentSkill->GetTag();
 	CurHitContext = CurrentSkill->GetSkillHitContext();
 
 	if (HasShockwave()) SpawnRadialShockwave();
@@ -272,7 +271,7 @@ FCombatState UCombatComponent::GetCurrentCombatState()
 	FCombatState CurrentState;
 
 	CurrentState.WeaponType = EquippedWeapon ? EquippedWeapon->GetWeaponType() : EWeaponType::EWT_Unarmed;
-	CurrentState.ActionTag = CurrentCombatTag;
+	CurrentState.ActionTag = CurrentSkill ? CurrentSkill->GetTag() : CurrentCombatTag;
 	CurrentState.WeaponStance = Character->GetWeaponStance();
 
 	return CurrentState;
