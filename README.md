@@ -1,5 +1,5 @@
 
-동영상: https://youtu.be/HC7rAM73Swk
+동영상: https://youtu.be/1aM2AIHFSLU
 
 Notion: https://www.notion.so/Action-Combat-Project-Troubleshooting-35d2b62eaa66805fada6fffad00a9de3
 
