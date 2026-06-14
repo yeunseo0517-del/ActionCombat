@@ -8,7 +8,7 @@
 
 * [설계 배경 및 결정](#설계-배경-및-결정)
 * [구조 다이어그램](#구조-다이어그램)
-* 핵심 구현
+* [핵심 구현](#핵심-구현)
   * [Socket 기반 Trace](#Socket-기반-Trace)
     * [AnimNotify 기반 Socket 전환](#AnimNotify-기반-Socket-전환)
     * [Socket 조회 위치 결정](#Socket-조회-위치-결정)
