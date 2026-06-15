@@ -88,6 +88,8 @@ const FVector End = BoxTraceEnd->GetComponentLocation();
 
 특히 맨손 공격을 추가하면서 콤보 단계마다 왼손과 오른손을 번갈아 사용해야 했기 때문에 **Trace Point를 고정할 경우 대응하기 어려웠습니다.** 또한 맨손 공격은 별도 Mesh를 가진 무기가 아니라 더미 Weapon Actor로 처리되며, 실제 Trace 위치는 캐릭터 손 Socket을 기준으로 잡아야 했습니다.
 
+이 설계 결정의 배경은 [Weapon 기반 근접 공격 통합 구조](./UnarmedTraceIntegration.md)에서 정리했습니다.
+
 #### 해결
 
 왼손/오른손 공격은 공격 규칙 자체가 다른 것이 아니라 **판정 위치만 다른 동일한 맨손 공격**이라고 판단했습니다. 따라서 Dummy Actor를 추가로 만들기보다 공격 단계별 Socket 정보만 데이터로 교체하는 방식으로 구성했습니다.
