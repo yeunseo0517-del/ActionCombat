@@ -87,9 +87,9 @@ else
 
 #### 해결
 
-스킬 데이터는 에디터에서 설정하는 `FSkillEntry`에, 실행은 게임 시작 시 생성되는 `USKillBase` 인스턴스로 분리했습니다. 생성 이후 실행 경로에서는 항상 Skill Base을 참조합니다.
+스킬 데이터는 에디터에서 설정하는 `FSkillEntry`에, 실행은 게임 시작 시 생성되는 `USkillBase` 인스턴스로 분리했습니다. 생성 이후 실행 경로에서는 항상 `USkillBase`를 참조합니다.
 
-**Skill Entry**는 스킬 클래스, 거리 구간, 기본 **설정값을 담는 정적 데이터**이고, **Skill Base**는 실제 전투 중 선택되고 실행되는 Runtime Skill **객체**입니다.
+**Skill Entry**는 스킬 클래스, 거리 구간, 기본 **설정값을 담는 정적 데이터**이고, **Skill Base**는 실제 전투 중 선택되고 실행되는 **Runtime Skill 객체**입니다.
 
 ```cpp
 // 게임 시작 시 Entry → Runtime Skill 변환
@@ -112,11 +112,11 @@ RuntimeSkill->Init(Entry, int32(Slot), SkillCount);
 
 또한 애니메이션 이후 판정을 발생시키는 스킬의 경우, 애니메이션 재생 후 AnimNotify 시점에 `CombatComponent`에서 처리됩니다. 선택 시점과 실행 시점이 분리되어 있기 때문에 실행 시점에 `CombatComponent`가 현재 선택된 스킬이 무엇인지 다시 판단하고, 해당 스킬 데이터에서 필요한 값을 해석해야 하는 구조가 됐습니다.
 
-하지만 `CombatComponent`를 선택된 스킬을 실행하는 등 **전투 로직을 수행하는 주체로만** 두려는 설계 방향과 맞지 않았습니다.
+하지만 CombatComponent는 스킬을 판별하거나 해석하는 주체가 아니라 이미 선택된 스킬 정보를 기반으로 전투 처리를 수행하는 파이프라인으로 두고자 했던 방향과 맞지 않았습니다.
 
 #### 해결
 
-스킬별 실행 정보와 해석 책임을 Skill Base로 분리했습니다. `CombatComponent`를 포함한 외부 시스템은 어떤 스킬인지, 스킬의 세부 동작을 알 필요 없이 ActivateSkill() 하나만 호출하면 됩니다.
+스킬별 실행 정보와 해석 책임을 Skill Base로 분리했습니다. 외부 시스템은 어떤 스킬인지, 스킬의 세부 동작을 알 필요 없이 ActivateSkill() 하나만 호출하면 됩니다.
 
 ```cpp
 virtual void ActivateSkill(AActor* Owner) PURE_VIRTUAL(...);
@@ -152,7 +152,7 @@ void URadialShockwave::ActivateSkill(AActor* Owner)
 
 하지만 전투 중 AI가 `SkillClass`를 직접 해석해 스킬을 생성하고 초기화하면 AI가 단순 선택을 넘어 스킬 실행 준비까지 책임지는 구조가 됩니다. 이 경우 AI가 어떤 스킬을 고를지뿐 아니라, 해당 스킬이 어떤 실행 정보를 가져야 하는지까지 알아야 하므로 선택 책임과 실행 책임이 섞이게 됩니다.
 
-결과적으로 스킬 선택은 AI가 담당하고, 실행은 Combat Component가 담당한다는 역할 경계가 흐려집니다.
+결과적으로 스킬 선택은 AI가 담당하고, 실행은 `CombatComponent`가 담당한다는 역할 경계가 흐려집니다.
 
 #### 해결 - 거리 기반 Runtime Skill Pool
 
@@ -164,7 +164,7 @@ void URadialShockwave::ActivateSkill(AActor* Owner)
 
 게임 시작 시 `SkillBase` 인스턴스를 거리 구간별 `RuntimeSkillPool`에 미리 등록했습니다. 이때 `SkillBase`가 전투 중 바로 선택 및 실행이 가능하도록 각 `SkillBase`에는 `SkillID`, `AttackTag`, 실행 데이터 등 전투 중 필요한 정보가 초기화됩니다.
 
-전투 중 AI는 이미 초기화된 `SkillBase` 후보 중 하나를 선택만 하며 선택된 스킬은 `CurrentSKill`로 `CombatComponent`에 전달됩니다.
+전투 중 AI는 이미 초기화된 `SkillBase` 후보 중 하나를 선택만 하며 선택된 스킬은 `CurrentSkill`로 `CombatComponent`에 전달됩니다.
 
 ```cpp
 if (Distance > FarRange)
@@ -176,6 +176,13 @@ else
 	SelectedSkill = SelectSkill(ESkillRange::Mid);
 }
 ```
+
+#### 결과
+
+- AI의 역할을 스킬 선택으로 제한
+- 스킬 구성 변경 시 AI 코드 수정 없이 Pool 구성만 변경
+
+---
 
 ## AnimNotify 기반 실행 타이밍 분리
 
