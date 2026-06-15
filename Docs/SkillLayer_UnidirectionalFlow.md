@@ -6,7 +6,6 @@
 
 * [설계 배경](#설계-배경)
 * [구조 다이어그램](#구조-다이어그램)
-* [레이어별 책임 분리 효과](#레이어별-책임-분리-효과)
 * 핵심 구현
   * [StatusComponent 기반 상태 관리](#StatusComponent-기반-상태-관리)
 * [트레이드오프 및 한계](#트레이드오프-및-한계)
@@ -32,6 +31,8 @@
 즉 스킬 실행 결과가 여러 레이어로 퍼지면서 **의존 방향이 복잡해지는 문제**가 있었습니다.
 
 따라서 스킬이 각 시스템을 직접 제어하지 않고 스킬 실행 이후 필요한 상태 관리와 이벤트 발행 책임을 StatusComponent로 분리했습니다. 스킬은 상태와 수치만 등록하고 시스템은 각자 필요한 시점에 StatusComponent의 이벤트나 상태 값을 참조하도록 구성했습니다. 이 과정에서 델리게이트를 적극 활용했습니다.
+
+이를 통해 **각 레이어는 자신보다 뒤에 있는 처리 대상의 구체적인 구현을 몰라도 됩니다.** 스킬은 상태만 등록하고 `HUD`/`Character`/`CombatComponent`는 각자 필요한 시점에 `StatusComponent`를 통해서만 정보를 받습니다.
 
 | 역할 | 담당 |
 | :--- | :--- |
@@ -61,22 +62,6 @@ graph TD
 
     style ST fill:#EAF2FF,stroke:#0066FF,stroke-width:2px,color:#0050C8
 ```
-
----
-
-## 레이어별 책임 분리 효과
-
-**각 레이어는 자신보다 뒤에 있는 처리 대상의 구체적인 구현을 알지 않도록 구성했습니다.**
-
-스킬은 실행 결과를 `StatusComponent`에 등록하고 이후 `HUD` / `Character` / `CombatComponent`는 `StatusComponent`의 이벤트나 상태 값을 기준으로 각자 필요한 처리만 수행합니다.
-
-`StatusComponent`는 어떤 스킬이 실행되었는지에 따라 분기하지 않고 전달받은 SkillID, 쿨타임, 상태 값, 강화 수치 같은 정보만 기준으로 처리합니다.
-
-HUD 역시 특정 스킬 클래스를 알 필요가 없습니다. `SkillHUDWidget`은 `StatusComponent`의 델리게이트 이벤트를 구독하고 전달된 정보(Slot)에 맞는 `SkillWidget`만 찾아 갱신합니다.
-
-`SkillWidget`은 자신이 Q, E, R 중 어떤 슬롯인지 알 필요 없이 사용 중 오버레이와 쿨타임 오버레이를 켜고 끄는 역할만 담당합니다.
-
-전투 계산도 같은 흐름을 따릅니다. `CombatComponent`는 현재 어떤 스킬이나 버프가 실행 중인지 직접 판단하지 않고 데미지 계산 시점에 `StatusComponent`에서 현재 적용 중인 추가 데미지만 조회합니다.
 
 ---
 
@@ -121,6 +106,8 @@ void UStatusComponent::StartCooldown(int32 Slot, int32 SkillID, float Cooldown)
 }
 ```
 
+---
+
 ### 스킬 이벤트
 
 `StatusComponent`는 스킬 실행 이후 필요한 이벤트를 관리합니다.
@@ -160,6 +147,8 @@ void UStatusComponent::AddStatus(EStatusType Status)
 HUD는 `StatusComponent`의 스킬 이벤트를 구독하여 UI 상태를 갱신합니다.
 
 Skill Widget은 '사용 중' 오버레이, '쿨타임' 오버레이, 기본 아이콘을 조합하여 현재 스킬 상태를 표시합니다. 각 오버레이의 표시 시점은 스킬 클래스가 직접 제어하지 않고, `StatusComponent`의 델리게이트 이벤트를 HUD가 구독하여 처리하도록 구성했습니다.
+
+---
 
 ### 상태 관리
 
@@ -202,7 +191,7 @@ void UStatusComponent::RemoveStatus(EStatusType Status)
 ## 관련 코드
 
 ### Status Component
-- [StatusComponent.h]()
+- [StatusComponent.h](https://github.com/yeunseo0517-del/ActionCombat/blob/main/Source/ActionCombact/Private/Components/Status/StatusComponent.cpp)
 - [StatusComponent.cpp](https://github.com/yeunseo0517-del/ActionCombat/blob/main/Source/ActionCombact/Private/Components/Status/StatusComponent.cpp)
 
 ### Skill
