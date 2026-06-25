@@ -47,6 +47,7 @@ void AMinionEnemy::UpdateMovement()
 
 float AMinionEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	ClearPatrolTimer();
 	CombatTarget = EventInstigator->GetPawn();
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
@@ -60,6 +61,7 @@ void AMinionEnemy::BeginPlay()
 
 void AMinionEnemy::Die(const FName& Section)
 {
+	ClearPatrolTimer();
 	HideHealthBar();
 	Super::Die(Section);
 }
@@ -69,9 +71,10 @@ void AMinionEnemy::EnterHitReact()
 	if (IsDead()) return;
 	if (HealthBarWidget)
 	{
-		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
+		HealthBarWidget->SetHealthPercent(Attributes->GetCurrentHealth(), Attributes->GetMaxHealth());
 	}
 	ShowHealthBar();
+	ClearPatrolTimer();
 	Super::EnterHitReact();
 }
 
@@ -104,7 +107,7 @@ void AMinionEnemy::UpdateBattleStrategy()
 		else if (IsOutsideAttackRadius() && !IsChasing())
 		{
 			ClearAttackTimer();
-			if (!IsEngaged()) ChaseTarget();
+			ChaseTarget();
 		}
 		else if (CanAttack())
 		{
@@ -123,11 +126,14 @@ void AMinionEnemy::UpdateBattleStrategy()
 void AMinionEnemy::TryAttack()
 {
 	if (!CanStartAttack()) return;
+	if (EnemyController) EnemyController->StopMovement();
+	GetCharacterMovement()->StopMovementImmediately();
 	Attack(FGameplayTags::Get().Action_Attack_Basic);
 }
 
 void AMinionEnemy::ChaseTarget()
 {
+	ClearPatrolTimer();
 	Super::ChaseTarget();
 	GetCharacterMovement()->MaxWalkSpeed = ChasingSpeed;
 }
@@ -177,6 +183,7 @@ AActor* AMinionEnemy::ChoosePatrolTarget()
 
 void AMinionEnemy::PatrolTimerFinished()
 {
+	if (!IsPatrolling()) return;
 	MoveToTarget(PatrolTarget);
 }
 

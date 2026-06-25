@@ -4,7 +4,7 @@
 #include "HUD/HealthBarComponent.h"
 #include "HUD/HealthBar.h"
 
-void UHealthBarComponent::SetHealthPercent(float Percent)
+void UHealthBarComponent::SetHealthPercent(float CurrentHealth, float MaxHealth)
 {
 	if (!HealthBarWidget)
 	{
@@ -13,6 +13,6 @@ void UHealthBarComponent::SetHealthPercent(float Percent)
 
 	if (HealthBarWidget && HealthBarWidget->HealthBar)
 	{
-		HealthBarWidget->SetHealthPercent(Percent);
+		HealthBarWidget->SetHealthPercent(CurrentHealth, MaxHealth);
 	}
 }

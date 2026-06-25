@@ -136,7 +136,7 @@ void ABossEnemy::EnterHitReact()
 	if (IsDead()) return;
 	if (HealthBar)
 	{
-		HealthBar->SetHealthPercent(Attributes->GetHealthPercent());
+		HealthBar->SetHealthPercent(Attributes->GetCurrentHealth(), Attributes->GetMaxHealth());
 	}
 	Super::EnterHitReact();
 }

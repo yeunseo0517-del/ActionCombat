@@ -37,13 +37,23 @@ void UAttributeComponent::RecieveDamage(float DamageAmount)
 	Health = FMath::Clamp(Health - DamageAmount, 0.f, MaxHealth);
 }
 
-float UAttributeComponent::GetHealthPercent()
+float UAttributeComponent::GetMaxHealth()
 {
-	return Health / MaxHealth;
+	return MaxHealth;
+}
+
+float UAttributeComponent::GetCurrentHealth()
+{
+	return Health;
 }
 
 bool UAttributeComponent::IsAlive()
 {
 	return Health > 0;
+}
+
+void UAttributeComponent::AddGold(int32 AmountOfGold)
+{
+	Gold += AmountOfGold;
 }
 

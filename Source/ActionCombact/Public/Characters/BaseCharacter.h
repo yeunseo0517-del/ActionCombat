@@ -91,10 +91,10 @@ protected:
 	virtual void EnterHitReact();
 
 	void SetCurrentState(FGameplayTag Tag);
+	bool IsInvincible();
 	bool IsUnoccupied();
 	bool IsAttacking();
 	bool IsHitReacting();
-	bool IsDead();
 
 
 	/*
@@ -148,7 +148,6 @@ private:
 	double DirectionalHitReact(const FVector& ImpactPoint);
 	FName GetHitSection(double Theta);
 	bool IsSuperArmor();
-	bool IsInvincible();
 	void AddTag(FGameplayTagContainer& Container, const FGameplayTag& Tag);
 	void RemoveTag(FGameplayTagContainer& Container, const FGameplayTag& Tag);
 	bool HasTag(const FGameplayTagContainer& Container, const FGameplayTag& Tag);
@@ -200,4 +199,5 @@ public:
 	void AddActionTag(const FGameplayTag& Tag);
 	void RemoveActionTag(const FGameplayTag& Tag);
 	bool HasActionTag(const FGameplayTag& Tag);
+	bool IsDead();
 };

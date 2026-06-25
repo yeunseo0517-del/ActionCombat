@@ -16,8 +16,9 @@
 
 #include "Components/Attribute/AttributeComponent.h"
 #include "Components/Combat/CombatComponent.h"
-#include "HUD/HealthBar.h"
 #include "HUD/SkillHUDWidget.h"
+#include "HUD/SlashHUD.h"
+#include "HUD/SlashOverlay.h"
 
 
 // Sets default values
@@ -54,25 +55,25 @@ void ASlashCharacter::BeginPlay()
 			Subsystem->AddMappingContext(SlashCharacterContext, 0);
 		}
 	}
-	CreateHealthBarWidget();
-	CreateSkillWidget();
+	InitializeSlashOverlay();
 }
 
-void ASlashCharacter::CreateHealthBarWidget()
+void ASlashCharacter::InitializeSlashOverlay()
 {
-	if (HealthBarClass && !HealthBar)
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
 	{
-		HealthBar = CreateWidget<UHealthBar>(GetWorld(), HealthBarClass);
-		if (HealthBar) HealthBar->AddToViewport();
-	}
-}
-
-void ASlashCharacter::CreateSkillWidget()
-{
-	if (SkillHUDClass && !SkillHUD)
-	{
-		SkillHUD = CreateWidget<USkillHUDWidget>(GetWorld(), SkillHUDClass);
-		if (SkillHUD) SkillHUD->AddToViewport();
+		ASlashHUD* SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD());
+		if (SlashHUD)
+		{
+			SlashOverlay = SlashHUD->GetSlashOverlay();
+			SetHUDHealth();
+			if (SlashOverlay && Attributes)
+			{
+				SlashOverlay->SetStaminaPercent(1.f, 1.f);
+				SlashOverlay->SetGold(0);
+			}
+		}
 	}
 }
 
@@ -101,10 +102,6 @@ void ASlashCharacter::EnterHitReact()
 {
 	if (IsDead()) return;
 	Super::EnterHitReact();
-	if (HealthBar)
-	{
-		HealthBar->SetHealthPercent(Attributes->GetHealthPercent());
-	}
 }
 
 bool ASlashCharacter::IsEquipMontage(UAnimMontage* Montage)
@@ -283,6 +280,20 @@ void ASlashCharacter::AttackEnd()
 	SetCurrentState(FGameplayTag());
 }
 
+void ASlashCharacter::SetOverlappingItem(AItem* Item)
+{
+	OverlappingItem = Item;
+}
+
+void ASlashCharacter::AddGold(int32 Amount)
+{
+	if (Attributes)
+	{
+		Attributes->AddGold(Amount);
+		SlashOverlay->SetGold(Attributes->GetGold());
+	}
+}
+
 void ASlashCharacter::HandleEquipState()
 {
 	if (!HasUnarmedWeapon())
@@ -331,5 +342,21 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(QSkillAction, ETriggerEvent::Started, this, &ASlashCharacter::OnQStarted);
 		EnhancedInputComponent->BindAction(ESkillAction, ETriggerEvent::Started, this, &ASlashCharacter::OnEStarted);
 		EnhancedInputComponent->BindAction(RSkillAction, ETriggerEvent::Started, this, &ASlashCharacter::OnRStarted);
+	}
+}
+
+float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (IsInvincible()) return 0.f;
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	SetHUDHealth();
+	return DamageAmount;
+}
+
+void ASlashCharacter::SetHUDHealth()
+{
+	if (SlashOverlay && Attributes)
+	{
+		SlashOverlay->SetHealthPercent(Attributes->GetCurrentHealth(), Attributes->GetMaxHealth());
 	}
 }

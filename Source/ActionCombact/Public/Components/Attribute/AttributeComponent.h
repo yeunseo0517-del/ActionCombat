@@ -17,16 +17,24 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void RecieveDamage(float DamageAmount);
-	float GetHealthPercent();
-	bool IsAlive();
-
 protected:
 	virtual void BeginPlay() override;
-
+	
+private:
 	UPROPERTY(EditAnywhere, Category = Attributes)
 	float Health;
 
 	UPROPERTY(EditAnywhere, Category = Attributes)
 	float MaxHealth;
+
+	UPROPERTY(EditAnywhere, Category = Attributes)
+	int32 Gold;
+
+public:
+	void RecieveDamage(float DamageAmount);
+	float GetMaxHealth();
+	float GetCurrentHealth();
+	bool IsAlive();
+	void AddGold(int32 AmountOfGold);
+	FORCEINLINE int32 GetGold() { return Gold; }
 };

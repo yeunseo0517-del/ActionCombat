@@ -61,9 +61,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float AttackMin = 0.5f, AttackMax = 1.f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = Combat)
 	double AttackRadius = 300.f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = Combat)
 	double AcceptanceRadius = 150.f;
+
+private:
+	void SpawnTreasure();
+
+	UPROPERTY(EditAnywhere, Category = "Reward")
+	TSubclassOf<class ATreasure> TreasureClass;
 };

@@ -7,6 +7,8 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Items/Treasure.h"
+#include "Components/Attribute/AttributeComponent.h"
 
 AEnemy::AEnemy()
 {
@@ -68,13 +70,43 @@ void AEnemy::OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted)
 
 void AEnemy::Die(const FName& Section)
 {
+	if (EnemyController) EnemyController->StopMovement();
+	GetCharacterMovement()->StopMovementImmediately();
 	Super::Die(Section);
+	SpawnTreasure();
 	ClearAttackTimer();
+}
+
+void AEnemy::SpawnTreasure()
+{
+	if (!GetWorld() || !TreasureClass) return;
+
+	FVector Location = GetActorLocation();
+	Location.Z += 50.f;
+	ATreasure* Treaure = GetWorld()->SpawnActor<ATreasure>(TreasureClass, Location, GetActorRotation());
+
+	if (Treaure && Attributes)
+	{
+		Treaure->SetGoldAmount(Attributes->GetGold());
+	}
 }
 
 void AEnemy::StartAttackTimer()
 {
+	if (CombatTarget)
+	{
+		ABaseCharacter* Target = Cast<ABaseCharacter>(CombatTarget);
+		if (!Target || Target->IsDead())
+		{
+			CombatTarget = nullptr;
+			return;
+		}
+	}
 	if (GetWorldTimerManager().IsTimerActive(AttackTimer)) return;
+
+	if (EnemyController) EnemyController->StopMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+
 	SetCurrentState(FGameplayTags::Get().State_AI_Engaged);
 	const float AttackTime = FMath::RandRange(AttackMin, AttackMax);
 	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::TryAttack, AttackTime);
@@ -123,6 +155,8 @@ bool AEnemy::IsInsideAttackRadius()
 void AEnemy::EnterHitReact()
 {
 	if (IsDead()) return;
+	if (EnemyController) EnemyController->StopMovement();
+	GetCharacterMovement()->StopMovementImmediately();
 	Super::EnterHitReact();
 	ClearAttackTimer();
 }

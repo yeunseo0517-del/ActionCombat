@@ -156,7 +156,7 @@ void UCombatComponent::OnWeaponEquipped(AWeapon* NewWeapon)
 
 void UCombatComponent::ExecuteAttack(const FGameplayTag& Tag)
 {
-	if (!Character) return;
+	if (!Character || !CanAttack()) return;
 	if (Tag.MatchesTag(FGameplayTags::Get().Action_Attack_Basic))
 	{
 		UpdateComboState();

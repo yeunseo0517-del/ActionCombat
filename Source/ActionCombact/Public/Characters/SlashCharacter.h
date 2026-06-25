@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Characters/BaseCharacter.h"
+#include "Interfaces/PickupInterface.h"
 #include "SlashCharacter.generated.h"
 
 class USpringArmComponent;
@@ -11,12 +12,13 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class AItem;
+class ATreasure;
 class AWeapon;
 class UHealthBar;
 class USkillWidget;
 
 UCLASS()
-class ACTIONCOMBACT_API ASlashCharacter : public ABaseCharacter
+class ACTIONCOMBACT_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
 {
 	GENERATED_BODY()
 
@@ -24,11 +26,15 @@ public:
 	ASlashCharacter();
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	virtual void HandleEquipState() override;
 	virtual bool CanStartAttack() override;
 	virtual void StartAttack() override;
 	virtual void AttackEnd() override;
+
+	virtual void SetOverlappingItem(AItem* Item) override;
+	virtual void AddGold(int32 Amount) override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -76,8 +82,8 @@ protected:
 	float SprintWalkSpeed = 1000.f;
 
 private:
-	void CreateHealthBarWidget();
-	void CreateSkillWidget();
+	void InitializeSlashOverlay();
+	void SetHUDHealth();
 	void StartSprint();
 	void StopSprint();
 	void Equip();
@@ -133,17 +139,7 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappingItem;
 
-	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<class UHealthBar> HealthBarClass;
+	UPROPERTY()
+	class USlashOverlay* SlashOverlay;
 
-	UPROPERTY(VisibleAnywhere, Category = "UI")
-	UHealthBar* HealthBar;
-
-	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<class USkillHUDWidget> SkillHUDClass;
-
-	UPROPERTY(VisibleAnywhere, Category = "UI")
-	USkillHUDWidget* SkillHUD;
-public:
-	FORCEINLINE void SetOverlappingItem(AItem* item) { OverlappingItem = item; }
 };
