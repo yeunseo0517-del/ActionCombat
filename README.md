@@ -18,7 +18,7 @@
   * [Skill System](#skill-system)
     * [4. Runtime 기반 스킬 구성](#4-runtime-기반-스킬-구성)
     * [5. 스킬 레이어 간 단방향 흐름](#5-스킬-레이어-간-단방향-흐름)
-* [트러블슈팅]()
+* [트러블슈팅](./Docs/TroubleShooting.md)
 
 ---
 
