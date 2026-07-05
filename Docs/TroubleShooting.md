@@ -11,14 +11,16 @@
 ![Before](./Images/Before_VFXProblem.gif)
 ### 문제
 
-Trail용 Custom AnimNotify State를 제작했습니다. Socket 지정 없이 Weapon의 Trace용 SceneComponent(Start/End) 위치를 재사용해 Trail 위치와 길이를 자동 계산하는 구조였습니다.
+공격 애니메이션마다 기준 Socket 정보를 별도로 지정해야 하는 반복 작업을 줄이기 위해 Trail용 Custom AnimNotify State를 제작했습니다.
+
+검의 시작점과 끝점을 나타내는 Start / End Socket을 공격 Trace와 Trail이 함께 사용하도록 구성했습니다. Trail에서 따로 Socket 정보를 등록하지 않아도 기존 공격용 Socket 정보를 자동으로 읽어 Niagara Trail의 위치와 길이를 자동 계산하는 방식이었습니다.
 
 검 궤적 Trail이 실제 검 위치가 아닌 엉뚱한 위치에 생성되는 문제가 발생했습니다.
 
 ### 시도한 과정
 
-1. TrailComp 생성 실패 여부 확인
-UE_LOG로 TrailComp 존재 여부를 체크했습니다. 정상적으로 생성되고 있었습니다.
+1. Trail Socket 정보 전달 성공 여부 확인
+UE_LOG로 Trail Socket 전달 여부를 체크했습니다. 정상적으로 전달되고 있었습니다.
 
 2. StartPosition / WeaponLength 값 확인
 UE_LOG로 값을 출력하고 Niagara에서 DrawDebug로 변수가 올바르게 넘어오는지 확인했습니다. 값 자체는 정상이었습니다.
