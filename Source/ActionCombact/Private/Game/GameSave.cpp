@@ -3,12 +3,18 @@
 
 #include "Game/GameSave.h"
 
-void UGameSave::SetSaveProfileData(const FProfileData& Data)
+
+void UGameSave::AddGold(int32 Amount)
 {
-	ProfileData = Data;
+	ProfileData.Gold += Amount;
 }
 
-FProfileData UGameSave::GetSaveProfileData() const
+void UGameSave::AddStageID(int32 ID)
 {
-	return ProfileData;
+	if (!ProfileData.ClearedStageIDs.Contains(ID)) ProfileData.ClearedStageIDs.Add(ID);
+}
+
+int32 UGameSave::GetCurrentGold() const
+{
+	return ProfileData.Gold;
 }

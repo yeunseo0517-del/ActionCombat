@@ -7,11 +7,23 @@
 #include "HUD/ResultWidget.h"
 #include "HUD/Widgets/GateConfirmWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Game/ActionGameInstance.h"
 
 void ASlashHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CreateWidgets();
+	ApplyHUDMode();
+
+	UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance());
+	if (!GI) return;
+	GI->OnGoldChanged.AddDynamic(this, &ASlashHUD::UpdateGold);
+	UpdateGold(GI->GetCurrentGold());
+}
+
+void ASlashHUD::CreateWidgets()
+{
 	UWorld* World = GetWorld();
 	if (World)
 	{
@@ -21,12 +33,20 @@ void ASlashHUD::BeginPlay()
 			if (SlashOverlayClass)
 			{
 				SlashOverlay = CreateWidget<USlashOverlay>(Controller, SlashOverlayClass);
-				if (SlashOverlay) SlashOverlay->AddToViewport();
+				if (SlashOverlay)
+				{
+					SlashOverlay->AddToViewport();
+					SlashOverlay->SetVisibility(ESlateVisibility::Collapsed);
+				}
 			}
 			if (SkillHUDClass)
 			{
 				SkillHUD = CreateWidget<USkillHUDWidget>(Controller, SkillHUDClass);
-				if (SkillHUD) SkillHUD->AddToViewport();
+				if (SkillHUD)
+				{
+					SkillHUD->AddToViewport();
+					SkillHUD->SetVisibility(ESlateVisibility::Collapsed);
+				}
 			}
 			if (ResultClass)
 			{
@@ -68,6 +88,12 @@ void ASlashHUD::CloseBattleResult()
 	if (!ResultWidget) return;
 	ResultWidget->SetVisibility(ESlateVisibility::Collapsed);
 	RestoreGameInputMode();
+}
+
+void ASlashHUD::UpdateGold(int32 Amount)
+{
+	if (!SlashOverlay) return;
+	SlashOverlay->SetGold(Amount);
 }
 
 void ASlashHUD::ShowGateConfirmWidget(const FText& MapName, FSimpleDelegate OnConfirmed)
@@ -141,20 +167,24 @@ void ASlashHUD::RestoreGameInputMode()
 	PC->SetInputMode(InputMode);
 }
 
-void ASlashHUD::SetTownHUD()
+void ASlashHUD::ApplyHUDMode()
 {
+	const bool bCombat = HUDMode == ESlashHUDMode::Combat;
+
 	if (SlashOverlay) SlashOverlay->SetVisibility(ESlateVisibility::Visible);
-	if (SkillHUD) SkillHUD->SetVisibility(ESlateVisibility::Collapsed);
+	if (SkillHUD) SkillHUD->SetVisibility(bCombat ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	if (ResultWidget) ResultWidget->SetVisibility(ESlateVisibility::Collapsed);
 	if (GateConfirmWidget) GateConfirmWidget->SetVisibility(ESlateVisibility::Collapsed);
 }
 
+void ASlashHUD::SetTownHUD()
+{
+	HUDMode = ESlashHUDMode::Town;
+}
+
 void ASlashHUD::SetCombatHUD()
 {
-	if (SlashOverlay) SlashOverlay->SetVisibility(ESlateVisibility::Visible);
-	if (SkillHUD) SkillHUD->SetVisibility(ESlateVisibility::Visible);
-	if (ResultWidget) ResultWidget->SetVisibility(ESlateVisibility::Collapsed);
-	if (GateConfirmWidget) GateConfirmWidget->SetVisibility(ESlateVisibility::Collapsed);
+	HUDMode = ESlashHUDMode::Combat;
 }
 
 void ASlashHUD::UpdateSlashOverlay(int32 Gold)

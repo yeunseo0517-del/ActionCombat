@@ -2,6 +2,7 @@
 
 
 #include "Game/Level/GateActor.h"
+#include "Game/ActionGameInstance.h"
 #include "Components/BoxComponent.h"
 #include "HUD/SlashHUD.h"
 #include "Kismet/GameplayStatics.h"
@@ -60,13 +61,10 @@ void AGateActor::OnGateEndOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 
 void AGateActor::HandleGateConfirm()
 {
-	if (TargetLevel.IsNull())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("TargetLevel is not set."));
-		return;
-	}
+	UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance());
+	if (!GI) return;
 
-	UGameplayStatics::OpenLevelBySoftObjectPtr(this, TargetLevel);
+	GI->TravelToLevel(TargetLevel);
 }
 
 void AGateActor::SetDestination(TSoftObjectPtr<UWorld> Target, FText Name)

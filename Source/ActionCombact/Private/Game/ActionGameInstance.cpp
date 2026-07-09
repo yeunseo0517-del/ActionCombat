@@ -11,19 +11,34 @@ void UActionGameInstance::Init()
 	LoadProfile();
 }
 
+void UActionGameInstance::TravelToLevel(TSoftObjectPtr<UWorld> TargetLevel)
+{
+	SaveProfile();
+	if (TargetLevel.IsNull())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("TargetLevel is not set."));
+		return;
+	}
+	UGameplayStatics::OpenLevelBySoftObjectPtr(this, TargetLevel);
+}
+
 void UActionGameInstance::AddGoldData(int32 Amount)
 {
-	ProfileData.Gold += Amount;
+	if (!GameSave) return;
+	GameSave->AddGold(Amount);
+	OnGoldChanged.Broadcast(GetCurrentGold());
 }
 
 void UActionGameInstance::AddStageID(int32 ID)
 {
-	if(!ProfileData.ClearedStageIDs.Contains(ID)) ProfileData.ClearedStageIDs.Add(ID);
+	if (!GameSave) return;
+	GameSave->AddStageID(ID);
 }
 
 int32 UActionGameInstance::GetCurrentGold() const
 {
-	return ProfileData.Gold;
+	if (!GameSave) return 0;
+	return GameSave->GetCurrentGold();
 }
 
 void UActionGameInstance::LoadProfile()
@@ -31,16 +46,9 @@ void UActionGameInstance::LoadProfile()
 	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, 0))
 	{
 		GameSave = Cast<UGameSave>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, 0));
-
-		if (GameSave)
-		{
-			ProfileData = GameSave->GetSaveProfileData();
-			return;
-		}
 	}
 
-	GameSave = Cast<UGameSave>(UGameplayStatics::CreateSaveGameObject(UGameSave::StaticClass()));
-	ProfileData = FProfileData();
+	if(!GameSave) GameSave = Cast<UGameSave>(UGameplayStatics::CreateSaveGameObject(UGameSave::StaticClass()));
 }
 
 void UActionGameInstance::SaveProfile()
@@ -51,6 +59,5 @@ void UActionGameInstance::SaveProfile()
 	}
 
 	if (!GameSave) return;
-	GameSave->SetSaveProfileData(ProfileData);
 	UGameplayStatics::SaveGameToSlot(GameSave, SaveSlotName, 0);
 }

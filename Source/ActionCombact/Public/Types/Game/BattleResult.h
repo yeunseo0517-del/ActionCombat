@@ -16,7 +16,4 @@ struct FBattleResult
 
     UPROPERTY(BlueprintReadOnly)
     int32 ClearedStageID = 0;
-
-    UPROPERTY(BlueprintReadOnly)
-    int32 EarnedGold = 0;
 };

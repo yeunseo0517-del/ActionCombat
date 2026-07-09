@@ -67,6 +67,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	double AcceptanceRadius = 150.f;
 
+	UPROPERTY(EditAnywhere, Category = "Reward")
+	int32 RewardGold = 10;
+
 private:
 	void SpawnTreasure();
 

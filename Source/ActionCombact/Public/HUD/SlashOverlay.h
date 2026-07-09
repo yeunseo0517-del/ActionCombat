@@ -18,7 +18,6 @@ public:
 	void SetHealthPercent(float CurrentHealth, float MaxHealth);
 	void SetStaminaPercent(float CurrentStamina, float MaxStamina);
 	void SetGold(int32 Gold);
-
 private:
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* HealthBar;

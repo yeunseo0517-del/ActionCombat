@@ -96,7 +96,7 @@ void AEnemy::SpawnTreasure()
 
 	if (Treaure && Attributes)
 	{
-		Treaure->SetGoldAmount(Attributes->GetGold());
+		Treaure->SetGoldAmount(RewardGold);
 	}
 }
 

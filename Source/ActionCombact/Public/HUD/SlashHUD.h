@@ -6,6 +6,13 @@
 #include "GameFramework/HUD.h"
 #include "SlashHUD.generated.h"
 
+UENUM()
+enum class ESlashHUDMode : uint8
+{
+	Town,
+	Combat
+};
+
 class USlashOverlay;
 class USkillHUDWidget;
 class UResultWidget;
@@ -34,9 +41,16 @@ private:
 	UFUNCTION()
 	void CloseBattleResult();
 
+	UFUNCTION()
+	void UpdateGold(int32 Amount);
+
 	void SetUIOnlyInputMode();
 	void SetGameAndUIInputMode();
 	void RestoreGameInputMode();
+	void CreateWidgets();
+	void ApplyHUDMode();
+
+	ESlashHUDMode HUDMode = ESlashHUDMode::Town;
 
 	UPROPERTY(EditDefaultsOnly, Category = Slash)
 	TSubclassOf<USlashOverlay> SlashOverlayClass;

@@ -31,7 +31,6 @@ private:
 	void SpawnPortalToTown();
 	void AfterRewardCollect();
 	FBattleResult MakeBattleResult(bool bVictory);
-	int32 GetPlayerEarnedGold() const;
 
 	UPROPERTY()
 	class ABattleMapConfig* BattleMapConfig;

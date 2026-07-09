@@ -20,6 +20,8 @@
 #include "HUD/SlashHUD.h"
 #include "HUD/SlashOverlay.h"
 
+#include "Game/ActionGameInstance.h"
+
 
 // Sets default values
 ASlashCharacter::ASlashCharacter()
@@ -68,11 +70,6 @@ void ASlashCharacter::InitializeSlashOverlay()
 		{
 			SlashOverlay = SlashHUD->GetSlashOverlay();
 			SetHUDHealth();
-			if (SlashOverlay && Attributes)
-			{
-				SlashOverlay->SetStaminaPercent(1.f, 1.f);
-				SlashOverlay->SetGold(0);
-			}
 		}
 	}
 }
@@ -289,8 +286,9 @@ void ASlashCharacter::AddGold(int32 Amount)
 {
 	if (Attributes)
 	{
-		Attributes->AddGold(Amount);
-		SlashOverlay->SetGold(Attributes->GetGold());
+		UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance());
+		if (!GI) return;
+		GI->AddGoldData(Amount);
 	}
 }
 

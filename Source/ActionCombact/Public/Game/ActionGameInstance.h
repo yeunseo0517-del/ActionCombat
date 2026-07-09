@@ -7,15 +7,8 @@
 #include "Types/ProfileData.h"
 #include "ActionGameInstance.generated.h"
 
-/**
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGoldChanged, int32, NewGold);
 
-SaveGame에서 ProfileData를 불러옴
-런타임 중 ProfileData를 들고 있음
-골드/재료/강화 단계 변경
-필요한 시점에 SaveGame으로 저장
-맵 이동 처리
-
- */
 UCLASS()
 class ACTIONCOMBACT_API UActionGameInstance : public UGameInstance
 {
@@ -24,6 +17,10 @@ class ACTIONCOMBACT_API UActionGameInstance : public UGameInstance
 public:
 	virtual void Init() override;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnGoldChanged OnGoldChanged;
+	
+	void TravelToLevel(TSoftObjectPtr<UWorld> TargetLevel);
 	void AddGoldData(int32 Amount);
 	void AddStageID(int32 ID);
 
@@ -33,9 +30,6 @@ public:
 	
 private:
 	void LoadProfile();
-
-	UPROPERTY()
-	FProfileData ProfileData;
 
 	UPROPERTY()
 	class UGameSave* GameSave;

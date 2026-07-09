@@ -99,9 +99,7 @@ void ABattleGameMode::FinishBattle(bool bVictory)
 
 	if (CachedResult.bVictory)
 	{
-		GI->AddGoldData(CachedResult.EarnedGold);
 		GI->AddStageID(CachedResult.ClearedStageID);
-		GI->SaveProfile();
 	}
 
 	GetWorldTimerManager().SetTimer(RewardCollectTimer, this, &ABattleGameMode::AfterRewardCollect, RewardCollectTime, false);
@@ -137,16 +135,6 @@ FBattleResult ABattleGameMode::MakeBattleResult(bool InbVictory)
 	FBattleResult Result;
 	Result.bVictory = InbVictory;
 	Result.ClearedStageID = CurrentStageID;
-	Result.EarnedGold = InbVictory ? GetPlayerEarnedGold() : 0;
 	Result.KilledEnemyCount = KilledEnemyCount;
 	return Result;
-}
-
-int32 ABattleGameMode::GetPlayerEarnedGold() const
-{
-	APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0);
-	if (!Player) return 0;
-
-	UAttributeComponent* Comp = Player->FindComponentByClass<UAttributeComponent>();
-	return Comp ? Comp->GetGold() : 0;
 }

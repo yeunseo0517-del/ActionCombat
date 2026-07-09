@@ -52,8 +52,3 @@ bool UAttributeComponent::IsAlive()
 	return Health > 0;
 }
 
-void UAttributeComponent::AddGold(int32 AmountOfGold)
-{
-	Gold += AmountOfGold;
-}
-

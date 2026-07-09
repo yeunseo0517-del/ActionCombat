@@ -27,14 +27,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Attributes)
 	float MaxHealth;
 
-	UPROPERTY(EditAnywhere, Category = Attributes)
-	int32 Gold;
-
 public:
 	void RecieveDamage(float DamageAmount);
 	float GetMaxHealth();
 	float GetCurrentHealth();
 	bool IsAlive();
-	void AddGold(int32 AmountOfGold);
-	FORCEINLINE int32 GetGold() { return Gold; }
 };

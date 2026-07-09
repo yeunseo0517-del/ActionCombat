@@ -20,6 +20,7 @@ private:
 	FProfileData ProfileData;
 
 public:
-	void SetSaveProfileData(const FProfileData& Data);
-	FProfileData GetSaveProfileData() const;
+	void AddGold(int32 Amount);
+	void AddStageID(int32 StageID);
+	int32 GetCurrentGold() const;
 };
