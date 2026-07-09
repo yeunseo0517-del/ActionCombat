@@ -9,6 +9,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Items/Treasure.h"
 #include "Components/Attribute/AttributeComponent.h"
+#include "Game/BattleGameMode.h"
+#include "Kismet/GameplayStatics.h"
 
 AEnemy::AEnemy()
 {
@@ -75,6 +77,13 @@ void AEnemy::Die(const FName& Section)
 	Super::Die(Section);
 	SpawnTreasure();
 	ClearAttackTimer();
+
+	ABattleGameMode* BattleGM = GetWorld()->GetAuthGameMode<ABattleGameMode>();
+
+	if (BattleGM)
+	{
+		BattleGM->NotifyEnemyKilled(this);
+	}
 }
 
 void AEnemy::SpawnTreasure()

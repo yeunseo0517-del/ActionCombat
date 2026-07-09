@@ -41,6 +41,7 @@ void USlashOverlay::SetStaminaPercent(float CurrentStamina, float MaxStamina)
 
 void USlashOverlay::SetGold(int32 Gold)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Update: %d"), Gold);
 	if (GoldText)
 	{
 		GoldText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Gold)));
