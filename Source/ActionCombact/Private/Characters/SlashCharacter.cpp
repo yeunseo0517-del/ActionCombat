@@ -13,6 +13,7 @@
 
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
+#include "Interfaces/InteractableInterface.h"
 
 #include "Components/Attribute/AttributeComponent.h"
 #include "Components/Combat/CombatComponent.h"
@@ -21,12 +22,13 @@
 #include "HUD/SlashOverlay.h"
 
 #include "Game/ActionGameInstance.h"
+#include "DrawDebugHelpers.h"
 
 
 // Sets default values
 ASlashCharacter::ASlashCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -43,6 +45,13 @@ ASlashCharacter::ASlashCharacter()
 	ViewCamera->SetupAttachment(SpringArm);
 
 	TeamType = ETeamType::Player;
+}
+
+void ASlashCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if(GetWorld()->TimeSince(InteractionData.LastInteractionCheckTime > InteractionCheckFrequency)) PerformInteractionCheck();
 }
 
 // Called when the game starts or when spawned
@@ -99,6 +108,129 @@ void ASlashCharacter::EnterHitReact()
 {
 	if (IsDead()) return;
 	Super::EnterHitReact();
+}
+
+void ASlashCharacter::PerformInteractionCheck()
+{
+	InteractionData.LastInteractionCheckTime = GetWorld()->GetTimeSeconds();
+
+	AActor* DetectedInteractable = nullptr;
+
+	FVector TraceStart = GetPawnViewLocation() + 10.f;
+	FVector TraceEnd = TraceStart + (GetViewRotation().Vector() * InteractionCheckDistance);
+
+	float LookDirection = FVector::DotProduct(GetActorForwardVector(), GetViewRotation().Vector());
+
+	if (LookDirection > 0)
+	{
+		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.f, 0, 2.f);
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+		FHitResult TraceHit;
+
+		if (GetWorld()->LineTraceSingleByChannel(TraceHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
+		{
+			AActor* HitActor = TraceHit.GetActor();
+			if (HitActor && Cast<IInteractableInterface>(HitActor))
+			{
+				const float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
+
+				if (HitActor == InteractionData.CurrentInteractable.Get()) return;
+
+				if (Distance <= InteractionCheckDistance)
+				{
+					FoundInteractable(HitActor);
+					return;
+				}
+			}
+		}
+		NoInteractableFound();
+	}
+}
+
+void ASlashCharacter::FoundInteractable(AActor* NewInteractable)
+{
+	if (IsInteracting())
+	{
+		EndInteract();
+	}
+
+	if (InteractionData.CurrentInteractable.IsValid())
+	{
+		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
+			Interface->EndFocus();
+	}
+
+	InteractionData.CurrentInteractable = NewInteractable;
+	if (IInteractableInterface* Interface = Cast<IInteractableInterface>(NewInteractable))
+		Interface->BeginFocus();
+}
+
+void ASlashCharacter::NoInteractableFound()
+{
+	if (IsInteracting())
+	{
+		GetWorldTimerManager().ClearTimer(InteractionTimer);
+	}
+
+	if (InteractionData.CurrentInteractable.IsValid())
+	{
+		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
+		{
+			Interface->EndFocus();
+		}
+	}
+
+	InteractionData.CurrentInteractable.Reset();
+}
+
+void ASlashCharacter::BeginInteract()
+{
+	// 시선이나 거리가 바뀌지 않았는지 확인
+	PerformInteractionCheck();
+
+	if (InteractionData.CurrentInteractable.IsValid())
+	{
+		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
+		{
+			Interface->BeginInteract();
+			if (FMath::IsNearlyZero(Interface->InteractableData.InteractionDuration, .1f))
+			{
+				Interact();
+			}
+			else
+			{
+				GetWorldTimerManager().SetTimer(InteractionTimer, this, &ASlashCharacter::Interact, Interface->InteractableData.InteractionDuration, false);
+			}
+		}
+	}
+}
+
+void ASlashCharacter::EndInteract()
+{
+	GetWorldTimerManager().ClearTimer(InteractionTimer);
+
+	if (InteractionData.CurrentInteractable.IsValid())
+	{
+		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
+		{
+			Interface->EndInteract();
+		}
+	}
+}
+
+void ASlashCharacter::Interact()
+{
+	GetWorldTimerManager().ClearTimer(InteractionTimer);
+
+	if (InteractionData.CurrentInteractable.IsValid())
+	{
+		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
+		{
+			Interface->Interact();
+		}
+	}
 }
 
 bool ASlashCharacter::IsEquipMontage(UAnimMontage* Montage)
@@ -335,6 +467,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ASlashCharacter::OnSprintStarted);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ASlashCharacter::OnSprintStopped);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ASlashCharacter::BeginInteract);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::OnEquipStarted);
 		EnhancedInputComponent->BindAction(BasicAttackAction, ETriggerEvent::Started, this, &ASlashCharacter::BasicAttack);
 		EnhancedInputComponent->BindAction(QSkillAction, ETriggerEvent::Started, this, &ASlashCharacter::OnQStarted);

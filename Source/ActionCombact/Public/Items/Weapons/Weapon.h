@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Items/Item.h"
+#include "Items/InteractItem.h"
 #include "Types/CombatTypes.h"
 #include "Types/TraceTypes.h"
 #include "Types/SkillTypes.h"
@@ -21,7 +21,7 @@ class UStatusComponent;
  * 
  */
 UCLASS()
-class ACTIONCOMBACT_API AWeapon : public AItem
+class ACTIONCOMBACT_API AWeapon : public AInteractItem
 {
 	GENERATED_BODY()
 	

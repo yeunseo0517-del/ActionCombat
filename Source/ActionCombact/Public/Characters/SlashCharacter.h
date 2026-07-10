@@ -7,6 +7,23 @@
 #include "Interfaces/PickupInterface.h"
 #include "SlashCharacter.generated.h"
 
+USTRUCT()
+struct FInteractionData
+{
+	GENERATED_BODY()
+
+	FInteractionData()
+		: CurrentInteractable(nullptr),
+		LastInteractionCheckTime(0.f)
+	{
+
+	};
+
+	TWeakObjectPtr<UObject> CurrentInteractable;
+
+	float LastInteractionCheckTime;
+};
+
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -25,6 +42,8 @@ class ACTIONCOMBACT_API ASlashCharacter : public ABaseCharacter, public IPickupI
 public:
 	ASlashCharacter();
 	
+	virtual void Tick(float DeltaSeconds) override;
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -36,11 +55,26 @@ public:
 	virtual void SetOverlappingItem(AItem* Item) override;
 	virtual void AddGold(int32 Amount) override;
 
+	FORCEINLINE bool IsInteracting() const { return GetWorldTimerManager().IsTimerActive(InteractionTimer); }
+
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) override;
 	virtual void EnterHitReact() override;
+
+	void PerformInteractionCheck();
+	void FoundInteractable(AActor* NewInteractable);
+	void NoInteractableFound();
+	void BeginInteract();
+	void EndInteract();
+	void Interact();
+
+
+	FInteractionData InteractionData;
+	float InteractionCheckFrequency = 0.1f;
+	float InteractionCheckDistance = 225.f;
+	FTimerHandle InteractionTimer;
 
 	/*
 	Enchanced Input
@@ -59,6 +93,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* SprintAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* InteractAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* EquipAction;

@@ -70,6 +70,7 @@ void AWeapon::InitializeSkills()
 {
 	Skills.Empty();
 	int SkillCount = 0;
+	if (!WeaponData || WeaponData->SkillLoadout.IsEmpty()) return;
 	for (auto& It : WeaponData->SkillLoadout)
 	{
 		ESkillSlot Slot = It.Key;
