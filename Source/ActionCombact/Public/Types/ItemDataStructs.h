@@ -65,7 +65,6 @@ struct FItemNumericData
 {
 	GENERATED_BODY()
 
-	float Weight;
 	int32 MaxStackSize;
 	bool bIsStackable;
 };
@@ -82,7 +81,7 @@ struct FItemAssetData
 	UStaticMesh* Mesh;
 };
 
-USTRUCT(BlueprintType)
+USTRUCT()
 struct FItemData : public FTableRowBase
 {
 	GENERATED_BODY()

@@ -8,7 +8,7 @@
 
 #include "Components/Attribute/AttributeComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "HUD/HealthBarComponent.h"
+#include "HUD/Battle/HealthBarComponent.h"
 
 AMinionEnemy::AMinionEnemy()
 {

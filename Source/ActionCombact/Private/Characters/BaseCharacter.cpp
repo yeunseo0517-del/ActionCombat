@@ -4,7 +4,7 @@
 #include "Characters/BaseCharacter.h"
 
 #include "Items/Weapons/Weapon.h"
-#include "Items/Weapons/Data/HitEffectDataAsset.h"
+#include "Data/HitEffectDataAsset.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Combat/CombatComponent.h"
 #include "Components/Combat/Skill/SkillBase.h"

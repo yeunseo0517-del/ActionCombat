@@ -4,7 +4,7 @@
 #include "Enemy/BossEnemy.h"
 #include "AIController.h"
 #include "Navigation/PathFollowingComponent.h"
-#include "HUD/HealthBar.h"
+#include "HUD/Battle/HealthBar.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/Combat/Skill/SkillBase.h"
 #include "Components/Combat/CombatComponent.h"

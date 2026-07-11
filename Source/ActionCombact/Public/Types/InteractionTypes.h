@@ -36,9 +36,11 @@ struct FInteractableData
 	UPROPERTY(EditInstanceOnly)
 	FText ActionText;
 
-	// 줍기 전용
 	UPROPERTY(EditInstanceOnly)
 	int32 Quantity;
+
+	UPROPERTY(EditInstanceOnly)
+	bool bShowQuantity;
 
 	UPROPERTY(EditInstanceOnly)
 	float InteractionDuration = 0.f;

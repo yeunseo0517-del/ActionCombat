@@ -2,7 +2,6 @@
 
 
 #include "Items/Item.h"
-#include "Components/SphereComponent.h"
 #include "Interfaces/PickupInterface.h"
 
 // Sets default values
@@ -16,44 +15,17 @@ AItem::AItem() : Amplitude(0.25f), TimeConstant(5.f)
 
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMeshComponent"));
 	ItemMesh->SetupAttachment(GetRootComponent());
-
-	OverlapSphere = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapSphere"));
-	OverlapSphere->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
 void AItem::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	// 이벤트가 발생했을 때 실행될 함수를 델리게이트에 바인딩
-	OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnSphereBeginOverlap);
-	OverlapSphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereEndOverlap);
 }
 
 float AItem::TransformedSin()
 {
 	return Amplitude * FMath::Sin(RunningTime * TimeConstant);
-}
-
-void AItem::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	IPickupInterface* PickupInteface = Cast<IPickupInterface>(OtherActor);
-
-	if (PickupInteface)
-	{
-		PickupInteface->SetOverlappingItem(this);
-	}
-}
-
-void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	IPickupInterface* PickupInteface = Cast<IPickupInterface>(OtherActor);
-
-	if (PickupInteface)
-	{
-		PickupInteface->SetOverlappingItem(nullptr);
-	}
 }
 
 // Called every frame

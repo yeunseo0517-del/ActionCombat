@@ -13,7 +13,8 @@ class ACTIONCOMBACT_API ABattleMapConfig : public AActor
 	
 public:	
 	// Sets default values for this actor's properties
-	ABattleMapConfig();
+	ABattleMapConfig()
+	{ }
 
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultSettings")
 	int32 CurrentStageID = 1;

@@ -9,38 +9,27 @@ UItemBase::UItemBase()
 
 UItemBase* UItemBase::CreateItemCopy() const
 {
-	UItemBase* ItemCopy = NewObject<UItemBase>(StaticClass());
-	ItemCopy->ItemID = this->ItemID;
-	ItemCopy->Quantity = this->Quantity;
-	ItemCopy->ItemType = this->ItemType;
-	ItemCopy->Quality = this->Quality;
-	ItemCopy->ItemStatistics = this->ItemStatistics;
-	ItemCopy->TextData = this->TextData;
-	ItemCopy->NumericData = this->NumericData;
-	ItemCopy->AssetData = this->AssetData;
+	UItemBase* ItemCopy = NewObject<UItemBase>(GetOuter(), GetClass());
+	ItemCopy->ItemData = this->ItemData;
 	return ItemCopy;
 }
 
-float UItemBase::GetItemStackWeight() const
+void UItemBase::SetItemData(const FItemData& Data, const int32 InQuantity)
 {
-	return Quantity * NumericData.Weight;
-}
-
-float UItemBase::GetItemSingleWeight() const
-{
-	return NumericData.Weight;
+	ItemData = Data;
+	Quantity = InQuantity;
 }
 
 bool UItemBase::IsFullItemStack() const
 {
-	return Quantity == NumericData.MaxStackSize;
+	return Quantity == ItemData.ItemNumericData.MaxStackSize;
 }
 
 void UItemBase::SetQuantity(const int32 NewQuantity)
 {
 	if (NewQuantity != Quantity)
 	{
-		int32 MaxSize = NumericData.bIsStackable ? NumericData.MaxStackSize : 1;
+		int32 MaxSize = ItemData.ItemNumericData.bIsStackable ? ItemData.ItemNumericData.MaxStackSize : 1;
 		Quantity = FMath::Clamp(NewQuantity, 0, MaxSize);
 
 		/*if (OwningInventory)

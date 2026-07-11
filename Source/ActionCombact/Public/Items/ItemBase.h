@@ -19,10 +19,11 @@ public:
 	UItemBase();
 
 	UItemBase* CreateItemCopy() const;
+	void SetItemData(const FItemData& Data, const int32 InQuantity);
 
-	FORCEINLINE float GetItemStackWeight() const;
-	FORCEINLINE float GetItemSingleWeight() const;
 	FORCEINLINE bool IsFullItemStack() const;
+	FORCEINLINE const FItemData& GetItemData() const { return ItemData; }
+	FORCEINLINE int32 GetQuantity() const { return Quantity; }
 
 	void SetQuantity(const int32 NewQuantity);
 	virtual void Use(class ASlashCharacter* Character);
@@ -30,7 +31,7 @@ public:
 protected:
 	bool operator==(const FName& OtherID) const
 	{
-		return this->ItemID == OtherID;
+		return this->ItemData.ItemID == OtherID;
 	}
 
 private:
@@ -38,26 +39,8 @@ private:
 	// UInventoryComponent* OwingInventory;
 
 	UPROPERTY(VisibleAnywhere, Category = "Item")
+	FItemData ItemData;
+
+	UPROPERTY(VisibleAnywhere, Category = "Item")
 	int32 Quantity;
-
-	UPROPERTY(VisibleAnywhere, Category = "Item")
-	FName ItemID;
-
-	UPROPERTY(VisibleAnywhere, Category = "Item")
-	EItemType ItemType;
-
-	UPROPERTY(VisibleAnywhere, Category = "Item")
-	EItemQuality Quality;
-
-	UPROPERTY(VisibleAnywhere, Category = "Item")
-	FItemStatistics ItemStatistics;
-
-	UPROPERTY(VisibleAnywhere, Category = "Item")
-	FItemTextData TextData;
-
-	UPROPERTY(VisibleAnywhere, Category = "Item")
-	FItemNumericData NumericData;
-
-	UPROPERTY(VisibleAnywhere, Category = "Item")
-	FItemAssetData AssetData;
 };

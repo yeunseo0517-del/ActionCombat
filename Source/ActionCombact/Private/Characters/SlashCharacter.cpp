@@ -17,9 +17,9 @@
 
 #include "Components/Attribute/AttributeComponent.h"
 #include "Components/Combat/CombatComponent.h"
-#include "HUD/SkillHUDWidget.h"
+#include "HUD/Battle/SkillHUDWidget.h"
 #include "HUD/SlashHUD.h"
-#include "HUD/SlashOverlay.h"
+#include "HUD/Battle/SlashOverlay.h"
 
 #include "Game/ActionGameInstance.h"
 #include "DrawDebugHelpers.h"
@@ -125,7 +125,7 @@ void ASlashCharacter::PerformInteractionCheck()
 
 	if (LookDirection > 0)
 	{
-		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.f, 0, 2.f);
+		//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.f, 0, 2.f);
 
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(this);
@@ -134,11 +134,6 @@ void ASlashCharacter::PerformInteractionCheck()
 		if (GetWorld()->LineTraceSingleByChannel(TraceHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
 		{
 			AActor* HitActor = TraceHit.GetActor();
-			UE_LOG(LogTemp, Warning, TEXT("Hit: %s"),
-				HitActor ? *HitActor->GetName() : TEXT("None"));
-
-			UE_LOG(LogTemp, Warning, TEXT("Interactable: %s"),
-				Cast<IInteractableInterface>(HitActor) ? TEXT("Yes") : TEXT("No"));
 			if (HitActor && Cast<IInteractableInterface>(HitActor))
 			{
 				const float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
@@ -242,6 +237,7 @@ void ASlashCharacter::Interact()
 		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
 		{
 			Interface->Interact(this);
+			if (ASlashHUD* HUD = GetSlashHUD()) HUD->ShowAcquiredWidget(Interface->GetInteractableData());
 		}
 	}
 }

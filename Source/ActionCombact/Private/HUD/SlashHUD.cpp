@@ -2,11 +2,11 @@
 
 
 #include "HUD/SlashHUD.h"
-#include "HUD/SlashOverlay.h"
-#include "HUD/SkillHUDWidget.h"
-#include "HUD/ResultWidget.h"
-#include "HUD/Widgets/GateConfirmWidget.h"
-#include "HUD/InteractionWidget.h"
+#include "HUD/Battle/SlashOverlay.h"
+#include "HUD/Battle/SkillHUDWidget.h"
+#include "HUD/Battle/ResultWidget.h"
+#include "HUD/Interaction/GateConfirmWidget.h"
+#include "HUD/Interaction/InteractionWidget.h"
 #include "HUD/Interaction/AcquiredNotificationWidget.h"
 #include "HUD/Inventory/InventoryPanelWidget.h"
 #include "Kismet/GameplayStatics.h"
@@ -47,7 +47,7 @@ void ASlashHUD::CreateWidgets()
 	}
 
 	if(!InteractionWidget) InteractionWidget = CreateHUDWidget<UInteractionWidget>(InteractionClass);
-	if (!AcquiredNotificationClass) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
+	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
 	if(!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
 }
 
@@ -56,7 +56,7 @@ void ASlashHUD::ShowBattleResult(const FBattleResult& Result)
 	if (!ResultWidget) return;
 
 	ResultWidget->SetBattleResult(Result);
-	ResultWidget->SetVisibility(ESlateVisibility::Visible);
+	SetWidgetVisible(ResultWidget, true);
 
 	SetGameAndUIInputMode();
 }
@@ -64,7 +64,7 @@ void ASlashHUD::ShowBattleResult(const FBattleResult& Result)
 void ASlashHUD::CloseBattleResult()
 {
 	if (!ResultWidget) return;
-	ResultWidget->SetVisibility(ESlateVisibility::Collapsed);
+	SetWidgetVisible(ResultWidget, false);
 	RestoreGameInputMode();
 }
 
@@ -77,12 +77,12 @@ void ASlashHUD::UpdateGold(int32 Amount)
 void ASlashHUD::ShowGateConfirmWidget(const FText& MapName, FSimpleDelegate OnConfirmed)
 {
 	if (!GateConfirmWidget) return;
-	if(ResultWidget) ResultWidget->SetVisibility(ESlateVisibility::Collapsed);
+	if (ResultWidget) SetWidgetVisible(ResultWidget, false);
 
 	PendingGateConfirm = OnConfirmed;
 
 	GateConfirmWidget->SetMessage(MapName);
-	GateConfirmWidget->SetVisibility(ESlateVisibility::Visible);
+	SetWidgetVisible(GateConfirmWidget, true);
 
 	SetGameAndUIInputMode();
 }
@@ -93,7 +93,7 @@ void ASlashHUD::HideGateConfirmWidget()
 
 	PendingGateConfirm.Unbind();
 
-	GateConfirmWidget->SetVisibility(ESlateVisibility::Collapsed);
+	SetWidgetVisible(GateConfirmWidget, false);
 
 	RestoreGameInputMode();
 }
@@ -101,21 +101,23 @@ void ASlashHUD::HideGateConfirmWidget()
 void ASlashHUD::HideInteractionWidget()
 {
 	if (!InteractionWidget) return;
-	InteractionWidget->SetVisibility(ESlateVisibility::Collapsed);
+	SetWidgetVisible(InteractionWidget, false);
 }
 
 void ASlashHUD::ShowAcquiredWidget(const FInteractableData& InteractableData)
 {
 	if (!AcquiredNotification) return;
 
-	AcquiredNotification->SetVisibility(ESlateVisibility::Visible);
+	SetWidgetVisible(AcquiredNotification, true);
 	AcquiredNotification->UpdateNotification(InteractableData);
+
+	GetWorldTimerManager().SetTimer(NotificationDestroyTimer, this, &ASlashHUD::HideAcquiredWidget, NotiDestroyTime, false);
 }
 
 void ASlashHUD::HideAcquiredWidget()
 {
 	if (!AcquiredNotification) return;
-	AcquiredNotification->SetVisibility(ESlateVisibility::Collapsed);
+	SetWidgetVisible(AcquiredNotification, false);
 }
 
 void ASlashHUD::ShowInteractionWidget(const FInteractableData& InteractableData)
@@ -123,7 +125,7 @@ void ASlashHUD::ShowInteractionWidget(const FInteractableData& InteractableData)
 	if (!InteractionWidget) return;
 	if (InteractionWidget->GetVisibility() == ESlateVisibility::Collapsed)
 	{
-		InteractionWidget->SetVisibility(ESlateVisibility::Visible);
+		SetWidgetVisible(InteractionWidget, true);
 	}
 
 	//InteractionWidget->UpdateWidget(InteractableData);
@@ -144,6 +146,12 @@ void ASlashHUD::HandleGateConfirm()
 void ASlashHUD::HandleGateCancel()
 {
 	HideGateConfirmWidget();
+}
+
+void ASlashHUD::SetWidgetVisible(UUserWidget* Widget, bool bVisible)
+{
+	if (!Widget) return;
+	Widget->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
 
 void ASlashHUD::SetUIOnlyInputMode()
@@ -185,10 +193,11 @@ void ASlashHUD::ApplyHUDMode()
 {
 	const bool bCombat = HUDMode == ESlashHUDMode::Combat;
 
-	if (SlashOverlay) SlashOverlay->SetVisibility(ESlateVisibility::Visible);
-	if (SkillHUD) SkillHUD->SetVisibility(bCombat ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-	if (ResultWidget) ResultWidget->SetVisibility(ESlateVisibility::Collapsed);
-	if (GateConfirmWidget) GateConfirmWidget->SetVisibility(ESlateVisibility::Collapsed);
+	if (SlashOverlay) SetWidgetVisible(SlashOverlay, true);
+	if (SkillHUD)
+	{
+		SetWidgetVisible(SkillHUD, bCombat);
+	}
 }
 
 void ASlashHUD::SetTownHUD()

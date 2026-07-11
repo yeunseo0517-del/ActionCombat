@@ -2,7 +2,7 @@
 
 
 #include "Items/Weapons/MeleeWeapon.h"
-#include "Items/Weapons/Data/CombatDataAsset.h"
+#include "Data/CombatDataAsset.h"
 #include "Components/Status/StatusComponent.h"
 #include "Components/Combat/CombatComponent.h"
 

@@ -22,7 +22,7 @@ private:
 	class UTextBlock* Name;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* ActionText;
+	class UTextBlock* QuantityPiece;
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* Quantity;

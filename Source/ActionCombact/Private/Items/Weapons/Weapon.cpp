@@ -7,8 +7,8 @@
 #include "Components/Status/StatusComponent.h"
 #include "Components/Combat/CombatComponent.h"
 #include "Components/Combat/Skill/SkillBase.h"
-#include "Items/Weapons/Data/HitEffectDataAsset.h"
-#include "Items/Weapons/Data/CombatDataAsset.h"
+#include "Data/HitEffectDataAsset.h"
+#include "Data/CombatDataAsset.h"
 
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -30,8 +30,6 @@ void AWeapon::Equip(USceneComponent* InParent, const FName& InSocketName, AActor
 	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
 	SetHitEffectData();
-
-	DisableSphereCollision();
 }
 
 void AWeapon::SetHitEffectData()
@@ -42,14 +40,6 @@ void AWeapon::SetHitEffectData()
 		{
 			CombatInterface->GetCombatComponent()->SetHitEffectData(HitEffectData);
 		}
-	}
-}
-
-void AWeapon::DisableSphereCollision()
-{
-	if (OverlapSphere)
-	{
-		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 }
 

@@ -2,8 +2,10 @@
 
 
 #include "Items/InteractItem.h"
+#include "Items/ItemBase.h"
+#include "Types/ItemDataStructs.h"
 #include "Components/WidgetComponent.h"
-#include "HUD/InteractionWidget.h"
+#include "HUD/Interaction/InteractionWidget.h"
 #include "Kismet/GameplayStatics.h"
 
 AInteractItem::AInteractItem()
@@ -51,17 +53,21 @@ void AInteractItem::EndFocus()
 
 void AInteractItem::BeginInteract()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Begin Interact"))
+	//UE_LOG(LogTemp, Warning, TEXT("Begin Interact"))
 }
 
 void AInteractItem::EndInteract()
 {
-	UE_LOG(LogTemp, Warning, TEXT("End Interact"))
+	//UE_LOG(LogTemp, Warning, TEXT("End Interact"))
 }
 
 void AInteractItem::Interact(AActor* Interactor)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Interact"))
+	if (!IsPendingKillPending())
+	{
+
+	}
+	Destroy();
 }
 
 const FInteractableData& AInteractItem::GetInteractableData() const
@@ -73,11 +79,53 @@ void AInteractItem::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitializePickup(ItemQauntity);
+
 	if (UInteractionWidget* Widget = Cast<UInteractionWidget>(InteractionWidgetComponent->GetUserWidgetObject()))
 	{
 		Widget->UpdateWidget(InteractableData);
 	}
 }
+
+void AInteractItem::InitializePickup(const int32 InQuantity)
+{
+	if (ItemDataTable && !DesiredItemID.IsNone())
+	{
+		const FItemData* ItemData = ItemDataTable->FindRow<FItemData>(DesiredItemID, DesiredItemID.ToString());
+		if (!ItemData) return;
+
+		ItemInstance = NewObject<UItemBase>(this);
+		ItemInstance->SetItemData(*ItemData, InQuantity <= 0? 1 : InQuantity);
+		ItemMesh->SetStaticMesh(ItemData->ItemAssetData.Mesh);
+
+		UpdateInteractableData();
+	}
+}
+
+void AInteractItem::InitializeDrop(const UItemBase* ItemToDrop, const int32 InQuantity)
+{
+	if (!ItemToDrop || InQuantity <= 0) return;
+
+	ItemInstance = ItemToDrop->CreateItemCopy();
+	ItemInstance->SetQuantity(InQuantity);
+
+	const FItemData& Data = ItemInstance->GetItemData();
+	ItemMesh->SetStaticMesh(Data.ItemAssetData.Mesh);
+
+	UpdateInteractableData();
+}
+
+void AInteractItem::UpdateInteractableData()
+{
+	if (!ItemInstance) return;
+	const FItemData& Data = ItemInstance->GetItemData();
+
+	InteractableData.InteractableType = EInteractableType::Pickup;
+	InteractableData.ActionText = Data.ItemTextData.InteractionText;
+	InteractableData.Name = Data.ItemTextData.Name;
+	InteractableData.Quantity = ItemInstance->GetQuantity();
+}
+
 
 void AInteractItem::UpdateWidgetPosition()
 {

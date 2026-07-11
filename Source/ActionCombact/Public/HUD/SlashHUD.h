@@ -55,6 +55,7 @@ private:
 	UFUNCTION()
 	void UpdateGold(int32 Amount);
 
+	void SetWidgetVisible(UUserWidget* Widget, bool bVisible);
 	void SetUIOnlyInputMode();
 	void SetGameAndUIInputMode();
 	void RestoreGameInputMode();
@@ -122,4 +123,8 @@ private:
 	UInventoryPanelWidget* InventoryPanel;
 
 	FSimpleDelegate PendingGateConfirm;
+
+	FTimerHandle NotificationDestroyTimer;
+	UPROPERTY(EditAnywhere, Category = Interaction)
+	float NotiDestroyTime = 2.5f;
 };

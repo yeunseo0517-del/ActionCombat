@@ -29,7 +29,6 @@ public:
 	AWeapon();
 
 	void Equip(USceneComponent* InParent, const FName& InSocketName, AActor* NewOwner, APawn* NewInstigator);
-	void DisableSphereCollision();
 	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
 	virtual FHitContext GetHitContext() { return FHitContext(); }
 

@@ -6,8 +6,8 @@
 #include "Components/Status/StatusComponent.h"
 #include "Components/Combat/AreaEffects/RadialShockwaves.h"
 #include "Components/Combat/Projectiles/BaseProjectile.h"
-#include "Items/Weapons/Data/CombatDataAsset.h"
-#include "Items/Weapons/Data/HitEffectDataAsset.h"
+#include "Data/CombatDataAsset.h"
+#include "Data/HitEffectDataAsset.h"
 
 #include "Items/Weapons/Weapon.h"
 #include "Characters/BaseCharacter.h"

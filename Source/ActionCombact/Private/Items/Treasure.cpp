@@ -4,6 +4,21 @@
 #include "Items/Treasure.h"
 #include "Interfaces/PickupInterface.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Components/SphereComponent.h"
+
+ATreasure::ATreasure()
+{
+	OverlapSphere = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapSphere"));
+	OverlapSphere->SetupAttachment(ItemMesh);
+}
+
+void ATreasure::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// 이벤트가 발생했을 때 실행될 함수를 델리게이트에 바인딩
+	OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ATreasure::OnSphereBeginOverlap);
+}
 
 void ATreasure::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
