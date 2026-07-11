@@ -11,8 +11,11 @@ AItem::AItem() : Amplitude(0.25f), TimeConstant(5.f)
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	USceneComponent* SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
+	SetRootComponent(SceneRoot);
+
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMeshComponent"));
-	SetRootComponent(ItemMesh);
+	ItemMesh->SetupAttachment(GetRootComponent());
 
 	OverlapSphere = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapSphere"));
 	OverlapSphere->SetupAttachment(GetRootComponent());
@@ -64,8 +67,8 @@ void AItem::Tick(float DeltaTime)
 	{
 		const float rotationZ = DeltaTime * 100;
 
-		AddActorWorldRotation(FRotator(0.f, rotationZ, 0.f));
-		AddActorWorldOffset(FVector(0.f, 0.f, TransformedSin()));
+		ItemMesh->AddLocalRotation(FRotator(0.f, rotationZ, 0.f));
+		ItemMesh->AddLocalOffset(FVector(0.f, 0.f, TransformedSin()));
 	}
 }
 

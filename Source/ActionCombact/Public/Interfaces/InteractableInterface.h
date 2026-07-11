@@ -4,48 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "Types/InteractionTypes.h"
 #include "InteractableInterface.generated.h"
-
-UENUM()
-enum class EInteractableType : uint8
-{
-	Pickup UMETA(DisplayName = "Pickup"),
-	NonPlayerCharacter UMETA(DisplayName = "NPC"),
-	Device UMETA(DisplayName = "Device"),
-	Store UMETA(DisplayName = "Store")
-};
-
-USTRUCT()
-struct FInteractableData
-{
-	GENERATED_BODY()
-
-	FInteractableData()
-		: InteractableType(EInteractableType::Pickup),
-		Name(FText::GetEmpty()),
-		Action(FText::GetEmpty()),
-		Quantity(0),
-		InteractionDuration(0.f)
-	{
-
-	}
-
-	UPROPERTY(EditInstanceOnly)
-	EInteractableType InteractableType;
-
-	UPROPERTY(EditInstanceOnly)
-	FText Name;
-
-	UPROPERTY(EditInstanceOnly)
-	FText Action;
-
-	// 줍기 전용
-	UPROPERTY(EditInstanceOnly)
-	int32 Quantity;
-
-	UPROPERTY(EditInstanceOnly)
-	float InteractionDuration = 0.f;
-};
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
@@ -67,7 +27,7 @@ public:
 	virtual void EndFocus() = 0;
 	virtual void BeginInteract() = 0;
 	virtual void EndInteract() = 0;
-	virtual void Interact() = 0;
+	virtual void Interact(AActor* Interactor) = 0;
 
-	FInteractableData InteractableData;
+	virtual const FInteractableData& GetInteractableData() const = 0;
 };

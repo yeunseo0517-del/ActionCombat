@@ -18,6 +18,5 @@ void ATownGameMode::BeginPlay()
 	if (!SlashHUD) return;
 
 	SlashHUD->SetTownHUD();
-	SlashHUD->UpdateSlashOverlay(GI->GetCurrentGold());
-	UE_LOG(LogTemp, Warning, TEXT("%d"), GI->GetCurrentGold());
+	SlashHUD->UpdateGoldWidget(GI->GetCurrentGold());
 }

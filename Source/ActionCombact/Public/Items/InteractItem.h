@@ -18,11 +18,25 @@ class ACTIONCOMBACT_API AInteractItem : public AItem, public IInteractableInterf
 public:
 	AInteractItem();
 
+	virtual void Tick(float DeltaTime) override;
+
 	virtual void BeginFocus() override;
 	virtual void EndFocus() override;
 	virtual void BeginInteract() override;
 	virtual void EndInteract() override;
-	virtual void Interact() override;
+	virtual void Interact(AActor* Interactor) override;
 
+	virtual const FInteractableData& GetInteractableData() const override;
 protected:
+	virtual void BeginPlay() override;
+private:
+	void UpdateWidgetPosition();
+
+	bool ShouldUpdateWidgetPosition = false;
+
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	FInteractableData InteractableData;
+
+	UPROPERTY(VisibleAnywhere, Category = "Interaction")
+	TObjectPtr<class UWidgetComponent> InteractionWidgetComponent;
 };

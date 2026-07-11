@@ -6,8 +6,12 @@
 #include "HUD/SkillHUDWidget.h"
 #include "HUD/ResultWidget.h"
 #include "HUD/Widgets/GateConfirmWidget.h"
+#include "HUD/InteractionWidget.h"
+#include "HUD/Interaction/AcquiredNotificationWidget.h"
+#include "HUD/Inventory/InventoryPanelWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Game/ActionGameInstance.h"
+#include "Interfaces/InteractableInterface.h"
 
 void ASlashHUD::BeginPlay()
 {
@@ -24,53 +28,27 @@ void ASlashHUD::BeginPlay()
 
 void ASlashHUD::CreateWidgets()
 {
-	UWorld* World = GetWorld();
-	if (World)
+	if(!SlashOverlay) SlashOverlay = CreateHUDWidget<USlashOverlay>(SlashOverlayClass);
+	if(!SkillHUD) SkillHUD = CreateHUDWidget<USkillHUDWidget>(SkillHUDClass);
+	if (!ResultWidget)
 	{
-		APlayerController* Controller = World->GetFirstPlayerController();
-		if (Controller)
+		ResultWidget = CreateHUDWidget<UResultWidget>(ResultClass);
+		if (ResultWidget) ResultWidget->OnCloseRequested.AddDynamic(this, &ASlashHUD::CloseBattleResult);
+	}
+
+	if (!GateConfirmWidget)
+	{
+		GateConfirmWidget = CreateHUDWidget<UGateConfirmWidget>(GateConfirmClass);
+		if (GateConfirmWidget)
 		{
-			if (SlashOverlayClass)
-			{
-				SlashOverlay = CreateWidget<USlashOverlay>(Controller, SlashOverlayClass);
-				if (SlashOverlay)
-				{
-					SlashOverlay->AddToViewport();
-					SlashOverlay->SetVisibility(ESlateVisibility::Collapsed);
-				}
-			}
-			if (SkillHUDClass)
-			{
-				SkillHUD = CreateWidget<USkillHUDWidget>(Controller, SkillHUDClass);
-				if (SkillHUD)
-				{
-					SkillHUD->AddToViewport();
-					SkillHUD->SetVisibility(ESlateVisibility::Collapsed);
-				}
-			}
-			if (ResultClass)
-			{
-				ResultWidget = CreateWidget<UResultWidget>(Controller, ResultClass);
-				if (ResultWidget)
-				{
-					ResultWidget->AddToViewport();
-					ResultWidget->SetVisibility(ESlateVisibility::Collapsed);
-					ResultWidget->OnCloseRequested.AddDynamic(this, &ASlashHUD::CloseBattleResult);
-				}
-			}
-			if (GateConfirmClass)
-			{
-				GateConfirmWidget = CreateWidget<UGateConfirmWidget>(Controller, GateConfirmClass);
-				if (GateConfirmWidget)
-				{
-					GateConfirmWidget->AddToViewport();
-					GateConfirmWidget->SetVisibility(ESlateVisibility::Collapsed);
-					GateConfirmWidget->OnConfirm.AddDynamic(this, &ASlashHUD::HandleGateConfirm);
-					GateConfirmWidget->OnCancel.AddDynamic(this, &ASlashHUD::HandleGateCancel);
-				}
-			}
+			GateConfirmWidget->OnConfirm.AddDynamic(this, &ASlashHUD::HandleGateConfirm);
+			GateConfirmWidget->OnCancel.AddDynamic(this, &ASlashHUD::HandleGateCancel);
 		}
 	}
+
+	if(!InteractionWidget) InteractionWidget = CreateHUDWidget<UInteractionWidget>(InteractionClass);
+	if (!AcquiredNotificationClass) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
+	if(!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
 }
 
 void ASlashHUD::ShowBattleResult(const FBattleResult& Result)
@@ -118,6 +96,42 @@ void ASlashHUD::HideGateConfirmWidget()
 	GateConfirmWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	RestoreGameInputMode();
+}
+
+void ASlashHUD::HideInteractionWidget()
+{
+	if (!InteractionWidget) return;
+	InteractionWidget->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void ASlashHUD::ShowAcquiredWidget(const FInteractableData& InteractableData)
+{
+	if (!AcquiredNotification) return;
+
+	AcquiredNotification->SetVisibility(ESlateVisibility::Visible);
+	AcquiredNotification->UpdateNotification(InteractableData);
+}
+
+void ASlashHUD::HideAcquiredWidget()
+{
+	if (!AcquiredNotification) return;
+	AcquiredNotification->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void ASlashHUD::ShowInteractionWidget(const FInteractableData& InteractableData)
+{
+	if (!InteractionWidget) return;
+	if (InteractionWidget->GetVisibility() == ESlateVisibility::Collapsed)
+	{
+		InteractionWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+
+	//InteractionWidget->UpdateWidget(InteractableData);
+}
+
+void ASlashHUD::SetHealth(float current, float max)
+{
+	SlashOverlay->SetHealthPercent(current, max);
 }
 
 void ASlashHUD::HandleGateConfirm()
@@ -187,7 +201,7 @@ void ASlashHUD::SetCombatHUD()
 	HUDMode = ESlashHUDMode::Combat;
 }
 
-void ASlashHUD::UpdateSlashOverlay(int32 Gold)
+void ASlashHUD::UpdateGoldWidget(int32 Gold)
 {
 	if (SlashOverlay) SlashOverlay->SetGold(Gold);
 }

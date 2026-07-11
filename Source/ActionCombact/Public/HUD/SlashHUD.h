@@ -17,6 +17,9 @@ class USlashOverlay;
 class USkillHUDWidget;
 class UResultWidget;
 class UGateConfirmWidget;
+class UInteractionWidget;
+class UInventoryPanelWidget;
+class UAcquiredNotificationWidget;
 
 UCLASS()
 class ACTIONCOMBACT_API ASlashHUD : public AHUD
@@ -27,6 +30,14 @@ public:
 	void ShowBattleResult(const struct FBattleResult& Result);
 	void ShowGateConfirmWidget(const FText& MapName, FSimpleDelegate OnConfirmed);
 	void HideGateConfirmWidget();
+	void ShowInteractionWidget(const struct FInteractableData& InteractableData);
+	void HideInteractionWidget();
+	void ShowAcquiredWidget(const struct FInteractableData& InteractableData);
+
+	void SetHealth(float current, float max);
+	void SetTownHUD();
+	void SetCombatHUD();
+	void UpdateGoldWidget(int32 Gold);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -49,6 +60,22 @@ private:
 	void RestoreGameInputMode();
 	void CreateWidgets();
 	void ApplyHUDMode();
+	void HideAcquiredWidget();
+
+	template<typename TWidget>
+	TWidget* CreateHUDWidget(TSubclassOf<TWidget> WidgetClass)
+	{
+		if (!PlayerOwner || !WidgetClass) return nullptr;
+
+		TWidget* Widget = CreateWidget<TWidget>(PlayerOwner, WidgetClass);
+
+		if (Widget)
+		{
+			Widget->AddToViewport();
+			Widget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		return Widget;
+	}
 
 	ESlashHUDMode HUDMode = ESlashHUDMode::Town;
 
@@ -76,13 +103,23 @@ private:
 	UPROPERTY()
 	UGateConfirmWidget* GateConfirmWidget;
 
-	FSimpleDelegate PendingGateConfirm;
+	UPROPERTY(EditDefaultsOnly, Category = Interaction)
+	TSubclassOf<UInteractionWidget> InteractionClass;
 
-public:
-	FORCEINLINE USlashOverlay* GetSlashOverlay() const { return SlashOverlay; }
-	FORCEINLINE USkillHUDWidget* GetSkillHUD() const { return SkillHUD; }
-	FORCEINLINE UResultWidget* GetResultWidget() const { return ResultWidget; }
-	void SetTownHUD();
-	void SetCombatHUD();
-	void UpdateSlashOverlay(int32 Gold);
+	UPROPERTY()
+	UInteractionWidget* InteractionWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = Interaction)
+	TSubclassOf<UAcquiredNotificationWidget> AcquiredNotificationClass;
+
+	UPROPERTY()
+	UAcquiredNotificationWidget* AcquiredNotification;
+
+	UPROPERTY(EditDefaultsOnly, Category = Inventory)
+	TSubclassOf<UInventoryPanelWidget> InventoryPanelClass;
+
+	UPROPERTY()
+	UInventoryPanelWidget* InventoryPanel;
+
+	FSimpleDelegate PendingGateConfirm;
 };

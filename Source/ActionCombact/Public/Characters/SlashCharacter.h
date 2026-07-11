@@ -19,7 +19,7 @@ struct FInteractionData
 
 	};
 
-	TWeakObjectPtr<UObject> CurrentInteractable;
+	TWeakObjectPtr<AActor> CurrentInteractable;
 
 	float LastInteractionCheckTime;
 };
@@ -32,7 +32,6 @@ class AItem;
 class ATreasure;
 class AWeapon;
 class UHealthBar;
-class USkillWidget;
 
 UCLASS()
 class ACTIONCOMBACT_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
@@ -119,8 +118,8 @@ protected:
 	float SprintWalkSpeed = 1000.f;
 
 private:
-	void InitializeSlashOverlay();
-	void SetHUDHealth();
+	void UpdateHUDHealth();
+	class ASlashHUD* GetSlashHUD();
 	void StartSprint();
 	void StopSprint();
 	void Equip();
@@ -177,6 +176,5 @@ private:
 	AItem* OverlappingItem;
 
 	UPROPERTY()
-	class USlashOverlay* SlashOverlay;
-
+	TWeakObjectPtr<class ASlashHUD> SlashHUD;
 };

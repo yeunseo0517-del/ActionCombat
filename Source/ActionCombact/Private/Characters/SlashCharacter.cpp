@@ -66,21 +66,23 @@ void ASlashCharacter::BeginPlay()
 			Subsystem->AddMappingContext(SlashCharacterContext, 0);
 		}
 	}
-	InitializeSlashOverlay();
+	UpdateHUDHealth();
 }
 
-void ASlashCharacter::InitializeSlashOverlay()
+void ASlashCharacter::UpdateHUDHealth()
 {
+	if(ASlashHUD* HUD = GetSlashHUD()) HUD->SetHealth(Attributes->GetCurrentHealth(), Attributes->GetMaxHealth());
+}
+
+ASlashHUD* ASlashCharacter::GetSlashHUD()
+{
+	if (SlashHUD.IsValid()) return SlashHUD.Get();
+
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController)
-	{
-		ASlashHUD* SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD());
-		if (SlashHUD)
-		{
-			SlashOverlay = SlashHUD->GetSlashOverlay();
-			SetHUDHealth();
-		}
-	}
+	if (!PlayerController) return nullptr;
+
+	SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD());
+	return SlashHUD.Get();
 }
 
 void ASlashCharacter::StartSprint()
@@ -132,17 +134,19 @@ void ASlashCharacter::PerformInteractionCheck()
 		if (GetWorld()->LineTraceSingleByChannel(TraceHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
 		{
 			AActor* HitActor = TraceHit.GetActor();
+			UE_LOG(LogTemp, Warning, TEXT("Hit: %s"),
+				HitActor ? *HitActor->GetName() : TEXT("None"));
+
+			UE_LOG(LogTemp, Warning, TEXT("Interactable: %s"),
+				Cast<IInteractableInterface>(HitActor) ? TEXT("Yes") : TEXT("No"));
 			if (HitActor && Cast<IInteractableInterface>(HitActor))
 			{
 				const float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
 
 				if (HitActor == InteractionData.CurrentInteractable.Get()) return;
 
-				if (Distance <= InteractionCheckDistance)
-				{
-					FoundInteractable(HitActor);
-					return;
-				}
+				FoundInteractable(HitActor);
+				return;
 			}
 		}
 		NoInteractableFound();
@@ -162,9 +166,18 @@ void ASlashCharacter::FoundInteractable(AActor* NewInteractable)
 			Interface->EndFocus();
 	}
 
+	IInteractableInterface* Interface = Cast<IInteractableInterface>(NewInteractable);
+	if (!Interface) return;
+	
+	Interface->BeginFocus();
+	
+	if (ASlashHUD* HUD = GetSlashHUD())
+	{
+		if(InteractionData.CurrentInteractable.Get())
+		HUD->ShowInteractionWidget(Interface->GetInteractableData());
+	}
+
 	InteractionData.CurrentInteractable = NewInteractable;
-	if (IInteractableInterface* Interface = Cast<IInteractableInterface>(NewInteractable))
-		Interface->BeginFocus();
 }
 
 void ASlashCharacter::NoInteractableFound()
@@ -195,13 +208,13 @@ void ASlashCharacter::BeginInteract()
 		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
 		{
 			Interface->BeginInteract();
-			if (FMath::IsNearlyZero(Interface->InteractableData.InteractionDuration, .1f))
+			if (FMath::IsNearlyZero(Interface->GetInteractableData().InteractionDuration, .1f))
 			{
 				Interact();
 			}
 			else
 			{
-				GetWorldTimerManager().SetTimer(InteractionTimer, this, &ASlashCharacter::Interact, Interface->InteractableData.InteractionDuration, false);
+				GetWorldTimerManager().SetTimer(InteractionTimer, this, &ASlashCharacter::Interact, Interface->GetInteractableData().InteractionDuration, false);
 			}
 		}
 	}
@@ -228,7 +241,7 @@ void ASlashCharacter::Interact()
 	{
 		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
 		{
-			Interface->Interact();
+			Interface->Interact(this);
 		}
 	}
 }
@@ -480,14 +493,6 @@ float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damage
 {
 	if (IsInvincible()) return 0.f;
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	SetHUDHealth();
+	UpdateHUDHealth();
 	return DamageAmount;
-}
-
-void ASlashCharacter::SetHUDHealth()
-{
-	if (SlashOverlay && Attributes)
-	{
-		SlashOverlay->SetHealthPercent(Attributes->GetCurrentHealth(), Attributes->GetMaxHealth());
-	}
 }
