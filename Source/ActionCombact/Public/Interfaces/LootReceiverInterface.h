@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "PickupInterface.generated.h"
+#include "LootReceiverInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UPickupInterface : public UInterface
+class ULootReceiverInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +16,7 @@ class UPickupInterface : public UInterface
 /**
  * 
  */
-class ACTIONCOMBACT_API IPickupInterface
+class ACTIONCOMBACT_API ILootReceiverInterface
 {
 	GENERATED_BODY()
 
@@ -24,4 +24,6 @@ class ACTIONCOMBACT_API IPickupInterface
 public:
 	virtual void SetOverlappingItem(class AItem* Item) = 0;
 	virtual void AddGold(int32 Amount) = 0;
+	//virtual void AddItem()
+	//virtual bool CanAddItem() = 0;
 };

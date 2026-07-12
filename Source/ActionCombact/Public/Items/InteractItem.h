@@ -52,9 +52,13 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Item Data")
 	UItemBase* ItemInstance;
 
-	UPROPERTY(EditAnywhere, Category = "Interaction")
+	UPROPERTY(VisibleAnywhere, Category = "Item Data | Interaction")
 	FInteractableData InteractableData;
 
-	UPROPERTY(VisibleAnywhere, Category = "Interaction")
+	UPROPERTY(VisibleAnywhere, Category = "Item Data | Interaction")
 	TObjectPtr<class UWidgetComponent> InteractionWidgetComponent;
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 };

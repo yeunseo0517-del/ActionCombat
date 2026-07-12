@@ -7,6 +7,7 @@
 #include "Components/WidgetComponent.h"
 #include "HUD/Interaction/InteractionWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Interfaces/LootReceiverInterface.h"
 
 AInteractItem::AInteractItem()
 {
@@ -36,6 +37,7 @@ void AInteractItem::BeginFocus()
 	{
 		ShouldUpdateWidgetPosition = true;
 		InteractionWidgetComponent->SetVisibility(true);
+		UpdateWidgetPosition();
 	}
 }
 
@@ -65,9 +67,14 @@ void AInteractItem::Interact(AActor* Interactor)
 {
 	if (!IsPendingKillPending())
 	{
-
+		if (ItemInstance)
+		{
+			if (ILootReceiverInterface* Player = Cast<ILootReceiverInterface>(Interactor))
+			{
+				//if(Player->CanAddItem()) Destroy();
+			}
+		}
 	}
-	Destroy();
 }
 
 const FInteractableData& AInteractItem::GetInteractableData() const
@@ -95,6 +102,7 @@ void AInteractItem::InitializePickup(const int32 InQuantity)
 		if (!ItemData) return;
 
 		ItemInstance = NewObject<UItemBase>(this);
+		if (ItemData->ItemNumericData.bIsStackable) InteractableData.bShowQuantity = true;
 		ItemInstance->SetItemData(*ItemData, InQuantity <= 0? 1 : InQuantity);
 		ItemMesh->SetStaticMesh(ItemData->ItemAssetData.Mesh);
 
@@ -136,17 +144,30 @@ void AInteractItem::UpdateWidgetPosition()
 	if (!CameraManager) return;
 
 	const FRotator CameraRotation = CameraManager->GetCameraRotation();
-	const FVector CameraRight =
-		FRotationMatrix(CameraRotation).GetUnitAxis(EAxis::Y);
-	const FVector CameraUp =
-		FRotationMatrix(CameraRotation).GetUnitAxis(EAxis::Z);
+	const FVector CameraRight = FRotationMatrix(CameraRotation).GetUnitAxis(EAxis::Y);
+	const FVector CameraUp = FRotationMatrix(CameraRotation).GetUnitAxis(EAxis::Z);
 
 	const FBoxSphereBounds Bounds = ItemMesh->Bounds;
 
-	const FVector WidgetLocation =
-		Bounds.Origin
-		+ CameraRight * (Bounds.SphereRadius + 20.f)
-		+ CameraUp * 20.f;
+	const FVector WidgetLocation = Bounds.Origin + CameraRight * (Bounds.SphereRadius + 20.f) + CameraUp * 20.f;
 
 	InteractionWidgetComponent->SetWorldLocation(WidgetLocation);
+}
+
+void AInteractItem::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	const FName ChangedPropertyName = PropertyChangedEvent.Property ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	if (ChangedPropertyName == GET_MEMBER_NAME_CHECKED(AInteractItem, DesiredItemID))
+	{
+		if (ItemDataTable)
+		{
+			if (const FItemData* ItemData = ItemDataTable->FindRow<FItemData>(DesiredItemID, DesiredItemID.ToString()))
+			{
+				ItemMesh->SetStaticMesh(ItemData->ItemAssetData.Mesh);
+			}
+		}
+	}
 }

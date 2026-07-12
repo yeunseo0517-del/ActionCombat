@@ -65,7 +65,10 @@ struct FItemNumericData
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere)
 	int32 MaxStackSize;
+
+	UPROPERTY(EditAnywhere)
 	bool bIsStackable;
 };
 

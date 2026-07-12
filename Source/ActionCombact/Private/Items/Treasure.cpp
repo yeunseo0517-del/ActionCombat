@@ -2,7 +2,7 @@
 
 
 #include "Items/Treasure.h"
-#include "Interfaces/PickupInterface.h"
+#include "Interfaces/LootReceiverInterface.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Components/SphereComponent.h"
 
@@ -22,11 +22,11 @@ void ATreasure::BeginPlay()
 
 void ATreasure::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	IPickupInterface* PickupInteface = Cast<IPickupInterface>(OtherActor);
+	ILootReceiverInterface* LootReceiver= Cast<ILootReceiverInterface>(OtherActor);
 
-	if (PickupInteface)
+	if (LootReceiver)
 	{
-		PickupInteface->AddGold(GoldAmount);
+		LootReceiver->AddGold(GoldAmount);
 		Destroy();
 
 		if (PickupEffect)

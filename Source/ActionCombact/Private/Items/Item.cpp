@@ -2,7 +2,7 @@
 
 
 #include "Items/Item.h"
-#include "Interfaces/PickupInterface.h"
+#include "Interfaces/LootReceiverInterface.h"
 
 // Sets default values
 AItem::AItem() : Amplitude(0.25f), TimeConstant(5.f)
@@ -15,6 +15,10 @@ AItem::AItem() : Amplitude(0.25f), TimeConstant(5.f)
 
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMeshComponent"));
 	ItemMesh->SetupAttachment(GetRootComponent());
+
+	ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ItemMesh->SetCollisionResponseToAllChannels(ECR_Overlap);
+	ItemMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 }
 
 // Called when the game starts or when spawned

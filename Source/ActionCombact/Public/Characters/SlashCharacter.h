@@ -4,7 +4,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Characters/BaseCharacter.h"
-#include "Interfaces/PickupInterface.h"
+#include "Interfaces/LootReceiverInterface.h"
 #include "SlashCharacter.generated.h"
 
 USTRUCT()
@@ -34,7 +34,7 @@ class AWeapon;
 class UHealthBar;
 
 UCLASS()
-class ACTIONCOMBACT_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
+class ACTIONCOMBACT_API ASlashCharacter : public ABaseCharacter, public ILootReceiverInterface
 {
 	GENERATED_BODY()
 

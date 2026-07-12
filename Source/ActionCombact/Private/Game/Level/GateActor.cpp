@@ -3,10 +3,12 @@
 
 #include "Game/Level/GateActor.h"
 #include "Game/ActionGameInstance.h"
+#include "Components/WidgetComponent.h"
 #include "Components/BoxComponent.h"
-#include "HUD/SlashHUD.h"
+#include "Player/SlashPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraComponent.h"
+#include "HUD/Interaction/InteractionWidget.h"
 
 // Sets default values
 AGateActor::AGateActor()
@@ -15,48 +17,79 @@ AGateActor::AGateActor()
 	PrimaryActorTick.bCanEverTick = false;
 
 	PortalEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PortalEffect"));
+	PortalEffect->SetupAttachment(GetRootComponent());
 	SetRootComponent(PortalEffect);
 
-	OverlapBox = CreateDefaultSubobject<UBoxComponent>(TEXT("OverlapBox"));
-	OverlapBox->SetupAttachment(RootComponent);
+	InteractCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Interact Collision"));
+	InteractCollision->SetupAttachment(GetRootComponent());
 
-	OverlapBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	OverlapBox->SetCollisionObjectType(ECC_WorldDynamic);
-	OverlapBox->SetCollisionResponseToAllChannels(ECR_Ignore);
-	OverlapBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	InteractCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	InteractCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+	InteractCollision->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
+	InteractionWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Interaction Widget"));
+	InteractionWidgetComponent->SetupAttachment(GetRootComponent());
+
+	InteractionWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	InteractionWidgetComponent->SetDrawAtDesiredSize(true);
+	InteractionWidgetComponent->SetVisibility(false);
+	InteractionWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 50.f));
+	InteractionWidgetComponent->SetPivot(FVector2D(0.f, 0.5f));
+}
+
+void AGateActor::BeginFocus()
+{
+	if (InteractionWidgetComponent)
+	{
+		ShouldUpdateWidgetPosition = true;
+		InteractionWidgetComponent->SetVisibility(true);
+		UpdateWidgetPosition();
+	}
+}
+
+void AGateActor::EndFocus()
+{
+	if (InteractionWidgetComponent)
+	{
+		ShouldUpdateWidgetPosition = false;
+		InteractionWidgetComponent->SetVisibility(false);
+	}
+}
+
+void AGateActor::BeginInteract()
+{
+}
+
+void AGateActor::EndInteract()
+{
+}
+
+void AGateActor::Interact(AActor* Interactor)
+{
+	APawn* Player = Cast<APawn>(Interactor);
+	if (!Player) return;
+	UE_LOG(LogTemp, Warning, TEXT("Has Player"))
+	ASlashPlayerController* PC = Cast<ASlashPlayerController>(Player->GetController());
+	if (!PC) return;
+	UE_LOG(LogTemp, Warning, TEXT("Has Controller"))
+	EndFocus();
+	PC->ShowGateConfirm(TargetLevelName, FSimpleDelegate::CreateUObject(this, &AGateActor::HandleGateConfirm));
+}
+
+const FInteractableData& AGateActor::GetInteractableData() const
+{
+	return InteractableData;
 }
 
 // Called when the game starts or when spawned
 void AGateActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	OverlapBox->OnComponentBeginOverlap.AddDynamic(this, &AGateActor::OnGateBeginOverlap);
-	OverlapBox->OnComponentEndOverlap.AddDynamic(this, &AGateActor::OnGateEndOverlap);
-}
 
-void AGateActor::OnGateBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PC) return;
-
-	if (!OtherActor || OtherActor != PC->GetPawn()) return;
-
-	ASlashHUD* SlashHUD = Cast<ASlashHUD>(PC->GetHUD());
-	if (!SlashHUD) return;
-	
-	SlashHUD->ShowGateConfirmWidget(TargetLevelName, FSimpleDelegate::CreateUObject(this, &AGateActor::HandleGateConfirm));
-}
-
-void AGateActor::OnGateEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PC) return;
-
-	if (!OtherActor || OtherActor != PC->GetPawn()) return;
-
-	ASlashHUD* SlashHUD = Cast<ASlashHUD>(PC->GetHUD());
-	if (SlashHUD) SlashHUD->HideGateConfirmWidget();
+	if (UInteractionWidget* Widget = Cast<UInteractionWidget>(InteractionWidgetComponent->GetUserWidgetObject()))
+	{
+		Widget->UpdateWidget(InteractableData);
+	}
 }
 
 void AGateActor::HandleGateConfirm()
@@ -77,4 +110,25 @@ void AGateActor::SetDestination(TSoftObjectPtr<UWorld> Target, FText Name)
 void AGateActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (ShouldUpdateWidgetPosition) UpdateWidgetPosition();
+}
+
+void AGateActor::UpdateWidgetPosition()
+{
+	if (!InteractionWidgetComponent || !InteractionWidgetComponent->IsVisible()) return;
+
+	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
+
+	if (!CameraManager) return;
+
+	const FRotator CameraRotation = CameraManager->GetCameraRotation();
+	const FVector CameraRight = FRotationMatrix(CameraRotation).GetUnitAxis(EAxis::Y);
+	const FVector CameraUp = FRotationMatrix(CameraRotation).GetUnitAxis(EAxis::Z);
+
+	const FBoxSphereBounds Bounds = PortalEffect->Bounds;
+
+	const FVector WidgetLocation = Bounds.Origin + CameraRight * (Bounds.SphereRadius + 20.f) + CameraUp * 20.f;
+
+	InteractionWidgetComponent->SetWorldLocation(WidgetLocation);
 }

@@ -237,7 +237,7 @@ void ASlashCharacter::Interact()
 		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
 		{
 			Interface->Interact(this);
-			if (ASlashHUD* HUD = GetSlashHUD()) HUD->ShowAcquiredWidget(Interface->GetInteractableData());
+			//if (ASlashHUD* HUD = GetSlashHUD()) HUD->ShowAcquiredWidget(Interface->GetInteractableData());
 		}
 	}
 }
