@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "Types/ItemDataStructs.h"
+#include "Types/Item/ItemDataStructs.h"
 #include "ItemBase.generated.h"
 
 /**
@@ -21,12 +21,17 @@ public:
 	UItemBase* CreateItemCopy() const;
 	void SetItemData(const FItemData& Data, const int32 InQuantity);
 
-	FORCEINLINE bool IsFullItemStack() const;
-	FORCEINLINE const FItemData& GetItemData() const { return ItemData; }
-	FORCEINLINE int32 GetQuantity() const { return Quantity; }
-
+	int32 AddToStack(int32 Amount);
 	void SetQuantity(const int32 NewQuantity);
 	virtual void Use(class ASlashCharacter* Character);
+
+	const bool IsFullItemStack() const;
+	const bool IsStackable() const;
+	const FItemData& GetItemData() const { return ItemData; }
+	const FName& GetItemID() const { return ItemData.ItemID; }
+	const FText& GetItemName() const { return ItemData.ItemTextData.Name; }
+	const int32 GetQuantity() const { return Quantity; }
+	const int32 GetMaxStackSize() const { return ItemData.ItemNumericData.MaxStackSize; }
 
 protected:
 	bool operator==(const FName& OtherID) const
@@ -35,9 +40,6 @@ protected:
 	}
 
 private:
-	//UPROPERTY()
-	// UInventoryComponent* OwingInventory;
-
 	UPROPERTY(VisibleAnywhere, Category = "Item")
 	FItemData ItemData;
 

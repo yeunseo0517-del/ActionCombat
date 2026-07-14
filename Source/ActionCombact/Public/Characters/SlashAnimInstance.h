@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Types/CombatTypes.h"
+#include "Types/Combat/CombatTypes.h"
 #include "SlashAnimInstance.generated.h"
 
 class ASlashCharacter;

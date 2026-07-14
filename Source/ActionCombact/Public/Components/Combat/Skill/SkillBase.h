@@ -6,7 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "Types/SkillTypes.h"
 #include "Types/GameplayTags.h"
-#include "Types/HitContext.h"
+#include "Types/Combat/HitContext.h"
 #include "NiagaraComponent.h"
 #include "SkillBase.generated.h"
 

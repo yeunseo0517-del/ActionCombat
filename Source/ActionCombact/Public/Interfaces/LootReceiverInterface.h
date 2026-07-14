@@ -24,6 +24,5 @@ class ACTIONCOMBACT_API ILootReceiverInterface
 public:
 	virtual void SetOverlappingItem(class AItem* Item) = 0;
 	virtual void AddGold(int32 Amount) = 0;
-	//virtual void AddItem()
-	//virtual bool CanAddItem() = 0;
+	virtual struct FItemAddResult AddItem(class UItemBase* Item) = 0;
 };

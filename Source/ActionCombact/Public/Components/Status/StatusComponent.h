@@ -7,9 +7,9 @@
 #include "Types/SkillTypes.h"
 #include "StatusComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatusChanged, EStatusType, Status);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCooldownChanged, int32, SlotKey, float, EndTime, float, Cooldown);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillActivated, int32, SlotKey);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnStatusChanged, EStatusType);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnCooldownChanged, int32, float, float);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSkillActivated, int32);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ACTIONCOMBACT_API UStatusComponent : public UActorComponent
@@ -32,19 +32,10 @@ public:
 
 	void PrintCurrentStatuses();
 
-	UPROPERTY(BlueprintAssignable)
 	FOnStatusChanged OnStatusStart;
-
-	UPROPERTY(BlueprintAssignable)
 	FOnStatusChanged OnStatusEnd;
-
-	UPROPERTY(BlueprintAssignable)
 	FOnCooldownChanged OnCooldownStart;
-
-	UPROPERTY(BlueprintAssignable)
 	FOnSkillActivated OnSkillActivated;
-
-	UPROPERTY(BlueprintAssignable)
 	FOnSkillActivated OnSkillDeactivated;
 
 	UPROPERTY()

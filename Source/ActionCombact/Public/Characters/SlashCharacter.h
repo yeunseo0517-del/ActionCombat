@@ -53,27 +53,17 @@ public:
 
 	virtual void SetOverlappingItem(AItem* Item) override;
 	virtual void AddGold(int32 Amount) override;
+	virtual struct FItemAddResult AddItem(class UItemBase* Item) override;
 
 	FORCEINLINE bool IsInteracting() const { return GetWorldTimerManager().IsTimerActive(InteractionTimer); }
 
 protected:
 	virtual void BeginPlay() override;
 
+	void BindHUDInventory();
+
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) override;
 	virtual void EnterHitReact() override;
-
-	void PerformInteractionCheck();
-	void FoundInteractable(AActor* NewInteractable);
-	void NoInteractableFound();
-	void BeginInteract();
-	void EndInteract();
-	void Interact();
-
-
-	FInteractionData InteractionData;
-	float InteractionCheckFrequency = 0.1f;
-	float InteractionCheckDistance = 225.f;
-	FTimerHandle InteractionTimer;
 
 	/*
 	Enchanced Input
@@ -95,6 +85,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* InteractAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* ToggleInventoryAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* EquipAction;
@@ -150,6 +143,15 @@ private:
 	void Disarm();
 	bool HasUnarmedWeapon();
 
+	void PerformInteractionCheck();
+	void FoundInteractable(AActor* NewInteractable);
+	void NoInteractableFound();
+	void BeginInteract();
+	void EndInteract();
+	void Interact();
+
+	void ToggleInventory();
+
 	/*
 	Play Montage
 	*/
@@ -177,4 +179,12 @@ private:
 
 	UPROPERTY()
 	TWeakObjectPtr<class ASlashHUD> SlashHUD;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UInventoryComponent* Inventory;
+
+	FInteractionData InteractionData;
+	float InteractionCheckFrequency = 0.1f;
+	float InteractionCheckDistance = 225.f;
+	FTimerHandle InteractionTimer;
 };

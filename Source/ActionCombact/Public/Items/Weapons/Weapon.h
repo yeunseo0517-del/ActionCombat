@@ -4,11 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Items/InteractItem.h"
-#include "Types/CombatTypes.h"
-#include "Types/TraceTypes.h"
+#include "Types/Combat/CombatTypes.h"
+#include "Types/Combat/TraceTypes.h"
 #include "Types/SkillTypes.h"
-#include "Types/HitContext.h"
-#include "Types/HitContext.h"
+#include "Types/Combat/HitContext.h"
 #include "Weapon.generated.h"
 
 class UHitEffectDataAsset;

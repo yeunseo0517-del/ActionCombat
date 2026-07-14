@@ -11,12 +11,14 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 
+#include "Types/Item/ItemAddResult.h"
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Interfaces/InteractableInterface.h"
 
 #include "Components/Attribute/AttributeComponent.h"
 #include "Components/Combat/CombatComponent.h"
+#include "Components/InventoryComponent.h"
 #include "HUD/Battle/SkillHUDWidget.h"
 #include "HUD/SlashHUD.h"
 #include "HUD/Battle/SlashOverlay.h"
@@ -44,6 +46,8 @@ ASlashCharacter::ASlashCharacter()
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	ViewCamera->SetupAttachment(SpringArm);
 
+	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+
 	TeamType = ETeamType::Player;
 }
 
@@ -67,6 +71,14 @@ void ASlashCharacter::BeginPlay()
 		}
 	}
 	UpdateHUDHealth();
+	BindHUDInventory();
+}
+
+void ASlashCharacter::BindHUDInventory()
+{
+	if (ASlashHUD* HUD = GetSlashHUD())
+		if (Inventory)
+			HUD->BindInventory(Inventory);
 }
 
 void ASlashCharacter::UpdateHUDHealth()
@@ -237,9 +249,13 @@ void ASlashCharacter::Interact()
 		if (IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractionData.CurrentInteractable.Get()))
 		{
 			Interface->Interact(this);
-			//if (ASlashHUD* HUD = GetSlashHUD()) HUD->ShowAcquiredWidget(Interface->GetInteractableData());
 		}
 	}
+}
+
+void ASlashCharacter::ToggleInventory()
+{
+	if (ASlashHUD* HUD = GetSlashHUD()) HUD->ToggleInventory();
 }
 
 bool ASlashCharacter::IsEquipMontage(UAnimMontage* Montage)
@@ -433,6 +449,11 @@ void ASlashCharacter::AddGold(int32 Amount)
 	}
 }
 
+FItemAddResult ASlashCharacter::AddItem(UItemBase* Item)
+{
+	return Inventory->HandleAddItem(Item);
+}
+
 void ASlashCharacter::HandleEquipState()
 {
 	if (!HasUnarmedWeapon())
@@ -477,6 +498,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ASlashCharacter::OnSprintStarted);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ASlashCharacter::OnSprintStopped);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ASlashCharacter::BeginInteract);
+		EnhancedInputComponent->BindAction(ToggleInventoryAction, ETriggerEvent::Started, this, &ASlashCharacter::ToggleInventory);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::OnEquipStarted);
 		EnhancedInputComponent->BindAction(BasicAttackAction, ETriggerEvent::Started, this, &ASlashCharacter::BasicAttack);
 		EnhancedInputComponent->BindAction(QSkillAction, ETriggerEvent::Started, this, &ASlashCharacter::OnQStarted);

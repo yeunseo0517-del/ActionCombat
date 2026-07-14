@@ -23,9 +23,9 @@ void USkillHUDWidget::NativeConstruct()
 			UStatusComponent* StatusComp = Receiver->GetStatusComponent();
 			if (StatusComp)
 			{
-				StatusComp->OnSkillActivated.AddDynamic(this, &USkillHUDWidget::HandleSkillActivated);
-				StatusComp->OnCooldownStart.AddDynamic(this, &USkillHUDWidget::HandleCooldownStart);
-				StatusComp->OnSkillDeactivated.AddDynamic(this, &USkillHUDWidget::HandleSkillDeactivated);
+				StatusComp->OnSkillActivated.AddUObject(this, &USkillHUDWidget::HandleSkillActivated);
+				StatusComp->OnCooldownStart.AddUObject(this, &USkillHUDWidget::HandleCooldownStart);
+				StatusComp->OnSkillDeactivated.AddUObject(this, &USkillHUDWidget::HandleSkillDeactivated);
 			}
 		}
 	}

@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Types/CombatTypes.h"
-#include "Types/TraceTypes.h"
+#include "Types/Combat/CombatTypes.h"
+#include "Types/Combat/TraceTypes.h"
 #include "Types/GameplayTags.h"
-#include "Types/HitContext.h"
+#include "Types/Combat/HitContext.h"
 #include "CombatComponent.generated.h"
 
 class AWeapon;

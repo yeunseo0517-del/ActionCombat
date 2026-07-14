@@ -47,7 +47,14 @@ void ASlashHUD::CreateWidgets()
 	}
 
 	if(!InteractionWidget) InteractionWidget = CreateHUDWidget<UInteractionWidget>(InteractionClass);
-	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
+	if (!AcquiredNotification)
+	{
+		AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
+		if (AcquiredNotification)
+		{
+			AcquiredNotification->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
 	if(!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
 }
 
@@ -98,22 +105,6 @@ void ASlashHUD::HideGateConfirmWidget()
 	RestoreGameInputMode();
 }
 
-void ASlashHUD::HideInteractionWidget()
-{
-	if (!InteractionWidget) return;
-	SetWidgetVisible(InteractionWidget, false);
-}
-
-void ASlashHUD::ShowAcquiredWidget(const FInteractableData& InteractableData)
-{
-	if (!AcquiredNotification) return;
-
-	SetWidgetVisible(AcquiredNotification, true);
-	AcquiredNotification->UpdateNotification(InteractableData);
-
-	GetWorldTimerManager().SetTimer(NotificationDestroyTimer, this, &ASlashHUD::HideAcquiredWidget, NotiDestroyTime, false);
-}
-
 void ASlashHUD::HideAcquiredWidget()
 {
 	if (!AcquiredNotification) return;
@@ -123,12 +114,31 @@ void ASlashHUD::HideAcquiredWidget()
 void ASlashHUD::ShowInteractionWidget(const FInteractableData& InteractableData)
 {
 	if (!InteractionWidget) return;
-	if (InteractionWidget->GetVisibility() == ESlateVisibility::Collapsed)
+	if (!InteractionWidget->IsVisible())
 	{
 		SetWidgetVisible(InteractionWidget, true);
 	}
 
 	//InteractionWidget->UpdateWidget(InteractableData);
+}
+
+void ASlashHUD::ToggleInventory()
+{
+	if (!InventoryPanel)
+	{
+		if (InventoryPanelClass) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
+	}
+
+	if (!InventoryPanel->IsVisible())
+	{
+		SetWidgetVisible(InventoryPanel, true);
+		SetGameAndUIInputMode();
+	}
+	else
+	{
+		SetWidgetVisible(InventoryPanel, false);
+		RestoreGameInputMode();
+	}
 }
 
 void ASlashHUD::SetHealth(float current, float max)
@@ -213,4 +223,9 @@ void ASlashHUD::SetCombatHUD()
 void ASlashHUD::UpdateGoldWidget(int32 Gold)
 {
 	if (SlashOverlay) SlashOverlay->SetGold(Gold);
+}
+
+void ASlashHUD::BindInventory(UInventoryComponent* Inventory) const
+{
+	if (AcquiredNotification) AcquiredNotification->BindInventory(Inventory);
 }

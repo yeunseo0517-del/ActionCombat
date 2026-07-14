@@ -16,7 +16,7 @@ UCLASS()
 class ACTIONCOMBACT_API USkillHUDWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 protected:
 	virtual void NativeConstruct() override;
 

@@ -37,6 +37,7 @@ private:
 	void InitializePickup(const int32 InQuantity);
 	void InitializeDrop(const UItemBase* ItemToDrop, const int32 InQuantity);
 	void UpdateWidgetPosition();
+	void RefreshInteractionWidget();
 
 	bool ShouldUpdateWidgetPosition = false;
 

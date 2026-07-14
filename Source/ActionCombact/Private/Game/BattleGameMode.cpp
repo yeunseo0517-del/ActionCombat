@@ -8,7 +8,7 @@
 #include "Components/Attribute/AttributeComponent.h"
 #include "HUD/SlashHUD.h"
 #include "Game/Level/GateActor.h"
-#include "Types/BattleMapConfig.h"
+#include "Types/Game/BattleMapConfig.h"
 
 void ABattleGameMode::NotifyEnemyKilled(AActor* DeadEnemy)
 {

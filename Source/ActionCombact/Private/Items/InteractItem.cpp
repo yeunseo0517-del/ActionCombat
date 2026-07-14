@@ -3,7 +3,8 @@
 
 #include "Items/InteractItem.h"
 #include "Items/ItemBase.h"
-#include "Types/ItemDataStructs.h"
+#include "Types/Item/ItemDataStructs.h"
+#include "Types/Item/ItemAddResult.h"
 #include "Components/WidgetComponent.h"
 #include "HUD/Interaction/InteractionWidget.h"
 #include "Kismet/GameplayStatics.h"
@@ -71,11 +72,36 @@ void AInteractItem::Interact(AActor* Interactor)
 		{
 			if (ILootReceiverInterface* Player = Cast<ILootReceiverInterface>(Interactor))
 			{
-				//if(Player->CanAddItem()) Destroy();
+				const FItemAddResult& Result = Player->AddItem(ItemInstance);
+				switch (Result.OperationResult)
+				{
+				case EItemAddResult::IAR_NoItemAdded:
+					break;
+				case EItemAddResult::IAR_AllItemAdded:
+					Destroy();
+					break;
+				case EItemAddResult::IAR_PartialAmountItemAdded:
+					ItemInstance->SetQuantity(ItemInstance->GetQuantity() - Result.ActualAmountAdded);
+					UpdateInteractableData();
+					RefreshInteractionWidget();
+					break;
+				default:
+					break;
+				}
 			}
 		}
 	}
 }
+
+void AInteractItem::RefreshInteractionWidget()
+{
+	if (!InteractionWidgetComponent || !InteractionWidgetComponent->IsVisible()) return;
+	if (UInteractionWidget* Widget = Cast<UInteractionWidget>(InteractionWidgetComponent->GetUserWidgetObject()))
+	{
+		Widget->UpdateWidget(InteractableData);
+	}
+}
+
 
 const FInteractableData& AInteractItem::GetInteractableData() const
 {

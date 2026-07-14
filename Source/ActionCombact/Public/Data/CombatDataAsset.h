@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "Types/TraceTypes.h"
-#include "Types/CombatTypes.h"
+#include "Types/Combat/TraceTypes.h"
+#include "Types/Combat/CombatTypes.h"
 #include "Types/SkillTypes.h"
 #include "Types/GameplayTags.h"
 #include "CombatDataAsset.generated.h"

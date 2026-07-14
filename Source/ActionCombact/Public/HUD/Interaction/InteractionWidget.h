@@ -16,7 +16,7 @@ class ACTIONCOMBACT_API UInteractionWidget : public UUserWidget
 
 public:
 	void UpdateWidget(const struct FInteractableData& InteractableData);
-	
+
 private:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* Name;

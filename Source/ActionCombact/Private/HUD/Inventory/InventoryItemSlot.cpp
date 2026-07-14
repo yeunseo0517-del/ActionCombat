@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "HUD/Inventory/InventoryPanelWidget.h"
+#include "HUD/Inventory/InventoryItemSlot.h"
 
-//OnInventoryUpdated

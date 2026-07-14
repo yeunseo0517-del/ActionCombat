@@ -50,8 +50,8 @@ void ABaseCharacter::BeginPlay()
 
 	if (StatusComponent)
 	{
-		StatusComponent->OnStatusStart.AddDynamic(this, &ABaseCharacter::HandleStatusStart);
-		StatusComponent->OnStatusEnd.AddDynamic(this, &ABaseCharacter::HandleStatusEnd);
+		StatusComponent->OnStatusStart.AddUObject(this, &ABaseCharacter::HandleStatusStart);
+		StatusComponent->OnStatusEnd.AddUObject(this, &ABaseCharacter::HandleStatusEnd);
 	}
 
 	if (GetMesh()->DoesSocketExist(TEXT("HipsSocket")))

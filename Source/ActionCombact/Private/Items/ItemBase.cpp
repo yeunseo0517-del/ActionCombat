@@ -20,9 +20,27 @@ void UItemBase::SetItemData(const FItemData& Data, const int32 InQuantity)
 	Quantity = InQuantity;
 }
 
-bool UItemBase::IsFullItemStack() const
+const bool UItemBase::IsFullItemStack() const
 {
 	return Quantity == ItemData.ItemNumericData.MaxStackSize;
+}
+
+const bool UItemBase::IsStackable() const
+{
+	return ItemData.ItemNumericData.bIsStackable;
+}
+
+int32 UItemBase::AddToStack(int32 Amount)
+{
+	int32 MaxStack = ItemData.ItemNumericData.MaxStackSize;
+	int32 TryToAdd = Amount + Quantity;
+	if (TryToAdd > MaxStack)
+	{
+		Quantity = MaxStack;
+		return TryToAdd - MaxStack;
+	}
+	Quantity = TryToAdd;
+	return 0;
 }
 
 void UItemBase::SetQuantity(const int32 NewQuantity)
@@ -31,10 +49,6 @@ void UItemBase::SetQuantity(const int32 NewQuantity)
 	{
 		int32 MaxSize = ItemData.ItemNumericData.bIsStackable ? ItemData.ItemNumericData.MaxStackSize : 1;
 		Quantity = FMath::Clamp(NewQuantity, 0, MaxSize);
-
-		/*if (OwningInventory)
-		{
-		}*/
 	}
 }
 

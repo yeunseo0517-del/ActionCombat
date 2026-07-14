@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Types/HitContext.h"
+#include "Types/Combat/HitContext.h"
 #include "RadialShockwaves.generated.h"
 
 UCLASS()

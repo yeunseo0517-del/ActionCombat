@@ -9,7 +9,7 @@
 #include "Interfaces/WeaponHolderInterface.h"
 #include "Interfaces/StatusReceiverInterface.h"
 #include "Interfaces/TeamInterface.h"
-#include "Types/CombatTypes.h"
+#include "Types/Combat/CombatTypes.h"
 #include "Types/SkillTypes.h"
 #include "BaseCharacter.generated.h"
 

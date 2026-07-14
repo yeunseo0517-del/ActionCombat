@@ -31,13 +31,14 @@ public:
 	void ShowGateConfirmWidget(const FText& MapName, FSimpleDelegate OnConfirmed);
 	void HideGateConfirmWidget();
 	void ShowInteractionWidget(const struct FInteractableData& InteractableData);
-	void HideInteractionWidget();
-	void ShowAcquiredWidget(const struct FInteractableData& InteractableData);
+	void ToggleInventory();
 
 	void SetHealth(float current, float max);
 	void SetTownHUD();
 	void SetCombatHUD();
 	void UpdateGoldWidget(int32 Gold);
+
+	void BindInventory(class UInventoryComponent* Inventory) const;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -123,8 +124,4 @@ private:
 	UInventoryPanelWidget* InventoryPanel;
 
 	FSimpleDelegate PendingGateConfirm;
-
-	FTimerHandle NotificationDestroyTimer;
-	UPROPERTY(EditAnywhere, Category = Interaction)
-	float NotiDestroyTime = 2.5f;
 };

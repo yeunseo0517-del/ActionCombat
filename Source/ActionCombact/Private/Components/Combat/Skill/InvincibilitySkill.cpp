@@ -3,7 +3,7 @@
 
 #include "Components/Combat/Skill/InvincibilitySkill.h"
 #include "Interfaces/CombatInterface.h"
-#include "Types/CombatTypes.h"
+#include "Types/Combat/CombatTypes.h"
 #include "Types/GameplayTags.h"
 #include "Components/Status/StatusComponent.h"
 #include "Components/Combat/CombatComponent.h"
