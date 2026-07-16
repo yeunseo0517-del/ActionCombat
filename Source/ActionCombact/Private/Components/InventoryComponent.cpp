@@ -47,6 +47,7 @@ UItemBase* UInventoryComponent::FindNextPartialStack(UItemBase* Target) const
 		{ return Item &&
 		Item->GetItemID() == Target->GetItemID() &&
 		!Item->IsFullItemStack(); });
+	OnInventoryUpdated.Broadcast(Target);
 	return Result ? Result->Get() : nullptr;
 }
 
@@ -80,8 +81,6 @@ FItemAddResult UInventoryComponent::HandleAddItem(UItemBase* Target)
 	}
 
 	OnItemAddCompleted.Broadcast(Result, Target->GetItemName(), Target->IsStackable());
-	UE_LOG(LogTemp, Warning, TEXT("Action: %s"),
-		*Result.ResultMessage.ToString());
 	return Result;
 }
 

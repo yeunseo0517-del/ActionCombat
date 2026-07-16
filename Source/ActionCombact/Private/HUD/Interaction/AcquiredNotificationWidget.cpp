@@ -13,15 +13,6 @@ void UAcquiredNotificationWidget::NativeConstruct()
 	SetTextsVisible(false);
 }
 
-void UAcquiredNotificationWidget::NativeDestruct()
-{
-	if (BoundInventory.IsValid())
-	{
-		BoundInventory->OnItemAddCompleted.RemoveAll(this);
-	}
-	Super::NativeDestruct();
-}
-
 void UAcquiredNotificationWidget::BindInventory(UInventoryComponent* NewInventory)
 {
 	if (BoundInventory == NewInventory) return;
@@ -38,7 +29,6 @@ void UAcquiredNotificationWidget::BindInventory(UInventoryComponent* NewInventor
 
 void UAcquiredNotificationWidget::ShowWidget(const FItemAddResult& Result, const FText& Name, const bool IsStackable)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s In Notification"), *GetOwningPlayerPawn()->GetName())
 	SetTextsVisible(true);
 	UpdateNotification(Name, IsStackable, Result.ActualAmountAdded, Result.ResultMessage);
 	if (UWorld* World = GetWorld())
@@ -80,4 +70,13 @@ void UAcquiredNotificationWidget::SetTextsVisible(bool Value)
 	if (ActionText) ActionText->SetVisibility(Value ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	if (Quantity) Quantity->SetVisibility(Value ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	if (QuantityPiece) QuantityPiece->SetVisibility(Value ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+}
+
+void UAcquiredNotificationWidget::NativeDestruct()
+{
+	if (BoundInventory.IsValid())
+	{
+		BoundInventory->OnItemAddCompleted.RemoveAll(this);
+	}
+	Super::NativeDestruct();
 }

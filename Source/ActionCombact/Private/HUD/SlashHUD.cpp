@@ -9,6 +9,7 @@
 #include "HUD/Interaction/InteractionWidget.h"
 #include "HUD/Interaction/AcquiredNotificationWidget.h"
 #include "HUD/Inventory/InventoryPanelWidget.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Game/ActionGameInstance.h"
 #include "Interfaces/InteractableInterface.h"
@@ -119,6 +120,12 @@ void ASlashHUD::ToggleInventory()
 	}
 	if (!InventoryPanel->IsVisible())
 	{
+		const FVector2D ViewportSize =
+			UWidgetLayoutLibrary::GetViewportSize(this);
+
+		InventoryPanel->SetDesiredSizeInViewport(FVector2D(800.f, 600.f));
+		InventoryPanel->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
+		InventoryPanel->SetPositionInViewport(ViewportSize * 0.5f, true);
 		SetWidgetVisible(InventoryPanel, true);
 		SetGameAndUIInputMode();
 	}
@@ -208,6 +215,10 @@ void ASlashHUD::BindInventory(UInventoryComponent* Inventory)
 	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
 	if (!AcquiredNotification) return;
 	AcquiredNotification->BindInventory(Inventory);
+
+	if (!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
+	if (!InventoryPanel) return;
+	InventoryPanel->BindInventory(Inventory);
 }
 
 void ASlashHUD::BindAttribute(UAttributeComponent* Attribute)

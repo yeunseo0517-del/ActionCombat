@@ -31,7 +31,9 @@ public:
 	const FName& GetItemID() const { return ItemData.ItemID; }
 	const FText& GetItemName() const { return ItemData.ItemTextData.Name; }
 	const int32 GetQuantity() const { return Quantity; }
+	const EItemQuality GetQuality() const { return ItemData.ItemQuality; }
 	const int32 GetMaxStackSize() const { return ItemData.ItemNumericData.MaxStackSize; }
+	class UTexture2D* GetItemIcon() const { return ItemData.ItemAssetData.Icon; }
 
 protected:
 	bool operator==(const FName& OtherID) const
