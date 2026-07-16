@@ -18,5 +18,4 @@ void ATownGameMode::BeginPlay()
 	if (!SlashHUD) return;
 
 	SlashHUD->SetTownHUD();
-	SlashHUD->UpdateGoldWidget(GI->GetCurrentGold());
 }

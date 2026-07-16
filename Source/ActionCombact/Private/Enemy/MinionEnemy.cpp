@@ -69,10 +69,6 @@ void AMinionEnemy::Die(const FName& Section)
 void AMinionEnemy::EnterHitReact()
 {
 	if (IsDead()) return;
-	if (HealthBarWidget)
-	{
-		HealthBarWidget->SetHealthPercent(Attributes->GetCurrentHealth(), Attributes->GetMaxHealth());
-	}
 	ShowHealthBar();
 	ClearPatrolTimer();
 	Super::EnterHitReact();

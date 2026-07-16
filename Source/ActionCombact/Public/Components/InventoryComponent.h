@@ -9,6 +9,7 @@
 class UItemBase;
 struct FItemAddResult;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInventoryRefresh, const TArray<TObjectPtr<UItemBase>>&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInventoryUpdated, UItemBase*);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnItemAddCompleted, const FItemAddResult&, const FText&, const bool IsStackable);
 
@@ -22,13 +23,15 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	//FORCEINLINE int32 GetSlotsCapacity() const { return SlotsCapacity; }
-	//FORCEINLINE TArray<TObjectPtr<UItemBase>> GetInventoryContents() const { return Items; }
+	//int32 GetSlotsCapacity() const { return SlotsCapacity; }
+	TArray<TObjectPtr<UItemBase>> GetInventoryContents() const { return Items; }
 
 	FItemAddResult HandleAddItem(UItemBase* Item);
 	void RemoveSingleItem(UItemBase* Item);
 	int32 RemoveAmountItem(UItemBase* Item, int32 RemoveAmount);
 	void SplitStack(UItemBase* Item, int32 Amount);
+
+	FOnInventoryRefresh OnInventoryRefresh;
 
 	FOnInventoryUpdated OnInventoryUpdated;
 	FOnInventoryUpdated OnInventoryAdded;

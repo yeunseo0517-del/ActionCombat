@@ -15,8 +15,7 @@ class ACTIONCOMBACT_API UHealthBarComponent : public UWidgetComponent
 	GENERATED_BODY()
 	
 public:
-	void SetHealthPercent(float CurrentHealth, float MaxHealth);
-
+	void BindAttribute(class UAttributeComponent* Attribute) const;
 
 private:
 	UPROPERTY()

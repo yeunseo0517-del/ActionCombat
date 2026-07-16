@@ -81,6 +81,8 @@ public:
 	virtual void AttackEnd() {}
 	virtual bool CanStartAttack() { return false; }
 
+	UAttributeComponent* GetAttributeComponent() const { return Attributes; }
+
 protected:
 	virtual void BeginPlay() override;
 

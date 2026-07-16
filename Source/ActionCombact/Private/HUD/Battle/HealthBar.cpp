@@ -2,16 +2,36 @@
 
 
 #include "HUD/Battle/HealthBar.h"
+#include "Components/Attribute/AttributeComponent.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 
+void UHealthBar::BindAttribute(UAttributeComponent* NewAttribute)
+{
+	if (BoundAttribute.Get() == NewAttribute)
+	{
+		SetHealthPercent(NewAttribute->GetCurrentHealth(), NewAttribute->GetMaxHealth());
+	}
+	if (BoundAttribute.IsValid())
+	{
+		BoundAttribute->OnHealthChanged.RemoveAll(this);
+	}
+
+	BoundAttribute = NewAttribute;
+	if (!BoundAttribute.Get()) return;
+
+	BoundAttribute->OnHealthChanged.AddUObject(this, &UHealthBar::SetHealthPercent);
+	SetHealthPercent(NewAttribute->GetCurrentHealth(), NewAttribute->GetMaxHealth());
+}
+
 void UHealthBar::SetHealthPercent(float CurrentHealth, float MaxHealth)
 {
-	if (!HealthBar || !HealthText) return;
+	if (!HealthBar) return;
 
 	const float Percent = CurrentHealth / MaxHealth;
 	HealthBar->SetPercent(Percent);
 
+	if (!HealthText) return;
 	const int32 Current = FMath::CeilToInt(CurrentHealth);
 	const int32 Max = FMath::CeilToInt(MaxHealth);
 

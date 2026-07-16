@@ -19,16 +19,13 @@ void ASlashHUD::BeginPlay()
 
 	CreateWidgets();
 	ApplyHUDMode();
-
-	UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance());
-	if (!GI) return;
-	GI->OnGoldChanged.AddDynamic(this, &ASlashHUD::UpdateGold);
-	UpdateGold(GI->GetCurrentGold());
 }
 
 void ASlashHUD::CreateWidgets()
 {
-	if(!SlashOverlay) SlashOverlay = CreateHUDWidget<USlashOverlay>(SlashOverlayClass);
+	if (!SlashOverlay) SlashOverlay = CreateHUDWidget<USlashOverlay>(SlashOverlayClass);
+	if (SlashOverlay) SetWidgetVisible(SlashOverlay, true);
+
 	if(!SkillHUD) SkillHUD = CreateHUDWidget<USkillHUDWidget>(SkillHUDClass);
 	if (!ResultWidget)
 	{
@@ -47,14 +44,10 @@ void ASlashHUD::CreateWidgets()
 	}
 
 	if(!InteractionWidget) InteractionWidget = CreateHUDWidget<UInteractionWidget>(InteractionClass);
-	if (!AcquiredNotification)
-	{
-		AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
-		if (AcquiredNotification)
-		{
-			AcquiredNotification->SetVisibility(ESlateVisibility::Visible);
-		}
-	}
+
+	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
+	if (AcquiredNotification) SetWidgetVisible(AcquiredNotification, true);
+
 	if(!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
 }
 
@@ -73,12 +66,6 @@ void ASlashHUD::CloseBattleResult()
 	if (!ResultWidget) return;
 	SetWidgetVisible(ResultWidget, false);
 	RestoreGameInputMode();
-}
-
-void ASlashHUD::UpdateGold(int32 Amount)
-{
-	if (!SlashOverlay) return;
-	SlashOverlay->SetGold(Amount);
 }
 
 void ASlashHUD::ShowGateConfirmWidget(const FText& MapName, FSimpleDelegate OnConfirmed)
@@ -126,9 +113,10 @@ void ASlashHUD::ToggleInventory()
 {
 	if (!InventoryPanel)
 	{
-		if (InventoryPanelClass) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
+		if (!InventoryPanelClass) return;
+		InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
+		if (!InventoryPanel) return;
 	}
-
 	if (!InventoryPanel->IsVisible())
 	{
 		SetWidgetVisible(InventoryPanel, true);
@@ -139,11 +127,6 @@ void ASlashHUD::ToggleInventory()
 		SetWidgetVisible(InventoryPanel, false);
 		RestoreGameInputMode();
 	}
-}
-
-void ASlashHUD::SetHealth(float current, float max)
-{
-	SlashOverlay->SetHealthPercent(current, max);
 }
 
 void ASlashHUD::HandleGateConfirm()
@@ -220,12 +203,16 @@ void ASlashHUD::SetCombatHUD()
 	HUDMode = ESlashHUDMode::Combat;
 }
 
-void ASlashHUD::UpdateGoldWidget(int32 Gold)
+void ASlashHUD::BindInventory(UInventoryComponent* Inventory)
 {
-	if (SlashOverlay) SlashOverlay->SetGold(Gold);
+	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
+	if (!AcquiredNotification) return;
+	AcquiredNotification->BindInventory(Inventory);
 }
 
-void ASlashHUD::BindInventory(UInventoryComponent* Inventory) const
+void ASlashHUD::BindAttribute(UAttributeComponent* Attribute)
 {
-	if (AcquiredNotification) AcquiredNotification->BindInventory(Inventory);
+	if (!SlashOverlay) SlashOverlay = CreateHUDWidget<USlashOverlay>(SlashOverlayClass);
+	if (!SlashOverlay) return;
+	SlashOverlay->BindAttribute(Attribute);
 }

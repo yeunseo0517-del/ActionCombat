@@ -44,9 +44,6 @@ private:
 	void HideHealthBar();
 
 	UPROPERTY(VisibleAnywhere)
-	UHealthBarComponent* HealthBarWidget;
-
-	UPROPERTY(VisibleAnywhere)
 	UPawnSensingComponent* PawnSensing;
 
 	/*

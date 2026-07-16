@@ -33,12 +33,11 @@ public:
 	void ShowInteractionWidget(const struct FInteractableData& InteractableData);
 	void ToggleInventory();
 
-	void SetHealth(float current, float max);
 	void SetTownHUD();
 	void SetCombatHUD();
-	void UpdateGoldWidget(int32 Gold);
 
-	void BindInventory(class UInventoryComponent* Inventory) const;
+	void BindInventory(class UInventoryComponent* Inventory);
+	void BindAttribute(class UAttributeComponent* Attribute);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -52,9 +51,6 @@ private:
 
 	UFUNCTION()
 	void CloseBattleResult();
-
-	UFUNCTION()
-	void UpdateGold(int32 Amount);
 
 	void SetWidgetVisible(UUserWidget* Widget, bool bVisible);
 	void SetUIOnlyInputMode();

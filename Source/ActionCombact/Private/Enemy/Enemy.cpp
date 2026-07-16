@@ -9,6 +9,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Items/Treasure.h"
 #include "Components/Attribute/AttributeComponent.h"
+#include "HUD/Battle/HealthBarComponent.h"
 #include "Game/BattleGameMode.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -58,6 +59,8 @@ bool AEnemy::CanStartAttack()
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HealthBarWidget) HealthBarWidget->BindAttribute(GetAttributeComponent());
 }
 
 void AEnemy::OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted)

@@ -13,20 +13,23 @@ UCLASS()
 class ACTIONCOMBACT_API USlashOverlay : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
-	void SetHealthPercent(float CurrentHealth, float MaxHealth);
-	void SetStaminaPercent(float CurrentStamina, float MaxStamina);
-	void SetGold(int32 Gold);
+	void BindAttribute(class UAttributeComponent* Attribute);
+
+protected:
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	
 private:
+	void SetStaminaPercent(float CurrentStamina, float MaxStamina) const;
+	void SetGold(const int32 Gold) const;
+
 	UPROPERTY(meta = (BindWidget))
-	class UProgressBar* HealthBar;
+	class UHealthBar* HealthBar;
 
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* StaminaBar;
-
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* HealthText;
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* StaminaText;

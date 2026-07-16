@@ -6,6 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "SlashPlayerController.generated.h"
 
+class UInputMappingContext;
+class UInputAction;
+
 /**
  * 
  */
@@ -17,4 +20,25 @@ class ACTIONCOMBACT_API ASlashPlayerController : public APlayerController
 public:
 	void ShowGateConfirm(const FText& MapName, FSimpleDelegate OnConfirmed);
 	void HideGateConfirm();
+
+protected:
+	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
+	virtual void SetupInputComponent() override;
+
+private:
+	void InitializeHUD();
+	void ToggleInventory();
+
+	UPROPERTY()
+	class ASlashHUD* HUD;
+
+	/*
+	Enchanced Input
+	*/
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputMappingContext* SlashCharacterContext;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* ToggleInventoryAction;
 };

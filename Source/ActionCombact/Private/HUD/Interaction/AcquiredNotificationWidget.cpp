@@ -38,6 +38,7 @@ void UAcquiredNotificationWidget::BindInventory(UInventoryComponent* NewInventor
 
 void UAcquiredNotificationWidget::ShowWidget(const FItemAddResult& Result, const FText& Name, const bool IsStackable)
 {
+	UE_LOG(LogTemp, Warning, TEXT("%s In Notification"), *GetOwningPlayerPawn()->GetName())
 	SetTextsVisible(true);
 	UpdateNotification(Name, IsStackable, Result.ActualAmountAdded, Result.ResultMessage);
 	if (UWorld* World = GetWorld())
@@ -54,7 +55,6 @@ void UAcquiredNotificationWidget::HideWidget()
 
 void UAcquiredNotificationWidget::UpdateNotification(const FText& InName, const bool IsStackable, const int32 InQuantity, const FText& InAction)
 {
-	
 	if (NameText) NameText->SetText(InName);
 	if (ActionText) ActionText->SetText(InAction);
 	bool bShouldShowQuantity = IsStackable;

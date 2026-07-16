@@ -19,9 +19,6 @@
 #include "Components/Attribute/AttributeComponent.h"
 #include "Components/Combat/CombatComponent.h"
 #include "Components/InventoryComponent.h"
-#include "HUD/Battle/SkillHUDWidget.h"
-#include "HUD/SlashHUD.h"
-#include "HUD/Battle/SlashOverlay.h"
 
 #include "Game/ActionGameInstance.h"
 #include "DrawDebugHelpers.h"
@@ -62,40 +59,18 @@ void ASlashCharacter::Tick(float DeltaSeconds)
 void ASlashCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(SlashCharacterContext, 0);
-		}
-	}
-	UpdateHUDHealth();
-	BindHUDInventory();
 }
 
-void ASlashCharacter::BindHUDInventory()
-{
-	if (ASlashHUD* HUD = GetSlashHUD())
-		if (Inventory)
-			HUD->BindInventory(Inventory);
-}
-
-void ASlashCharacter::UpdateHUDHealth()
-{
-	if(ASlashHUD* HUD = GetSlashHUD()) HUD->SetHealth(Attributes->GetCurrentHealth(), Attributes->GetMaxHealth());
-}
-
-ASlashHUD* ASlashCharacter::GetSlashHUD()
-{
-	if (SlashHUD.IsValid()) return SlashHUD.Get();
-
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (!PlayerController) return nullptr;
-
-	SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD());
-	return SlashHUD.Get();
-}
+//ASlashHUD* ASlashCharacter::GetSlashHUD()
+//{
+//	if (SlashHUD.IsValid()) return SlashHUD.Get();
+//
+//	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+//	if (!PlayerController) return nullptr;
+//
+//	SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD());
+//	return SlashHUD.Get();
+//}
 
 void ASlashCharacter::StartSprint()
 {
@@ -177,12 +152,6 @@ void ASlashCharacter::FoundInteractable(AActor* NewInteractable)
 	if (!Interface) return;
 	
 	Interface->BeginFocus();
-	
-	if (ASlashHUD* HUD = GetSlashHUD())
-	{
-		if(InteractionData.CurrentInteractable.Get())
-		HUD->ShowInteractionWidget(Interface->GetInteractableData());
-	}
 
 	InteractionData.CurrentInteractable = NewInteractable;
 }
@@ -251,11 +220,6 @@ void ASlashCharacter::Interact()
 			Interface->Interact(this);
 		}
 	}
-}
-
-void ASlashCharacter::ToggleInventory()
-{
-	if (ASlashHUD* HUD = GetSlashHUD()) HUD->ToggleInventory();
 }
 
 bool ASlashCharacter::IsEquipMontage(UAnimMontage* Montage)
@@ -441,12 +405,9 @@ void ASlashCharacter::SetOverlappingItem(AItem* Item)
 
 void ASlashCharacter::AddGold(int32 Amount)
 {
-	if (Attributes)
-	{
-		UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance());
-		if (!GI) return;
-		GI->AddGoldData(Amount);
-	}
+	UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance());
+	if (!GI) return;
+	GI->AddGoldData(Amount);
 }
 
 FItemAddResult ASlashCharacter::AddItem(UItemBase* Item)
@@ -497,13 +458,12 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ASlashCharacter::OnSprintStarted);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ASlashCharacter::OnSprintStopped);
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ASlashCharacter::BeginInteract);
-		EnhancedInputComponent->BindAction(ToggleInventoryAction, ETriggerEvent::Started, this, &ASlashCharacter::ToggleInventory);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::OnEquipStarted);
 		EnhancedInputComponent->BindAction(BasicAttackAction, ETriggerEvent::Started, this, &ASlashCharacter::BasicAttack);
 		EnhancedInputComponent->BindAction(QSkillAction, ETriggerEvent::Started, this, &ASlashCharacter::OnQStarted);
 		EnhancedInputComponent->BindAction(ESkillAction, ETriggerEvent::Started, this, &ASlashCharacter::OnEStarted);
 		EnhancedInputComponent->BindAction(RSkillAction, ETriggerEvent::Started, this, &ASlashCharacter::OnRStarted);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ASlashCharacter::BeginInteract);
 	}
 }
 
@@ -511,6 +471,5 @@ float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damage
 {
 	if (IsInvincible()) return 0.f;
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	UpdateHUDHealth();
 	return DamageAmount;
 }

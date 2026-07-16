@@ -44,7 +44,6 @@ protected:
 	virtual void UpdateMovement() override;
 	virtual void UpdateBattleStrategy() override;
 	virtual void TryAttack() override;
-	virtual void EnterHitReact() override;
 
 private:
 	void CreateHealthBarWidget();

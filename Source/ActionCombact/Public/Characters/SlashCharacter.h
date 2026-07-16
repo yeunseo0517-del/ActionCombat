@@ -26,12 +26,13 @@ struct FInteractionData
 
 class USpringArmComponent;
 class UCameraComponent;
-class UInputMappingContext;
 class UInputAction;
 class AItem;
 class ATreasure;
 class AWeapon;
 class UHealthBar;
+class UInventoryComponent;
+class UAttributeComponent;
 
 UCLASS()
 class ACTIONCOMBACT_API ASlashCharacter : public ABaseCharacter, public ILootReceiverInterface
@@ -57,19 +58,17 @@ public:
 
 	FORCEINLINE bool IsInteracting() const { return GetWorldTimerManager().IsTimerActive(InteractionTimer); }
 
+	UInventoryComponent* GetInventoryComponent() const { return Inventory; }
+
 protected:
 	virtual void BeginPlay() override;
-
-	void BindHUDInventory();
 
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) override;
 	virtual void EnterHitReact() override;
 
 	/*
 	Enchanced Input
-*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputMappingContext* SlashCharacterContext;
+	*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* JumpAction;
@@ -82,12 +81,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* SprintAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* InteractAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* ToggleInventoryAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* EquipAction;
@@ -104,6 +97,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* RSkillAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* InteractAction;
+
 	UPROPERTY(EditAnywhere, Category = "Character Properties")
 	float NormalWalkSpeed = 600.f;
 
@@ -111,8 +107,6 @@ protected:
 	float SprintWalkSpeed = 1000.f;
 
 private:
-	void UpdateHUDHealth();
-	class ASlashHUD* GetSlashHUD();
 	void StartSprint();
 	void StopSprint();
 	void Equip();
@@ -177,11 +171,8 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappingItem;
 
-	UPROPERTY()
-	TWeakObjectPtr<class ASlashHUD> SlashHUD;
-
 	UPROPERTY(EditDefaultsOnly)
-	class UInventoryComponent* Inventory;
+	UInventoryComponent* Inventory;
 
 	FInteractionData InteractionData;
 	float InteractionCheckFrequency = 0.1f;

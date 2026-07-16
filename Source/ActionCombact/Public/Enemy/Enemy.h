@@ -70,6 +70,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Reward")
 	int32 RewardGold = 10;
 
+	UPROPERTY(VisibleAnywhere)
+	UHealthBarComponent* HealthBarWidget;
+
 private:
 	void SpawnTreasure();
 

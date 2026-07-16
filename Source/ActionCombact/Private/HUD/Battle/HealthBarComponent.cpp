@@ -3,16 +3,9 @@
 
 #include "HUD/Battle/HealthBarComponent.h"
 #include "HUD/Battle/HealthBar.h"
+#include "Components/Attribute/AttributeComponent.h"
 
-void UHealthBarComponent::SetHealthPercent(float CurrentHealth, float MaxHealth)
+void UHealthBarComponent::BindAttribute(UAttributeComponent* Attribute) const
 {
-	if (!HealthBarWidget)
-	{
-		HealthBarWidget = Cast<UHealthBar>(GetUserWidgetObject());
-	}
-
-	if (HealthBarWidget && HealthBarWidget->HealthBar)
-	{
-		HealthBarWidget->SetHealthPercent(CurrentHealth, MaxHealth);
-	}
+	if (HealthBarWidget) HealthBarWidget->BindAttribute(Attribute);
 }

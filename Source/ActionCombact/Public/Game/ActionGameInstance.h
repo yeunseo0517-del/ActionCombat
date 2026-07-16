@@ -7,7 +7,7 @@
 #include "Types/ProfileData.h"
 #include "ActionGameInstance.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGoldChanged, int32, NewGold);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnGoldChanged, const int32);
 
 UCLASS()
 class ACTIONCOMBACT_API UActionGameInstance : public UGameInstance
@@ -17,7 +17,6 @@ class ACTIONCOMBACT_API UActionGameInstance : public UGameInstance
 public:
 	virtual void Init() override;
 
-	UPROPERTY(BlueprintAssignable)
 	FOnGoldChanged OnGoldChanged;
 	
 	void TravelToLevel(TSoftObjectPtr<UWorld> TargetLevel);

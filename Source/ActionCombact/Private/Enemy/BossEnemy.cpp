@@ -130,13 +130,3 @@ void ABossEnemy::TryAttack()
 		Attack(FGameplayTags::Get().Action_Attack_Basic);
 	}
 }
-
-void ABossEnemy::EnterHitReact()
-{
-	if (IsDead()) return;
-	if (HealthBar)
-	{
-		HealthBar->SetHealthPercent(Attributes->GetCurrentHealth(), Attributes->GetMaxHealth());
-	}
-	Super::EnterHitReact();
-}

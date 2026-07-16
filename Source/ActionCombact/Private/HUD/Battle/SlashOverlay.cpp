@@ -2,27 +2,31 @@
 
 
 #include "HUD/Battle/SlashOverlay.h"
+#include "Game/ActionGameInstance.h"
+#include "HUD/Battle/HealthBar.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Components/Attribute/AttributeComponent.h"
 
-void USlashOverlay::SetHealthPercent(float CurrentHealth, float MaxHealth)
+void USlashOverlay::NativeConstruct()
 {
-	if (HealthBar)
-	{
-		const float Percent = CurrentHealth / MaxHealth;
-		HealthBar->SetPercent(Percent);
-	}
+	Super::NativeConstruct();
 
-	if (HealthText)
-	{
-		const int32 Current = FMath::CeilToInt(CurrentHealth);
-		const int32 Max = FMath::CeilToInt(MaxHealth);
+	UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance());
+	if (!GI) return;
 
-		HealthText->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), Current, Max)));
-	}
+	GI->OnGoldChanged.RemoveAll(this);
+
+	GI->OnGoldChanged.AddUObject(this, &USlashOverlay::SetGold);
+	SetGold(GI->GetCurrentGold());
 }
 
-void USlashOverlay::SetStaminaPercent(float CurrentStamina, float MaxStamina)
+void USlashOverlay::BindAttribute(UAttributeComponent* Attribute)
+{
+	if (HealthBar) HealthBar->BindAttribute(Attribute);
+}
+
+void USlashOverlay::SetStaminaPercent(float CurrentStamina, float MaxStamina) const
 {
 	if (StaminaBar)
 	{
@@ -39,11 +43,19 @@ void USlashOverlay::SetStaminaPercent(float CurrentStamina, float MaxStamina)
 	}
 }
 
-void USlashOverlay::SetGold(int32 Gold)
+void USlashOverlay::SetGold(const int32 Gold) const
 {
-	UE_LOG(LogTemp, Warning, TEXT("Update: %d"), Gold);
 	if (GoldText)
 	{
 		GoldText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Gold)));
 	}
+}
+
+void USlashOverlay::NativeDestruct()
+{
+	if (UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance()))
+	{
+		GI->OnGoldChanged.RemoveAll(this);
+	}
+	Super::NativeDestruct();
 }

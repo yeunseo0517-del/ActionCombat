@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "HealthBar.generated.h"
 
+class UAttributeComponent;
+
 /**
  * 
  */
@@ -15,6 +17,12 @@ class ACTIONCOMBACT_API UHealthBar : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+	void BindAttribute(UAttributeComponent* Attribute);
+
+private:
+	UPROPERTY()
+	TWeakObjectPtr<UAttributeComponent> BoundAttribute;
+
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* HealthBar;
 
