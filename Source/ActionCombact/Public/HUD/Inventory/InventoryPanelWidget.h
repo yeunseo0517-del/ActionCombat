@@ -7,6 +7,7 @@
 #include "InventoryPanelWidget.generated.h"
 
 class UItemBase;
+class UItemContextMenuWidget;
 
 /**
  * 
@@ -18,6 +19,7 @@ class ACTIONCOMBACT_API UInventoryPanelWidget : public UUserWidget
 
 public:
 	void BindInventory(class UInventoryComponent* Inventory);
+	void HideChildWidgets();
 	
 private:
 	virtual void NativeOnInitialized() override;
@@ -26,9 +28,20 @@ private:
 	void HandleInventoryAdded(UItemBase* Item);
 	void HandleInventorRemoved(UItemBase* Item);
 	void HandleInventoryUpdated(UItemBase* Item);
+	void HandleItemRightClicked(const FGuid& InstanceID, const FVector2D Position, const FText& ActionText);
+	void HandleActionRequested();
+	void HandleDropRequested();
 
 	UPROPERTY()
 	TWeakObjectPtr<class UInventoryComponent> BoundInventory;
+
+	UPROPERTY()
+	class UItemBase* PendingItem;
+
+	FGuid PendingInstanceID;
+
+	UPROPERTY()
+	UItemContextMenuWidget* ItemContextMenu;
 
 	UPROPERTY(meta = (BindWidget))
 	class UWrapBox* InventoryPanel;
@@ -38,4 +51,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class UInventoryItemSlot> SlotClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UItemContextMenuWidget> ContextMenuClass;
 };

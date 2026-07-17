@@ -3,10 +3,12 @@
 
 #include "HUD/Inventory/InventoryPanelWidget.h"
 #include "HUD/Inventory/InventoryItemSlot.h"
+#include "HUD/Inventory/ItemContextMenuWidget.h"
 #include "Components/InventoryComponent.h"
 #include "Game/ActionGameInstance.h"
 #include "Components/TextBlock.h"
 #include "Components/WrapBox.h"
+#include "Items/ItemBase.h"
 
 //OnInventoryUpdated
 
@@ -46,6 +48,11 @@ void UInventoryPanelWidget::BindInventory(UInventoryComponent* NewInventory)
 	HandleInventoryRefreshed(BoundInventory->GetInventoryContents());
 }
 
+void UInventoryPanelWidget::HideChildWidgets()
+{
+	if (ItemContextMenu) ItemContextMenu->RemoveFromParent();
+}
+
 void UInventoryPanelWidget::UpdateTextInfo(const int32 Amount) const
 {
 	GoldText->SetText(FText::AsNumber(Amount));
@@ -66,6 +73,7 @@ void UInventoryPanelWidget::HandleInventoryAdded(UItemBase* Item)
 {
 	UInventoryItemSlot* ItemSlot = CreateWidget<UInventoryItemSlot>(this, SlotClass);
 	ItemSlot->SetItemInstance(Item);
+	ItemSlot->OnItemRightClicked.AddUObject(this, &UInventoryPanelWidget::HandleItemRightClicked);
 
 	InventoryPanel->AddChildToWrapBox(ItemSlot);
 }
@@ -94,4 +102,34 @@ void UInventoryPanelWidget::HandleInventoryUpdated(UItemBase* Item)
 			return;
 		}
 	}
+}
+
+void UInventoryPanelWidget::HandleItemRightClicked(const FGuid& InstanceID, const FVector2D Position, const FText& ActionText)
+{
+	if (ItemContextMenu)
+	{
+		ItemContextMenu->RemoveFromParent();
+	}
+	if (!ContextMenuClass) return;
+	ItemContextMenu = CreateWidget<UItemContextMenuWidget>(this, ContextMenuClass);
+	if (!ItemContextMenu) return;
+
+	PendingInstanceID = InstanceID;
+
+	ItemContextMenu->OnActionClicked.AddUObject(this, &UInventoryPanelWidget::HandleActionRequested);
+	ItemContextMenu->OnDropClicked.AddUObject(this, &UInventoryPanelWidget::HandleDropRequested);
+
+	ItemContextMenu->AddToViewport(200);
+	ItemContextMenu->SetPositionInViewport(Position, false);
+	ItemContextMenu->ShowMenuWidget(ActionText);
+}
+
+void UInventoryPanelWidget::HandleActionRequested()
+{
+	//if (BoundInventory.IsValid() && PendingItem) BoundInventory->Equip(InstanceID);
+}
+
+void UInventoryPanelWidget::HandleDropRequested()
+{
+	if (BoundInventory.IsValid() && PendingItem) BoundInventory->RemoveItemByInstanceID(PendingInstanceID);
 }

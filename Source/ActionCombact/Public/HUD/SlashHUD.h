@@ -61,7 +61,7 @@ private:
 	void HideAcquiredWidget();
 
 	template<typename TWidget>
-	TWidget* CreateHUDWidget(TSubclassOf<TWidget> WidgetClass)
+	TWidget* CreateHUDWidget(TSubclassOf<TWidget> WidgetClass, int32 order = 0)
 	{
 		if (!PlayerOwner || !WidgetClass) return nullptr;
 
@@ -69,7 +69,7 @@ private:
 
 		if (Widget)
 		{
-			Widget->AddToViewport();
+			Widget->AddToViewport(order);
 			Widget->SetVisibility(ESlateVisibility::Collapsed);
 		}
 		return Widget;

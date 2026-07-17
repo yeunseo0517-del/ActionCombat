@@ -17,7 +17,7 @@ void UInventoryItemSlot::NativeOnInitialized()
 		if (Tooltip)
 		{
 			Tooltip->InitializeTooltip(ItemInstance);
-			if(ItemBorder) ItemBorder->SetToolTip(Tooltip);
+			ItemBorder->SetToolTip(Tooltip);
 		}
 	}
 }
@@ -38,10 +38,7 @@ FReply UInventoryItemSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, 
 	{
 		if (ItemInstance)
 		{
-			OnItemRightClicked.Broadcast(
-				ItemInstance,
-				InMouseEvent.GetScreenSpacePosition()
-			);
+			OnItemRightClicked.Broadcast(ItemInstance->GetInstanceID(), InMouseEvent.GetScreenSpacePosition(), ItemInstance->GetActionText());
 		}
 
 		return FReply::Handled();

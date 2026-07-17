@@ -35,9 +35,12 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	// ...
 }
 
-UItemBase* UInventoryComponent::FindNextItemByID(UItemBase* Item) const
+UItemBase* UInventoryComponent::FindItemByInstanceID(const FGuid& InstanceID)
 {
-	return nullptr;
+	if (!InstanceID.IsValid()) return nullptr;
+	const auto* Result = Items.FindByPredicate([&InstanceID](const TObjectPtr<UItemBase>& Item)
+		{ return Item && Item->GetInstanceID() == InstanceID; });
+	return Result ? Result->Get() : nullptr;
 }
 
 UItemBase* UInventoryComponent::FindNextPartialStack(UItemBase* Target) const
@@ -47,7 +50,6 @@ UItemBase* UInventoryComponent::FindNextPartialStack(UItemBase* Target) const
 		{ return Item &&
 		Item->GetItemID() == Target->GetItemID() &&
 		!Item->IsFullItemStack(); });
-	OnInventoryUpdated.Broadcast(Target);
 	return Result ? Result->Get() : nullptr;
 }
 
@@ -111,6 +113,7 @@ void UInventoryComponent::AddItems(UItemBase* Target, int32& RemainingAmount)
 	while (RemainingAmount > 0 && Items.Num() < SlotsCapacity)
 	{
 		UItemBase* NewItem = Target->CreateItemCopy();
+		NewItem->SetInstanceID();
 		int32 AddAmount = FMath::Min(RemainingAmount, MaxStack);
 
 		NewItem->SetQuantity(AddAmount);
@@ -151,4 +154,12 @@ void UInventoryComponent::SplitStack(UItemBase* Target, int32 Amount)
 
 	RemoveAmountItem(Target, Amount);
 	AddItems(Target, Amount);
+}
+
+void UInventoryComponent::RemoveItemByInstanceID(const FGuid& ID)
+{
+	UItemBase* Target = FindItemByInstanceID(ID);
+
+	if (!Target) { UE_LOG(LogTemp, Warning, TEXT("No Item")) return; }
+	RemoveSingleItem(Target);
 }

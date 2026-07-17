@@ -9,7 +9,7 @@
 class UItemBase;
 class UInventoryTooltip;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemRightClicked, UItemBase*, FVector2D);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnItemRightClicked, const FGuid&, const FVector2D, const FText& ActionText);
 
 /**
  * 

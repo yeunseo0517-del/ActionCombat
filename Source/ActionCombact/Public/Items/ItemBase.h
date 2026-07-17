@@ -30,10 +30,14 @@ public:
 	const FItemData& GetItemData() const { return ItemData; }
 	const FName& GetItemID() const { return ItemData.ItemID; }
 	const FText& GetItemName() const { return ItemData.ItemTextData.Name; }
+	const FText& GetActionText() const { return ItemData.ItemTextData.InteractionText; }
 	const int32 GetQuantity() const { return Quantity; }
 	const EItemQuality GetQuality() const { return ItemData.ItemQuality; }
 	const int32 GetMaxStackSize() const { return ItemData.ItemNumericData.MaxStackSize; }
 	class UTexture2D* GetItemIcon() const { return ItemData.ItemAssetData.Icon; }
+
+	void SetInstanceID() { if (!InstanceID.IsValid()) InstanceID = FGuid::NewGuid(); }
+	const FGuid& GetInstanceID() { return InstanceID; }
 
 protected:
 	bool operator==(const FName& OtherID) const
@@ -42,6 +46,9 @@ protected:
 	}
 
 private:
+	UPROPERTY()
+	FGuid InstanceID;
+
 	UPROPERTY(VisibleAnywhere, Category = "Item")
 	FItemData ItemData;
 

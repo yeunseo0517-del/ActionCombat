@@ -27,9 +27,8 @@ public:
 	TArray<TObjectPtr<UItemBase>> GetInventoryContents() const { return Items; }
 
 	FItemAddResult HandleAddItem(UItemBase* Item);
-	void RemoveSingleItem(UItemBase* Item);
-	int32 RemoveAmountItem(UItemBase* Item, int32 RemoveAmount);
 	void SplitStack(UItemBase* Item, int32 Amount);
+	void RemoveItemByInstanceID(const FGuid& ID);
 
 	FOnInventoryRefresh OnInventoryRefresh;
 
@@ -43,11 +42,13 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	UItemBase* FindNextItemByID(UItemBase* Item) const;
+	UItemBase* FindItemByInstanceID(const FGuid& InstanceID);
 	UItemBase* FindNextPartialStack(UItemBase* Item) const;
 	FItemAddResult HandleNonStackableItem(UItemBase* Item);
 	void FillExistingStacks(UItemBase* Target, int32& RemainingAmount);
 	void AddItems(UItemBase* Target, int32& RemainingAmount);
+	void RemoveSingleItem(UItemBase* Item);
+	int32 RemoveAmountItem(UItemBase* Item, int32 RemoveAmount);
 
 	UPROPERTY(VisibleAnywhere, Category = "Inventory")
 	TArray<TObjectPtr<UItemBase>> Items;

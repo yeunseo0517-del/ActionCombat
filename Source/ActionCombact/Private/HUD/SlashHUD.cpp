@@ -49,7 +49,7 @@ void ASlashHUD::CreateWidgets()
 	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
 	if (AcquiredNotification) SetWidgetVisible(AcquiredNotification, true);
 
-	if(!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
+	if(!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass, 100);
 }
 
 void ASlashHUD::ShowBattleResult(const FBattleResult& Result)
@@ -131,6 +131,7 @@ void ASlashHUD::ToggleInventory()
 	}
 	else
 	{
+		InventoryPanel->HideChildWidgets();
 		SetWidgetVisible(InventoryPanel, false);
 		RestoreGameInputMode();
 	}
@@ -216,7 +217,7 @@ void ASlashHUD::BindInventory(UInventoryComponent* Inventory)
 	if (!AcquiredNotification) return;
 	AcquiredNotification->BindInventory(Inventory);
 
-	if (!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass);
+	if (!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass, 100);
 	if (!InventoryPanel) return;
 	InventoryPanel->BindInventory(Inventory);
 }
