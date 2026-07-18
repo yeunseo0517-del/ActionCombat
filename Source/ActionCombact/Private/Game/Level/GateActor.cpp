@@ -68,10 +68,10 @@ void AGateActor::Interact(AActor* Interactor)
 {
 	APawn* Player = Cast<APawn>(Interactor);
 	if (!Player) return;
-	UE_LOG(LogTemp, Warning, TEXT("Has Player"))
+
 	ASlashPlayerController* PC = Cast<ASlashPlayerController>(Player->GetController());
 	if (!PC) return;
-	UE_LOG(LogTemp, Warning, TEXT("Has Controller"))
+
 	EndFocus();
 	PC->ShowGateConfirm(TargetLevelName, FSimpleDelegate::CreateUObject(this, &AGateActor::HandleGateConfirm));
 }

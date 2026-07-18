@@ -25,6 +25,9 @@ public:
 	void AddEnhancedDamage(float Value);
 	void RemoveEnhancedDamage(float Value);
 	float GetEnhancedDamage();
+	void AddDefense(float Value);
+	void RemoveDefense(float Value);
+	float GetDefense();
 	bool IsSkillOnCooldown(int32 SkillID);
 	void ActivateSkill(int32 Slot, int32 SkillID, float Cooldown);
 	void SkillDurationEnd(int32 InSlotKey);
@@ -48,6 +51,7 @@ private:
 	void StartCooldown(int32 Slot, int32 SkillID, float Cooldown);
 
 	TArray<float> EnhancedDamageSources;
+	TArray<float> DefenseSources;
 	FString GetStatusTypeString(EStatusType Type);
 
 	TMap<ESkillSlot, FTimerHandle> DurationHandle;

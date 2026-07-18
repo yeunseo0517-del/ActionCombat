@@ -27,7 +27,6 @@ public:
 	FOnItemRightClicked OnItemRightClicked;
 
 protected:
-	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 

@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "StatusReceiverInterface.generated.h"
+#include "EquipReceiverInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UStatusReceiverInterface : public UInterface
+class UEquipReceiverInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,12 +16,11 @@ class UStatusReceiverInterface : public UInterface
 /**
  * 
  */
-class ACTIONCOMBACT_API IStatusReceiverInterface
+class ACTIONCOMBACT_API IEquipReceiverInterface
 {
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual class UStatusComponent* GetStatusComponent() const = 0;
-	virtual class UAttributeComponent* GetAttributeComponent() const = 0;
+	virtual void EquipWeapon(class UWeaponItem* NewWeapon) = 0;
 };

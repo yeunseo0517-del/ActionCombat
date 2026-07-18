@@ -7,6 +7,7 @@
 #include "Components/Status/StatusComponent.h"
 #include "Components/Combat/CombatComponent.h"
 #include "Components/Combat/Skill/SkillBase.h"
+
 #include "Data/HitEffectDataAsset.h"
 #include "Data/CombatDataAsset.h"
 
@@ -17,19 +18,38 @@
 #include "Interfaces/StatusReceiverInterface.h"
 #include "Interfaces/CombatInterface.h"
 
+#include "Items/ItemBase/WeaponItem.h"
+
 AWeapon::AWeapon()
 {
 }
 
 void AWeapon::Equip(USceneComponent* InParent, const FName& InSocketName, AActor* NewOwner, APawn* NewInstigator)
 {
-	ItemState = EItemState::EIS_Equipped;
 	SetOwner(NewOwner);
 	SetInstigator(NewInstigator);
 	AttachMeshToSocket(InParent, InSocketName);
 	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
 	SetHitEffectData();
+}
+
+void AWeapon::InitializeFromItem(UWeaponItem* InItemBase)
+{
+	if (!InItemBase) return;
+	ItemBase = InItemBase;
+
+	const FItemData& Data = ItemBase->GetItemData();
+	ItemMesh->SetStaticMesh(Data.ItemAssetData.Mesh);
+	if (!Data.WeaponSetting.CombatData.IsNull()) WeaponData = Data.WeaponSetting.CombatData.LoadSynchronous();
+	WeaponType = Data.WeaponSetting.WeaponType;
+}
+
+void AWeapon::DestroyWeapon()
+{
+	if (!ItemBase) return;
+	ItemBase->RemoveBuff(GetOwner());
+	Destroy();
 }
 
 void AWeapon::SetHitEffectData()

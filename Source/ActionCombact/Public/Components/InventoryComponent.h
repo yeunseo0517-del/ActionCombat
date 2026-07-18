@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Interfaces/SaveableInterface.h"
 #include "InventoryComponent.generated.h"
 
 class UItemBase;
@@ -14,7 +15,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnInventoryUpdated, UItemBase*);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnItemAddCompleted, const FItemAddResult&, const FText&, const bool IsStackable);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class ACTIONCOMBACT_API UInventoryComponent : public UActorComponent
+class ACTIONCOMBACT_API UInventoryComponent : public UActorComponent, public ISaveableInterface
 {
 	GENERATED_BODY()
 
@@ -29,6 +30,11 @@ public:
 	FItemAddResult HandleAddItem(UItemBase* Item);
 	void SplitStack(UItemBase* Item, int32 Amount);
 	void RemoveItemByInstanceID(const FGuid& ID);
+	//void RemoveAmountItemByID(const FGuid& ID, int32 RequestAmount);
+	void UseItem(const FGuid& InstanceID);
+
+	virtual void CaptureSaveData(FProfileData& Profile) override;
+	virtual void RestoreSaveData(const FProfileData& SaveData) override;
 
 	FOnInventoryRefresh OnInventoryRefresh;
 
@@ -49,6 +55,9 @@ private:
 	void AddItems(UItemBase* Target, int32& RemainingAmount);
 	void RemoveSingleItem(UItemBase* Item);
 	int32 RemoveAmountItem(UItemBase* Item, int32 RemoveAmount);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
+	UDataTable* ItemDataTable;
 
 	UPROPERTY(VisibleAnywhere, Category = "Inventory")
 	TArray<TObjectPtr<UItemBase>> Items;

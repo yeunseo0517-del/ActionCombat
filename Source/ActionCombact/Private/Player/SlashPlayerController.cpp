@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "HUD/SlashHUD.h"
 #include "Characters/SlashCharacter.h"
+#include "Game/ActionGameInstance.h"
 
 void ASlashPlayerController::BeginPlay()
 {
@@ -22,7 +23,10 @@ void ASlashPlayerController::BeginPlay()
 void ASlashPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
 	InitializeHUD();
+
+	if (UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance())) GI->RestoreProfile(GetPawn());
 }
 
 void ASlashPlayerController::SetupInputComponent()

@@ -17,6 +17,7 @@ public:
 	UAttributeComponent();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void Heal(float Value);
 
 	FOnHealthChanged OnHealthChanged;
 

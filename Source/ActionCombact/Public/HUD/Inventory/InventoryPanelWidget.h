@@ -28,7 +28,7 @@ private:
 	void HandleInventoryAdded(UItemBase* Item);
 	void HandleInventorRemoved(UItemBase* Item);
 	void HandleInventoryUpdated(UItemBase* Item);
-	void HandleItemRightClicked(const FGuid& InstanceID, const FVector2D Position, const FText& ActionText);
+	void HandleItemRightClicked(const FGuid& InstanceID, const FVector2D Position, const FText& UsageText);
 	void HandleActionRequested();
 	void HandleDropRequested();
 

@@ -67,20 +67,40 @@ bool UStatusComponent::HasStatus(EStatusType Status)
 
 void UStatusComponent::AddEnhancedDamage(float Value)
 {
+	if (Value <= 0) return;
 	EnhancedDamageSources.Add(Value);
 }
 
 void UStatusComponent::RemoveEnhancedDamage(float Value)
 {
+	if (Value <= 0) return;
 	EnhancedDamageSources.RemoveSingle(Value);
 }
 
 float UStatusComponent::GetEnhancedDamage()
 {
 	float TotalDamage = 0.f;
-	for (float Value : EnhancedDamageSources)
-		TotalDamage += Value;
+	for (float Value : EnhancedDamageSources) TotalDamage += Value;
 	return TotalDamage;
+}
+
+void UStatusComponent::AddDefense(float Value)
+{
+	if (Value <= 0) return;
+	DefenseSources.Add(Value);
+}
+
+void UStatusComponent::RemoveDefense(float Value)
+{
+	if (Value <= 0) return;
+	DefenseSources.RemoveSingle(Value);
+}
+
+float UStatusComponent::GetDefense()
+{
+	float TotalDefense = 0.f;
+	for (float Value : DefenseSources) TotalDefense += Value;
+	return TotalDefense;
 }
 
 FString UStatusComponent::GetStatusTypeString(EStatusType Type)

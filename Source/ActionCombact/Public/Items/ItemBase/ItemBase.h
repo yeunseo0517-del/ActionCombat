@@ -23,21 +23,22 @@ public:
 
 	int32 AddToStack(int32 Amount);
 	void SetQuantity(const int32 NewQuantity);
-	virtual void Use(class ASlashCharacter* Character);
+	virtual void UseItem(AActor* TargetActor) {}
 
 	const bool IsFullItemStack() const;
 	const bool IsStackable() const;
 	const FItemData& GetItemData() const { return ItemData; }
 	const FName& GetItemID() const { return ItemData.ItemID; }
 	const FText& GetItemName() const { return ItemData.ItemTextData.Name; }
-	const FText& GetActionText() const { return ItemData.ItemTextData.InteractionText; }
+	const FText& GetUsageText() const { return ItemData.ItemTextData.UsageText; }
 	const int32 GetQuantity() const { return Quantity; }
 	const EItemQuality GetQuality() const { return ItemData.ItemQuality; }
 	const int32 GetMaxStackSize() const { return ItemData.ItemNumericData.MaxStackSize; }
 	class UTexture2D* GetItemIcon() const { return ItemData.ItemAssetData.Icon; }
 
 	void SetInstanceID() { if (!InstanceID.IsValid()) InstanceID = FGuid::NewGuid(); }
-	const FGuid& GetInstanceID() { return InstanceID; }
+	void SetInstanceID(FGuid NewID) { if (NewID.IsValid()) InstanceID = NewID; }
+	const FGuid& GetInstanceID() const { return InstanceID; }
 
 protected:
 	bool operator==(const FName& OtherID) const
@@ -45,7 +46,6 @@ protected:
 		return this->ItemData.ItemID == OtherID;
 	}
 
-private:
 	UPROPERTY()
 	FGuid InstanceID;
 

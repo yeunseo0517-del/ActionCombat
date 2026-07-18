@@ -35,7 +35,7 @@ struct FCombatTraceData
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "Shape == ETraceType::ETT_BoxSingle || Shape == ETraceType::ETT_BoxSweep", EditConditionHides))
 	FVector HalfSize;
 
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "Shpae == ETraceType::ETT_Sphere", EditConditionHides))
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "Shape == ETraceType::ETT_Sphere", EditConditionHides))
 	float Radius;
 
 	UPROPERTY(EditAnywhere)

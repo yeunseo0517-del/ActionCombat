@@ -3,44 +3,66 @@
 
 #include "HUD/Inventory/InventoryTooltip.h"
 #include "HUD/Inventory/InventoryItemSlot.h"
-#include "Items/ItemBase.h"
+#include "Items/ItemBase/ItemBase.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 
 void UInventoryTooltip::InitializeTooltip(UItemBase* ItemBeingHovered)
 {
 	if (!ItemBeingHovered) return;
-	UE_LOG(LogTemp, Warning, TEXT("In Tooltip"))
-	const FItemData& ItemData = ItemBeingHovered->GetItemData();
 
+	const FItemData& ItemData = ItemBeingHovered->GetItemData();
+	SetTextInfo(ItemData, ItemBeingHovered->GetQuantity());
+	SetToolTip(this);
+}
+
+void UInventoryTooltip::SetTextInfo(const FItemData& ItemData, const int32 Quantity)
+{
 	if (ItemName) ItemName->SetText(ItemData.ItemTextData.Name);
 	if (DamageValue)
 	{
 		if (ItemData.ItemStatistics.DamageValue != 0)
-			DamageValue->SetText(FText::AsNumber(ItemData.ItemStatistics.DamageValue));
+			DamageValue->SetText(FText::Format(NSLOCTEXT("Item", "AttackStat", "+{0}"), FText::AsNumber(ItemData.ItemStatistics.DamageValue)));
 		else
-			DamageValue->SetVisibility(ESlateVisibility::Collapsed);
+		{
+			SetVisibilityCollapsed(DamageValue);
+			if (DamageText) SetVisibilityCollapsed(DamageText);
+		}
 	}
 	if (ArmorRating)
 	{
 		if (ItemData.ItemStatistics.ArmorRating != 0)
-			ArmorRating->SetText(FText::AsNumber(ItemData.ItemStatistics.ArmorRating));
+			ArmorRating->SetText(FText::Format(NSLOCTEXT("Item", "ArmorStat", "+{0}"), FText::AsNumber(ItemData.ItemStatistics.ArmorRating)));
 		else
-			ArmorRating->SetVisibility(ESlateVisibility::Collapsed);
+		{
+			SetVisibilityCollapsed(ArmorRating);
+			if (ArmorRatingText) SetVisibilityCollapsed(ArmorRatingText);
+		}
 	}
-	if (UsageText) UsageText->SetText(ItemData.ItemTextData.UsageText);
+	if (Restoration)
+	{
+		if (ItemData.ItemStatistics.RestorationAmount != 0)
+			Restoration->SetText(FText::Format(NSLOCTEXT("Item", "RestoreStat", "+{0}"), FText::AsNumber(ItemData.ItemStatistics.RestorationAmount)));
+		else
+		{
+			SetVisibilityCollapsed(Restoration);
+			if (RestorationText) SetVisibilityCollapsed(RestorationText);
+		}
+	}
 	if (ItemDescription) ItemDescription->SetText(ItemData.ItemTextData.Description);
 	if (SellValue) SellValue->SetText(FText::AsNumber(ItemData.ItemStatistics.SellValue));
 
 	if (ItemData.ItemNumericData.bIsStackable)
 	{
-		if (MaxStackSize) MaxStackSize->SetText(FText::AsNumber(ItemData.ItemNumericData.MaxStackSize));
-		if (StackSizeValue) StackSizeValue->SetText(FText::AsNumber(ItemBeingHovered->GetQuantity()));
+		if (StackValue) StackValue->SetText(FText::Format(NSLOCTEXT("Item", "StackVal", "{0}/{1}"), FText::AsNumber(Quantity), FText::AsNumber(ItemData.ItemNumericData.MaxStackSize)));
 	}
 	else
 	{
-		if (MaxStackSize) MaxStackSize->SetVisibility(ESlateVisibility::Collapsed);
-		if (StackSizeValue) StackSizeValue->SetVisibility(ESlateVisibility::Collapsed);
+		if (StackValue) SetVisibilityCollapsed(StackValue);
 	}
+}
 
-	SetToolTip(this);
+void UInventoryTooltip::SetVisibilityCollapsed(UTextBlock* TextBlock)
+{
+	TextBlock->SetVisibility(ESlateVisibility::Collapsed);
 }

@@ -23,4 +23,5 @@ public:
 	void AddGold(int32 Amount);
 	void AddStageID(int32 StageID);
 	int32 GetCurrentGold() const;
+	FProfileData& GetProfileData() { return ProfileData; }
 };

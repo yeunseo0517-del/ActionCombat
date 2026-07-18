@@ -26,6 +26,8 @@ public:
 	int32 GetCurrentGold() const;
 
 	void SaveProfile();
+	void CapturePlayerData();
+	void RestoreProfile(APawn* Player);
 	
 private:
 	void LoadProfile();

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Items/InteractItem.h"
+#include "Items/Item.h"
 #include "Types/Combat/CombatTypes.h"
 #include "Types/Combat/TraceTypes.h"
 #include "Types/SkillTypes.h"
@@ -15,12 +15,13 @@ class UNiagaraComponent;
 class USkillBase;
 class UCombatDataAsset;
 class UStatusComponent;
+class UWeaponItem;
 
 /**
  * 
  */
 UCLASS()
-class ACTIONCOMBACT_API AWeapon : public AInteractItem
+class ACTIONCOMBACT_API AWeapon : public AItem
 {
 	GENERATED_BODY()
 	
@@ -43,6 +44,9 @@ public:
 	void PlayNiagaraEffect();
 	void DestroyNiagaraEffect();
 
+	void InitializeFromItem(UWeaponItem* InItemBase);
+	void DestroyWeapon();
+
 protected:
 	virtual void BeginPlay() override;
 	void InitializeSkills();
@@ -64,6 +68,9 @@ protected:
 
 private:
 	void SetHitEffectData();
+
+	UPROPERTY()
+	UWeaponItem* ItemBase;
 
 	UPROPERTY(EditAnywhere, Category = State)
 	EWeaponType WeaponType;

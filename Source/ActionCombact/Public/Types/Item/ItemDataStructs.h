@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "Types/Combat/CombatTypes.h"
 #include "ItemDataStructs.generated.h"
 
 UENUM(BlueprintType)
@@ -29,16 +30,16 @@ struct FItemStatistics
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	float ArmorRating;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	float DamageValue;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	float RestorationAmount;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	float SellValue;
 };
 
@@ -47,16 +48,16 @@ struct FItemTextData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	FText Name;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	FText Description;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	FText InteractionText;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	FText UsageText;
 };
 
@@ -65,10 +66,10 @@ struct FItemNumericData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	int32 MaxStackSize;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	bool bIsStackable;
 };
 
@@ -77,11 +78,29 @@ struct FItemAssetData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	UTexture2D* Icon;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	UStaticMesh* Mesh;
+};
+
+USTRUCT(BlueprintType)
+struct FWeaponSetting
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class AWeapon> WeaponClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	EWeaponType WeaponType;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSoftObjectPtr<class UCombatDataAsset> CombatData;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSoftObjectPtr<class UHitEffectDataAsset> HitEffectData;
 };
 
 USTRUCT()
@@ -89,24 +108,30 @@ struct FItemData : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = "Item Data")
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
 	FName ItemID;
 
-	UPROPERTY(EditAnywhere, Category = "Item Data")
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
+	TSubclassOf<class UItemBase> ItemClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data", meta = (EditCondition = "ItemType != EItemType::EIT_Consumable ", EditConditionHides))
+	FWeaponSetting WeaponSetting;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
 	EItemType ItemType;
 
-	UPROPERTY(EditAnywhere, Category = "Item Data")
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
 	EItemQuality ItemQuality;
 
-	UPROPERTY(EditAnywhere, Category = "Item Data")
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
 	FItemStatistics ItemStatistics;
 
-	UPROPERTY(EditAnywhere, Category = "Item Data")
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
 	FItemTextData ItemTextData;
 
-	UPROPERTY(EditAnywhere, Category = "Item Data")
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
 	FItemNumericData ItemNumericData;
 
-	UPROPERTY(EditAnywhere, Category = "Item Data")
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
 	FItemAssetData ItemAssetData;
 };

@@ -5,16 +5,16 @@
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 
-void UItemContextMenuWidget::ShowMenuWidget(const FText& InActionText)
+void UItemContextMenuWidget::ShowMenuWidget(const FText& InUsageText)
 {
-	if (ActionText) ActionText->SetText(InActionText);
+	if (UsageText) UsageText->SetText(InUsageText);
 }
 
 void UItemContextMenuWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
-	if (ActionButton) ActionButton->OnClicked.AddDynamic(this, &UItemContextMenuWidget::HandleActionClicked);
+	if (UsageButton) UsageButton->OnClicked.AddDynamic(this, &UItemContextMenuWidget::HandleActionClicked);
 	if (DropButton) DropButton->OnClicked.AddDynamic(this, &UItemContextMenuWidget::HandleDropClicked);
 }
 

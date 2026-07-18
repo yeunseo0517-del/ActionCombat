@@ -36,10 +36,10 @@ private:
 	void HandleDropClicked();
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* ActionText;
+	UTextBlock* UsageText;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* ActionButton;
+	UButton* UsageButton;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* DropButton;

@@ -8,7 +8,7 @@
 #include "Game/ActionGameInstance.h"
 #include "Components/TextBlock.h"
 #include "Components/WrapBox.h"
-#include "Items/ItemBase.h"
+#include "Items/ItemBase/ItemBase.h"
 
 //OnInventoryUpdated
 
@@ -104,7 +104,7 @@ void UInventoryPanelWidget::HandleInventoryUpdated(UItemBase* Item)
 	}
 }
 
-void UInventoryPanelWidget::HandleItemRightClicked(const FGuid& InstanceID, const FVector2D Position, const FText& ActionText)
+void UInventoryPanelWidget::HandleItemRightClicked(const FGuid& InstanceID, const FVector2D Position, const FText& UsageText)
 {
 	if (ItemContextMenu)
 	{
@@ -121,15 +121,19 @@ void UInventoryPanelWidget::HandleItemRightClicked(const FGuid& InstanceID, cons
 
 	ItemContextMenu->AddToViewport(200);
 	ItemContextMenu->SetPositionInViewport(Position, false);
-	ItemContextMenu->ShowMenuWidget(ActionText);
+	ItemContextMenu->ShowMenuWidget(UsageText);
 }
 
 void UInventoryPanelWidget::HandleActionRequested()
 {
-	//if (BoundInventory.IsValid() && PendingItem) BoundInventory->Equip(InstanceID);
+	if (!BoundInventory.IsValid() || !PendingInstanceID.IsValid()) return;
+	BoundInventory->UseItem(PendingInstanceID);
+	BoundInventory->RemoveItemByInstanceID(PendingInstanceID);
+	if (ItemContextMenu) ItemContextMenu->RemoveFromParent();
 }
 
 void UInventoryPanelWidget::HandleDropRequested()
 {
-	if (BoundInventory.IsValid() && PendingItem) BoundInventory->RemoveItemByInstanceID(PendingInstanceID);
+	if (BoundInventory.IsValid() && PendingInstanceID.IsValid()) BoundInventory->RemoveItemByInstanceID(PendingInstanceID);
+	if (ItemContextMenu) ItemContextMenu->RemoveFromParent();
 }

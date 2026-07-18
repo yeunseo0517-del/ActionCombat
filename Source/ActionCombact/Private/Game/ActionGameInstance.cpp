@@ -4,6 +4,7 @@
 #include "Game/ActionGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Game/GameSave.h"
+#include "Interfaces/SaveableInterface.h"
 
 void UActionGameInstance::Init()
 {
@@ -59,5 +60,41 @@ void UActionGameInstance::SaveProfile()
 	}
 
 	if (!GameSave) return;
+	CapturePlayerData();
 	UGameplayStatics::SaveGameToSlot(GameSave, SaveSlotName, 0);
+}
+
+void UActionGameInstance::CapturePlayerData()
+{
+	if (!GameSave) return;
+
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	if (!PlayerPawn) return;
+
+	const TArray<UActorComponent*> SaveableComponents = PlayerPawn->GetComponentsByInterface(USaveableInterface::StaticClass());
+	for (UActorComponent* Component : SaveableComponents)
+	{
+		if (!IsValid(Component)) continue;
+		if (ISaveableInterface* Saveable = Cast<ISaveableInterface>(Component))
+		{
+			Saveable->CaptureSaveData(GameSave->GetProfileData());
+		}
+	}
+}
+
+void UActionGameInstance::RestoreProfile(APawn* Player)
+{
+	if (!Player || !GameSave) return;
+
+	TArray<UActorComponent*> SaveableComponents = Player->GetComponentsByInterface(USaveableInterface::StaticClass());
+
+	for (UActorComponent* Component : SaveableComponents)
+	{
+		if (!IsValid(Component)) continue;
+
+		ISaveableInterface* Saveable = Cast< ISaveableInterface>(Component);
+		if (!Saveable) continue;
+
+		Saveable->RestoreSaveData(GameSave->GetProfileData());
+	}
 }

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Items/ItemBase.h"
+#include "Items/ItemBase/ItemBase.h"
 
 UItemBase::UItemBase()
 {
@@ -50,8 +50,4 @@ void UItemBase::SetQuantity(const int32 NewQuantity)
 		int32 MaxSize = ItemData.ItemNumericData.bIsStackable ? ItemData.ItemNumericData.MaxStackSize : 1;
 		Quantity = FMath::Clamp(NewQuantity, 0, MaxSize);
 	}
-}
-
-void UItemBase::Use(ASlashCharacter* Character)
-{
 }

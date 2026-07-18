@@ -14,6 +14,7 @@
 #include "Types/Item/ItemAddResult.h"
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
+#include "Items/ItemBase/WeaponItem.h"
 #include "Interfaces/InteractableInterface.h"
 
 #include "Components/Attribute/AttributeComponent.h"
@@ -54,23 +55,6 @@ void ASlashCharacter::Tick(float DeltaSeconds)
 
 	if(GetWorld()->TimeSince(InteractionData.LastInteractionCheckTime > InteractionCheckFrequency)) PerformInteractionCheck();
 }
-
-// Called when the game starts or when spawned
-void ASlashCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-//ASlashHUD* ASlashCharacter::GetSlashHUD()
-//{
-//	if (SlashHUD.IsValid()) return SlashHUD.Get();
-//
-//	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-//	if (!PlayerController) return nullptr;
-//
-//	SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD());
-//	return SlashHUD.Get();
-//}
 
 void ASlashCharacter::StartSprint()
 {
@@ -279,27 +263,39 @@ void ASlashCharacter::OnEquipStarted()
 
 void ASlashCharacter::Equip()
 {
-	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
+	if (EquippedWeapon == DefaultWeapon) return;
 
-	if (OverlappingWeapon)
+	// ¹«±â ÀåÂø ÇØÁ¦
+	if (CanDisarm())
 	{
-		EquipWeapon(OverlappingWeapon);
+		SetCurrentState(FGameplayTags::Get().State_Player_Equip);
+		PlayEquipMontage(FName("Unequip"));
 	}
-	else
+	// ¹«±â ÀåÂø
+	else if (CanArm())
 	{
-		// ¹«±â ÀåÂø ÇØÁ¦
-		if (CanDisarm())
-		{
-			SetCurrentState(FGameplayTags::Get().State_Player_Equip);
-			PlayEquipMontage(FName("Unequip"));
-		}
-		// ¹«±â ÀåÂø
-		else if (CanArm())
-		{
-			SetCurrentState(FGameplayTags::Get().State_Player_Equip);
-			PlayEquipMontage(FName("Equip"));
-		}
+		SetCurrentState(FGameplayTags::Get().State_Player_Equip);
+		PlayEquipMontage(FName("Equip"));
 	}
+}
+
+void ASlashCharacter::EquipWeapon(UWeaponItem* NewWeapon)
+{
+	if (!NewWeapon) return;
+
+	if (EquippedWeapon && EquippedWeapon != DefaultWeapon)
+	{
+		EquippedWeapon->DestroyWeapon();
+	}
+
+	if (!NewWeapon->GetWeaponClass()) return;
+	AWeapon* Weapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon->GetWeaponClass());
+
+	Weapon->InitializeFromItem(NewWeapon);
+	Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+	SetWeaponStance(EWeaponStance::EWS_OneHand);
+	EquippedWeapon = Weapon;
+	SwitchToWeapon(EquippedWeapon);
 }
 
 void ASlashCharacter::UseQSkill()
@@ -349,15 +345,6 @@ void ASlashCharacter::OnRStarted()
 	UseRSkill();
 }
 
-void ASlashCharacter::EquipWeapon(AWeapon* Weapon)
-{
-	Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
-	SetWeaponStance(EWeaponStance::EWS_OneHand);
-	OverlappingItem = nullptr;
-	EquippedWeapon = Weapon;
-	SwitchToWeapon(EquippedWeapon);
-}
-
 bool ASlashCharacter::CanArm()
 {
 	return EquippedWeapon && IsUnoccupied() && HasUnarmedWeapon();
@@ -396,11 +383,6 @@ void ASlashCharacter::AttackEnd()
 {
 	if (!IsAttacking()) return;
 	SetCurrentState(FGameplayTag());
-}
-
-void ASlashCharacter::SetOverlappingItem(AItem* Item)
-{
-	OverlappingItem = Item;
 }
 
 void ASlashCharacter::AddGold(int32 Amount)

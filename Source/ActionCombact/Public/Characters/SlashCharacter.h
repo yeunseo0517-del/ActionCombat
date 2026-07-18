@@ -5,6 +5,7 @@
 #include "InputActionValue.h"
 #include "Characters/BaseCharacter.h"
 #include "Interfaces/LootReceiverInterface.h"
+#include "Interfaces/EquipReceiverInterface.h"
 #include "SlashCharacter.generated.h"
 
 USTRUCT()
@@ -35,7 +36,7 @@ class UInventoryComponent;
 class UAttributeComponent;
 
 UCLASS()
-class ACTIONCOMBACT_API ASlashCharacter : public ABaseCharacter, public ILootReceiverInterface
+class ACTIONCOMBACT_API ASlashCharacter : public ABaseCharacter, public ILootReceiverInterface, public IEquipReceiverInterface
 {
 	GENERATED_BODY()
 
@@ -52,17 +53,15 @@ public:
 	virtual void StartAttack() override;
 	virtual void AttackEnd() override;
 
-	virtual void SetOverlappingItem(AItem* Item) override;
 	virtual void AddGold(int32 Amount) override;
 	virtual struct FItemAddResult AddItem(class UItemBase* Item) override;
 
 	FORCEINLINE bool IsInteracting() const { return GetWorldTimerManager().IsTimerActive(InteractionTimer); }
 
 	UInventoryComponent* GetInventoryComponent() const { return Inventory; }
+	virtual void EquipWeapon(class UWeaponItem* NewWeapon) override;
 
 protected:
-	virtual void BeginPlay() override;
-
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) override;
 	virtual void EnterHitReact() override;
 
@@ -129,7 +128,6 @@ private:
 	void OnEStarted();
 	void OnRStarted();
 
-	void EquipWeapon(AWeapon* OverlappingWeapon);
 	bool IsEquipMontage(UAnimMontage* Montage);
 	bool CanArm();
 	bool CanDisarm();
@@ -167,9 +165,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* ViewCamera;
-
-	UPROPERTY(VisibleInstanceOnly)
-	AItem* OverlappingItem;
 
 	UPROPERTY(EditDefaultsOnly)
 	UInventoryComponent* Inventory;

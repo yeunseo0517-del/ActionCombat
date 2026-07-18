@@ -3,30 +3,25 @@
 
 #include "HUD/Inventory/InventoryItemSlot.h"
 #include "HUD/Inventory/InventoryTooltip.h"
-#include "Items/ItemBase.h"
+#include "Items/ItemBase/ItemBase.h"
 #include "Components/Border.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-
-void UInventoryItemSlot::NativeOnInitialized()
-{
-	Super::NativeOnInitialized();
-	if (TooltipClass)
-	{
-		UInventoryTooltip* Tooltip = CreateWidget<UInventoryTooltip>(this, TooltipClass);
-		if (Tooltip)
-		{
-			Tooltip->InitializeTooltip(ItemInstance);
-			ItemBorder->SetToolTip(Tooltip);
-		}
-	}
-}
 
 void UInventoryItemSlot::NativeConstruct()
 {
 	Super::NativeConstruct();
 	if (!ItemInstance) return;
-
+	if (TooltipClass)
+	{
+		UInventoryTooltip* Tooltip = CreateWidget<UInventoryTooltip>(this, TooltipClass);
+		if (Tooltip)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s"), ItemInstance ? TEXT("Has Instance") : TEXT("No Instance"))
+				Tooltip->InitializeTooltip(ItemInstance);
+			ItemBorder->SetToolTip(Tooltip);
+		}
+	}
 	SetBorderColor();
 	SetIconImage();
 	SetQuantityText();
@@ -38,7 +33,7 @@ FReply UInventoryItemSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, 
 	{
 		if (ItemInstance)
 		{
-			OnItemRightClicked.Broadcast(ItemInstance->GetInstanceID(), InMouseEvent.GetScreenSpacePosition(), ItemInstance->GetActionText());
+			OnItemRightClicked.Broadcast(ItemInstance->GetInstanceID(), InMouseEvent.GetScreenSpacePosition(), ItemInstance->GetUsageText());
 		}
 
 		return FReply::Handled();

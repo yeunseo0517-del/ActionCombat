@@ -38,8 +38,17 @@ private:
 	void InitializeDrop(const UItemBase* ItemToDrop, const int32 InQuantity);
 	void UpdateWidgetPosition();
 	void RefreshInteractionWidget();
+	float TransformedSin();
 
 	bool ShouldUpdateWidgetPosition = false;
+
+	float RunningTime;
+
+	UPROPERTY(EditAnywhere, Category = "Sine Parameters")
+	float Amplitude;
+
+	UPROPERTY(EditAnywhere, Category = "Sine Parameters")
+	float TimeConstant;
 
 	UPROPERTY(EditAnywhere, Category = "Item Data")
 	UDataTable* ItemDataTable;

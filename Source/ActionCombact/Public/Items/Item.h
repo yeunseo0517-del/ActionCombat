@@ -6,12 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "Item.generated.h"
 
-enum class EItemState : uint8
-{
-	EIS_Hovering UMETA(DisplayName = "Hovering"),
-	EIS_Equipped UMETA(DisplayName = "Equipped")
-};
-
 class USphereComponent;
 
 UCLASS()
@@ -27,21 +21,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	EItemState ItemState = EItemState::EIS_Hovering;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* ItemMesh;
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float RunningTime;
-
-	UPROPERTY(EditAnywhere, Category = "Sine Parameters")
-	float Amplitude;
-
-	UPROPERTY(EditAnywhere, Category = "Sine Parameters")
-	float TimeConstant;
-
-	UFUNCTION(BlueprintPure)
-	float TransformedSin();
 };

@@ -20,7 +20,11 @@ class ACTIONCOMBACT_API UInventoryTooltip : public UUserWidget
 public:
 	void InitializeTooltip(class UItemBase* Instance);
 
+	void SetTextInfo(const struct FItemData& ItemData, const int32 Quantity);
+
 private:
+	void SetVisibilityCollapsed(UTextBlock* TextBlock);
+
 	UPROPERTY(VisibleAnywhere)
 	UInventoryItemSlot* SlotBeingHovered;
 
@@ -34,19 +38,25 @@ private:
 	UTextBlock* DamageValue;
 
 	UPROPERTY(meta = (BindWidget))
+	UTextBlock* DamageText;
+
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ArmorRating;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* UsageText;
+	UTextBlock* ArmorRatingText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* Restoration;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* RestorationText;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ItemDescription;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* MaxStackSize;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* StackSizeValue;
+	UTextBlock* StackValue;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* SellValue;

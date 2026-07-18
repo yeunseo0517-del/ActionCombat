@@ -71,7 +71,8 @@ public:
 	/*
 		Status Receiver Interface
 	*/
-	virtual UStatusComponent* GetStatusComponent() override { return StatusComponent; }
+	virtual UStatusComponent* GetStatusComponent() const override { return StatusComponent; }
+	virtual UAttributeComponent* GetAttributeComponent() const override { return Attributes; }
 	//
 
 	void Attack(const FGameplayTag& Tag);
@@ -80,8 +81,6 @@ public:
 	virtual void StartAttack();
 	virtual void AttackEnd() {}
 	virtual bool CanStartAttack() { return false; }
-
-	UAttributeComponent* GetAttributeComponent() const { return Attributes; }
 
 protected:
 	virtual void BeginPlay() override;

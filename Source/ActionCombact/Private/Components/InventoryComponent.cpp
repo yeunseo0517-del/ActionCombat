@@ -4,7 +4,7 @@
 #include "Components/InventoryComponent.h"
 #include "Types/Item/ItemDataStructs.h"
 #include "Types/Item/ItemAddResult.h"
-#include "Items/ItemBase.h"
+#include "Items/ItemBase/ItemBase.h"
 
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
@@ -23,7 +23,6 @@ void UInventoryComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
 }
 
 
@@ -160,6 +159,66 @@ void UInventoryComponent::RemoveItemByInstanceID(const FGuid& ID)
 {
 	UItemBase* Target = FindItemByInstanceID(ID);
 
-	if (!Target) { UE_LOG(LogTemp, Warning, TEXT("No Item")) return; }
-	RemoveSingleItem(Target);
+	if (!Target) return;
+	if (Target->IsStackable())
+	{
+		RemoveAmountItem(Target, 1);
+	}
+	else
+	{
+		RemoveSingleItem(Target);
+	}
+}
+
+//void UInventoryComponent::RemoveAmountItemByID(const FGuid& ID, int32 RequestAmount)
+//{
+//	UItemBase* Target = FindItemByInstanceID(ID);
+//	if (!Target) return;
+//	RemoveAmountItem(Target, RequestAmount);
+//}
+
+void UInventoryComponent::UseItem(const FGuid& InstanceID)
+{
+	UItemBase* Target = FindItemByInstanceID(InstanceID);
+	if (!Target) return;
+	Target->UseItem(GetOwner());
+}
+
+void UInventoryComponent::CaptureSaveData(FProfileData& Profile)
+{
+	Profile.InventoryItems.Empty();
+
+	for (UItemBase* Item : Items)
+	{
+		if (!Item) continue;
+		FInventorySaveData SaveData;
+		SaveData.ItemID = Item->GetItemID();
+		SaveData.Guid = Item->GetInstanceID();
+		SaveData.Quantity = Item->GetQuantity();
+
+		Profile.InventoryItems.Add(SaveData);
+	}
+}
+
+void UInventoryComponent::RestoreSaveData(const FProfileData& Profile)
+{
+	if (!ItemDataTable) return;
+
+	Items.Empty();
+
+	for (const FInventorySaveData& SaveData : Profile.InventoryItems)
+	{
+		const FItemData* ItemData = ItemDataTable->FindRow<FItemData>(SaveData.ItemID, SaveData.ItemID.ToString());
+		if (!ItemData || !ItemData->ItemClass) continue;
+
+		UItemBase* Item = NewObject<UItemBase>(this, ItemData->ItemClass);
+		if (!Item) continue;
+
+		Item->SetItemData(*ItemData, SaveData.Quantity);
+		Item->SetInstanceID(SaveData.Guid);
+
+		Items.Add(Item);
+	}
+
+	OnInventoryRefresh.Broadcast(Items);
 }

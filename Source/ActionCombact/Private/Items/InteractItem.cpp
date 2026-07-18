@@ -2,7 +2,7 @@
 
 
 #include "Items/InteractItem.h"
-#include "Items/ItemBase.h"
+#include "Items/ItemBase/ItemBase.h"
 #include "Types/Item/ItemDataStructs.h"
 #include "Types/Item/ItemAddResult.h"
 #include "Components/WidgetComponent.h"
@@ -10,7 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Interfaces/LootReceiverInterface.h"
 
-AInteractItem::AInteractItem()
+AInteractItem::AInteractItem() : Amplitude(0.25f), TimeConstant(5.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -26,7 +26,21 @@ AInteractItem::AInteractItem()
 
 void AInteractItem::Tick(float DeltaTime)
 {
+	Super::Tick(DeltaTime);
+
+	RunningTime += DeltaTime;
+
+	const float rotationZ = DeltaTime * 100;
+
+	ItemMesh->AddLocalRotation(FRotator(0.f, rotationZ, 0.f));
+	ItemMesh->AddLocalOffset(FVector(0.f, 0.f, TransformedSin()));
+
 	if (ShouldUpdateWidgetPosition) UpdateWidgetPosition();
+}
+
+float AInteractItem::TransformedSin()
+{
+	return Amplitude * FMath::Sin(RunningTime * TimeConstant);
 }
 
 void AInteractItem::BeginFocus()
@@ -127,7 +141,7 @@ void AInteractItem::InitializePickup(const int32 InQuantity)
 		const FItemData* ItemData = ItemDataTable->FindRow<FItemData>(DesiredItemID, DesiredItemID.ToString());
 		if (!ItemData) return;
 
-		ItemInstance = NewObject<UItemBase>(this);
+		ItemInstance = NewObject<UItemBase>(this, ItemData->ItemClass);
 		if (ItemData->ItemNumericData.bIsStackable) InteractableData.bShowQuantity = true;
 		ItemInstance->SetItemData(*ItemData, InQuantity <= 0? 1 : InQuantity);
 		ItemMesh->SetStaticMesh(ItemData->ItemAssetData.Mesh);
