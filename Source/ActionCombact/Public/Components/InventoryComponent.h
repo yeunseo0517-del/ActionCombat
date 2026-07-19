@@ -8,6 +8,7 @@
 #include "InventoryComponent.generated.h"
 
 class UItemBase;
+class UWeaponItem;
 struct FItemAddResult;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInventoryRefresh, const TArray<TObjectPtr<UItemBase>>&);
@@ -35,6 +36,7 @@ public:
 
 	virtual void CaptureSaveData(FProfileData& Profile) override;
 	virtual void RestoreSaveData(const FProfileData& SaveData) override;
+	void SetWeaponBase(UItemBase* NewData) { EquippedWeaponBase = NewData; }
 
 	FOnInventoryRefresh OnInventoryRefresh;
 
@@ -56,11 +58,17 @@ private:
 	void RemoveSingleItem(UItemBase* Item);
 	int32 RemoveAmountItem(UItemBase* Item, int32 RemoveAmount);
 
+	void RestoreInventoryData(const FProfileData& Profile);
+	void RestoreEquippedWeapon(const FEquipmentSaveData& Profile);
+
 	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
 	UDataTable* ItemDataTable;
 
 	UPROPERTY(VisibleAnywhere, Category = "Inventory")
 	TArray<TObjectPtr<UItemBase>> Items;
+
+	UPROPERTY(VisibleInstanceOnly, Category = Weapon)
+	UItemBase* EquippedWeaponBase;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	int32 SlotsCapacity = 10;

@@ -268,7 +268,7 @@ void UCombatComponent::UpdateComboState()
 
 FCombatState UCombatComponent::GetCurrentCombatState()
 {
-	FCombatState CurrentState;
+	FCombatState CurrentState{};
 
 	CurrentState.WeaponType = EquippedWeapon ? EquippedWeapon->GetWeaponType() : EWeaponType::EWT_Unarmed;
 	CurrentState.ActionTag = CurrentSkill ? CurrentSkill->GetTag() : CurrentCombatTag;

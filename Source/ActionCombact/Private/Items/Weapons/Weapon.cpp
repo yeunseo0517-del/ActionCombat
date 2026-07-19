@@ -43,6 +43,8 @@ void AWeapon::InitializeFromItem(UWeaponItem* InItemBase)
 	ItemMesh->SetStaticMesh(Data.ItemAssetData.Mesh);
 	if (!Data.WeaponSetting.CombatData.IsNull()) WeaponData = Data.WeaponSetting.CombatData.LoadSynchronous();
 	WeaponType = Data.WeaponSetting.WeaponType;
+
+	InitializeSkills();
 }
 
 void AWeapon::DestroyWeapon()
@@ -72,8 +74,6 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-
-	InitializeSkills();
 }
 
 void AWeapon::InitializeSkills()
@@ -145,7 +145,6 @@ FHitContext AWeapon::BuildWeaponHitContext(const TSet<AActor*>& AlreadyHit)
 	HitContext.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
 	HitContext.DamageCauser = this;
 	HitContext.AttackTag = CurrentTraceData->AttackTag;
-	HitContext.Damage = WeaponData->DefaultDamage;
 
 	return HitContext;
 }

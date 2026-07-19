@@ -8,6 +8,7 @@
 
 void UWeaponItem::UseItem(AActor* TargetActor)
 {
+	UE_LOG(LogTemp, Warning, TEXT("In Use Item Function"))
 	AddBuff(TargetActor);
 
 	IEquipReceiverInterface* EquipReceiver = Cast<IEquipReceiverInterface>(TargetActor);

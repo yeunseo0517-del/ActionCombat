@@ -24,7 +24,6 @@
 #include "Game/ActionGameInstance.h"
 #include "DrawDebugHelpers.h"
 
-
 // Sets default values
 ASlashCharacter::ASlashCharacter()
 {
@@ -54,6 +53,12 @@ void ASlashCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	if(GetWorld()->TimeSince(InteractionData.LastInteractionCheckTime > InteractionCheckFrequency)) PerformInteractionCheck();
+}
+
+void ASlashCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	if (UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance())) GI->RestoreProfile(this);
 }
 
 void ASlashCharacter::StartSprint()
@@ -283,19 +288,31 @@ void ASlashCharacter::EquipWeapon(UWeaponItem* NewWeapon)
 {
 	if (!NewWeapon) return;
 
-	if (EquippedWeapon && EquippedWeapon != DefaultWeapon)
-	{
-		EquippedWeapon->DestroyWeapon();
-	}
+	OnUnequip();
+	OnEquip(NewWeapon);
+}
 
-	if (!NewWeapon->GetWeaponClass()) return;
+void ASlashCharacter::OnEquip(UWeaponItem* NewWeapon)
+{
+	if (!NewWeapon || !NewWeapon->GetWeaponClass()) return;
 	AWeapon* Weapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon->GetWeaponClass());
+	if (!Weapon) return;
 
 	Weapon->InitializeFromItem(NewWeapon);
 	Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
 	SetWeaponStance(EWeaponStance::EWS_OneHand);
+
 	EquippedWeapon = Weapon;
+	Inventory->SetWeaponBase(NewWeapon);
 	SwitchToWeapon(EquippedWeapon);
+}
+
+void ASlashCharacter::OnUnequip()
+{
+	if (EquippedWeapon && EquippedWeapon != DefaultWeapon)
+	{
+		EquippedWeapon->DestroyWeapon();
+	}
 }
 
 void ASlashCharacter::UseQSkill()

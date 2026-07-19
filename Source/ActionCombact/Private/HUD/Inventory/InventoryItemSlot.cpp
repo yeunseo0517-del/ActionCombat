@@ -17,8 +17,7 @@ void UInventoryItemSlot::NativeConstruct()
 		UInventoryTooltip* Tooltip = CreateWidget<UInventoryTooltip>(this, TooltipClass);
 		if (Tooltip)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%s"), ItemInstance ? TEXT("Has Instance") : TEXT("No Instance"))
-				Tooltip->InitializeTooltip(ItemInstance);
+			Tooltip->InitializeTooltip(ItemInstance);
 			ItemBorder->SetToolTip(Tooltip);
 		}
 	}

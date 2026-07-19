@@ -135,6 +135,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = State)
 	FGameplayTag CurrentStateTag = FGameplayTag();
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float DefaultDamage = 10;
+
 private:
 	void SpawnDefaultWeapon();
 	AWeapon* GetActiveWeapon() const;

@@ -27,9 +27,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Visual Effects")
 	UNiagaraSystem* EnhanceEffect;
 
-	UPROPERTY(EditAnywhere)
-	float DefaultDamage;
-
 	UPROPERTY(EditAnywhere, Category = "Skills")
 	TMap<ESkillSlot, FSkillEntry> SkillLoadout;
 };

@@ -61,7 +61,12 @@ public:
 	UInventoryComponent* GetInventoryComponent() const { return Inventory; }
 	virtual void EquipWeapon(class UWeaponItem* NewWeapon) override;
 
+	void OnEquip(UWeaponItem* NewWeapon);
+
+	void OnUnequip();
+
 protected:
+	virtual void BeginPlay() override;
 	virtual void OnMontageEndedEvent(UAnimMontage* Montage, bool bInterrupted) override;
 	virtual void EnterHitReact() override;
 

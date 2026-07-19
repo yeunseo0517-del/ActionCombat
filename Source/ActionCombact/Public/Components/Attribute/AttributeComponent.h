@@ -4,12 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Interfaces/SaveableInterface.h"
 #include "AttributeComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, const float, const float);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class ACTIONCOMBACT_API UAttributeComponent : public UActorComponent
+class ACTIONCOMBACT_API UAttributeComponent : public UActorComponent, public ISaveableInterface
 {
 	GENERATED_BODY()
 
@@ -18,6 +19,9 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void Heal(float Value);
+
+	virtual void CaptureSaveData(FProfileData& Profile) override;
+	virtual void RestoreSaveData(const FProfileData& SaveData) override;
 
 	FOnHealthChanged OnHealthChanged;
 

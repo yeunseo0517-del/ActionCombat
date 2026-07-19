@@ -198,12 +198,25 @@ void UInventoryComponent::CaptureSaveData(FProfileData& Profile)
 
 		Profile.InventoryItems.Add(SaveData);
 	}
+
+	Profile.EquippedWeapon.ItemID = EquippedWeaponBase->GetItemID();
+	Profile.EquippedWeapon.Guid = EquippedWeaponBase->GetInstanceID();
 }
 
 void UInventoryComponent::RestoreSaveData(const FProfileData& Profile)
 {
-	if (!ItemDataTable) return;
+	if (!ItemDataTable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Please Set Item Data Table in Inventory Component"));
+		return;
+	}
 
+	RestoreInventoryData(Profile);
+	RestoreEquippedWeapon(Profile.EquippedWeapon);
+}
+
+void UInventoryComponent::RestoreInventoryData(const FProfileData& Profile)
+{
 	Items.Empty();
 
 	for (const FInventorySaveData& SaveData : Profile.InventoryItems)
@@ -221,4 +234,19 @@ void UInventoryComponent::RestoreSaveData(const FProfileData& Profile)
 	}
 
 	OnInventoryRefresh.Broadcast(Items);
+}
+
+void UInventoryComponent::RestoreEquippedWeapon(const FEquipmentSaveData& EquipSaveData)
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *EquipSaveData.ItemID.ToString())
+	const FItemData* WeaponData = ItemDataTable->FindRow<FItemData>(EquipSaveData.ItemID, EquipSaveData.ItemID.ToString());
+	if (!WeaponData || !WeaponData->ItemClass) return;
+
+	UItemBase* Item = NewObject<UItemBase>(this, WeaponData->ItemClass);
+	if (!Item) return;
+
+	Item->SetItemData(*WeaponData, 1);
+	Item->SetInstanceID(EquipSaveData.Guid);
+
+	Item->UseItem(GetOwner());
 }

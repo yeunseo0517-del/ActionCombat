@@ -83,6 +83,14 @@ void ABaseCharacter::SpawnDefaultWeapon()
 void ABaseCharacter::SwitchToWeapon(AWeapon* NewWeapon)
 {
 	if (!NewWeapon || !Combat) return;
+	if (NewWeapon != DefaultWeapon)
+	{
+		StatusComponent->RemoveEnhancedDamage(DefaultDamage);
+	}
+	else
+	{
+		StatusComponent->AddEnhancedDamage(DefaultDamage);
+	}
 	NewWeapon->ApplySocketPolicy();
 	Combat->OnWeaponEquipped(NewWeapon);
 }

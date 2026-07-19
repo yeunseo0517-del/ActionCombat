@@ -16,20 +16,21 @@ AGateActor::AGateActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	// Portal Niagara Effect
 	PortalEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PortalEffect"));
 	PortalEffect->SetupAttachment(GetRootComponent());
 	SetRootComponent(PortalEffect);
 
+	// Interact Collision Box
 	InteractCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Interact Collision"));
 	InteractCollision->SetupAttachment(GetRootComponent());
-
 	InteractCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	InteractCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
 	InteractCollision->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
+	//Interaction Widget Component
 	InteractionWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Interaction Widget"));
 	InteractionWidgetComponent->SetupAttachment(GetRootComponent());
-
 	InteractionWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	InteractionWidgetComponent->SetDrawAtDesiredSize(true);
 	InteractionWidgetComponent->SetVisibility(false);
@@ -81,7 +82,6 @@ const FInteractableData& AGateActor::GetInteractableData() const
 	return InteractableData;
 }
 
-// Called when the game starts or when spawned
 void AGateActor::BeginPlay()
 {
 	Super::BeginPlay();

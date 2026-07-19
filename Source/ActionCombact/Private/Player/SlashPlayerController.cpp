@@ -25,8 +25,6 @@ void ASlashPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	InitializeHUD();
-
-	if (UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance())) GI->RestoreProfile(GetPawn());
 }
 
 void ASlashPlayerController::SetupInputComponent()
