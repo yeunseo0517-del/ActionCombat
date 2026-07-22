@@ -35,8 +35,11 @@ struct FProfileData
 {
     GENERATED_BODY()
 
+	UPROPERTY()
+	bool bHasSavedHealth = false;
+
     UPROPERTY()
-	float CurrentHealth = 0.f;
+	float CurrentHealth;
 
     UPROPERTY()
     int32 Gold = 0;

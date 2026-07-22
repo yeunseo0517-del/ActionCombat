@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "Types/Game/BattleResult.h"
+#include "Types/InteractionTypes.h"
 #include "BattleGameMode.generated.h"
 
 /**
@@ -61,5 +62,5 @@ private:
 	UPROPERTY()
 	TSoftObjectPtr<UWorld> TargetLevel;
 
-	FText TargetLevelName;
+	FInteractableData InteractData;
 };

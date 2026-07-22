@@ -42,6 +42,14 @@ void AGateActor::BeginFocus()
 {
 	if (InteractionWidgetComponent)
 	{
+		if (!bWidgetInitialized)
+		{
+			if (UInteractionWidget* Widget = Cast<UInteractionWidget>(InteractionWidgetComponent->GetUserWidgetObject()))
+			{
+				Widget->UpdateWidget(InteractableData);
+				bWidgetInitialized = true;
+			}
+		}
 		ShouldUpdateWidgetPosition = true;
 		InteractionWidgetComponent->SetVisibility(true);
 		UpdateWidgetPosition();
@@ -74,7 +82,7 @@ void AGateActor::Interact(AActor* Interactor)
 	if (!PC) return;
 
 	EndFocus();
-	PC->ShowGateConfirm(TargetLevelName, FSimpleDelegate::CreateUObject(this, &AGateActor::HandleGateConfirm));
+	PC->ShowGateConfirm(InteractableData.Name, FSimpleDelegate::CreateUObject(this, &AGateActor::HandleGateConfirm));
 }
 
 const FInteractableData& AGateActor::GetInteractableData() const
@@ -85,11 +93,6 @@ const FInteractableData& AGateActor::GetInteractableData() const
 void AGateActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (UInteractionWidget* Widget = Cast<UInteractionWidget>(InteractionWidgetComponent->GetUserWidgetObject()))
-	{
-		Widget->UpdateWidget(InteractableData);
-	}
 }
 
 void AGateActor::HandleGateConfirm()
@@ -100,10 +103,10 @@ void AGateActor::HandleGateConfirm()
 	GI->TravelToLevel(TargetLevel);
 }
 
-void AGateActor::SetDestination(TSoftObjectPtr<UWorld> Target, FText Name)
+void AGateActor::SetDestination(TSoftObjectPtr<UWorld> Target, const FInteractableData& data)
 {
 	TargetLevel = Target;
-	TargetLevelName = Name;
+	InteractableData = data;
 }
 
 // Called every frame

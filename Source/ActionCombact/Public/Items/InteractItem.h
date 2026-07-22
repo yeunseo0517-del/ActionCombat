@@ -40,7 +40,7 @@ private:
 	void RefreshInteractionWidget();
 	float TransformedSin();
 
-	bool ShouldUpdateWidgetPosition = false;
+	bool bInFocus = false;
 
 	float RunningTime;
 

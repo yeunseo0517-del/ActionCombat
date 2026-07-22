@@ -2,6 +2,7 @@
 
 
 #include "Player/SlashPlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
@@ -48,6 +49,29 @@ void ASlashPlayerController::InitializeHUD()
 	}
 }
 
+void ASlashPlayerController::SetUIOnlyInputMode(TSharedPtr<SWidget> InWidgetToFocus = nullptr)
+{
+	SetShowMouseCursor(true);
+	FInputModeUIOnly InputMode;
+	InputMode.SetWidgetToFocus(InWidgetToFocus);
+	SetInputMode(InputMode);
+}
+
+void ASlashPlayerController::SetGameAndUIInputMode(TSharedPtr<SWidget> InWidgetToFocus = nullptr)
+{
+	SetShowMouseCursor(true);
+	FInputModeGameAndUI InputMode;
+	InputMode.SetWidgetToFocus(InWidgetToFocus);
+	SetInputMode(InputMode);
+}
+
+void ASlashPlayerController::RestoreGameInputMode()
+{
+	SetShowMouseCursor(false);
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
+}
+
 void ASlashPlayerController::ToggleInventory()
 {
 	if (!HUD) HUD = Cast<ASlashHUD>(GetHUD());
@@ -64,4 +88,10 @@ void ASlashPlayerController::HideGateConfirm()
 {
 	if (!HUD) HUD = Cast<ASlashHUD>(GetHUD());
 	HUD->HideGateConfirmWidget();
+}
+
+void ASlashPlayerController::OpenShop(AShopActor* Shop)
+{
+	if (!HUD) HUD = Cast<ASlashHUD>(GetHUD());
+	HUD->OpenShopWidget(Shop);
 }

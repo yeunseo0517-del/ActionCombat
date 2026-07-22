@@ -14,9 +14,8 @@ AInteractItem::AInteractItem() : Amplitude(0.25f), TimeConstant(5.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	InteractionWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Interaction Widget"));
+	InteractionWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Interaction Widget Component"));
 	InteractionWidgetComponent->SetupAttachment(GetRootComponent());
-
 	InteractionWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	InteractionWidgetComponent->SetDrawAtDesiredSize(true);
 	InteractionWidgetComponent->SetVisibility(false);
@@ -35,7 +34,7 @@ void AInteractItem::Tick(float DeltaTime)
 	ItemMesh->AddLocalRotation(FRotator(0.f, rotationZ, 0.f));
 	ItemMesh->AddLocalOffset(FVector(0.f, 0.f, TransformedSin()));
 
-	if (ShouldUpdateWidgetPosition) UpdateWidgetPosition();
+	if (bInFocus) UpdateWidgetPosition();
 }
 
 float AInteractItem::TransformedSin()
@@ -50,7 +49,7 @@ void AInteractItem::BeginFocus()
 
 	if (InteractionWidgetComponent)
 	{
-		ShouldUpdateWidgetPosition = true;
+		bInFocus = true;
 		InteractionWidgetComponent->SetVisibility(true);
 		UpdateWidgetPosition();
 	}
@@ -63,7 +62,7 @@ void AInteractItem::EndFocus()
 
 	if (InteractionWidgetComponent)
 	{
-		ShouldUpdateWidgetPosition = false;
+		bInFocus = false;
 		InteractionWidgetComponent->SetVisibility(false);
 	}
 }

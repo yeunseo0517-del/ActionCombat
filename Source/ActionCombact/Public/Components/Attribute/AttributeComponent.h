@@ -23,6 +23,9 @@ public:
 	virtual void CaptureSaveData(FProfileData& Profile) override;
 	virtual void RestoreSaveData(const FProfileData& SaveData) override;
 
+	float GetAttackPower() const { return BaseAttackPower; }
+	float GetDefense() const { return BaseDefense; }
+
 	FOnHealthChanged OnHealthChanged;
 
 protected:
@@ -34,6 +37,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Attributes)
 	float MaxHealth;
+
+	UPROPERTY(EditAnywhere, Category = Attributes)
+	float BaseAttackPower;
+
+	UPROPERTY(EditAnywhere, Category = Attributes)
+	float BaseDefense;
 
 public:
 	void RecieveDamage(float DamageAmount);

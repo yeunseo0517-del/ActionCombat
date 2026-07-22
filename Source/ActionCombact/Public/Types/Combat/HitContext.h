@@ -13,7 +13,6 @@ struct FHitContext
 	AActor* DamageCauser = nullptr;
 
 	FGameplayTag AttackTag;
-	float Damage = 0.f;
 
 	TSet<AActor*> AlreadyHitActors;
 };

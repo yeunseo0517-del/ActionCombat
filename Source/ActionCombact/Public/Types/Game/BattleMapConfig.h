@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Types/InteractionTypes.h"
 #include "BattleMapConfig.generated.h"
 
 UCLASS()
@@ -22,12 +23,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultSettings")
 	int32 TargetKillCount = 1;
 
-	UPROPERTY(EditInstanceOnly, Category = "AfterCombat")
+	UPROPERTY(EditInstanceOnly, Category = "Portal")
 	class ATargetPoint* PortalSpawnPoint;
 
-	UPROPERTY(EditAnywhere, Category = "AfterCombat")
+	UPROPERTY(EditAnywhere, Category = "Portal")
 	TSoftObjectPtr<UWorld> TargetLevel;
 
-	UPROPERTY(EditAnywhere, Category = "AfterCombat")
-	FText TargetLevelName;
+	UPROPERTY(EditAnywhere, Category = "Portal")
+	FInteractableData InteractableData;
 };

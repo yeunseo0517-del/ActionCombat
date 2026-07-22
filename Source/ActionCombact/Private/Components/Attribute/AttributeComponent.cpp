@@ -42,12 +42,16 @@ void UAttributeComponent::Heal(float Value)
 void UAttributeComponent::CaptureSaveData(FProfileData& Profile)
 {
 	Profile.CurrentHealth = Health;
+	Profile.bHasSavedHealth = true;
 }
 
 void UAttributeComponent::RestoreSaveData(const FProfileData& SaveData)
 {
-	Health = SaveData.CurrentHealth;
-	OnHealthChanged.Broadcast(Health, MaxHealth);
+	if (SaveData.bHasSavedHealth)
+	{
+		Health = SaveData.CurrentHealth;
+		OnHealthChanged.Broadcast(Health, MaxHealth);
+	}
 }
 
 void UAttributeComponent::RecieveDamage(float DamageAmount)

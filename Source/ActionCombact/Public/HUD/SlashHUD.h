@@ -20,6 +20,7 @@ class UGateConfirmWidget;
 class UInteractionWidget;
 class UInventoryPanelWidget;
 class UAcquiredNotificationWidget;
+class UShopWidget;
 
 UCLASS()
 class ACTIONCOMBACT_API ASlashHUD : public AHUD
@@ -38,6 +39,8 @@ public:
 
 	void BindInventory(class UInventoryComponent* Inventory);
 	void BindAttribute(class UAttributeComponent* Attribute);
+
+	void OpenShopWidget(class AShopActor* Shop);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -52,16 +55,18 @@ private:
 	UFUNCTION()
 	void CloseBattleResult();
 
+	class ASlashPlayerController* GetSlashPC() const;
+	void EnterGameAndUIMode(TSharedPtr<SWidget> InWidgetToFocus = nullptr);
+	void ExitUIInputMode();
 	void SetWidgetVisible(UUserWidget* Widget, bool bVisible);
-	void SetUIOnlyInputMode();
-	void SetGameAndUIInputMode();
-	void RestoreGameInputMode();
 	void CreateWidgets();
 	void ApplyHUDMode();
 	void HideAcquiredWidget();
+	void ShowInventoryPanel();
+	void HideInventoryPanel();
 
 	template<typename TWidget>
-	TWidget* CreateHUDWidget(TSubclassOf<TWidget> WidgetClass, int32 order = 0)
+	TWidget* CreateHUDWidget(TSubclassOf<TWidget> WidgetClass, ESlateVisibility Visibility = ESlateVisibility::Collapsed, int32 order = 0)
 	{
 		if (!PlayerOwner || !WidgetClass) return nullptr;
 
@@ -70,7 +75,7 @@ private:
 		if (Widget)
 		{
 			Widget->AddToViewport(order);
-			Widget->SetVisibility(ESlateVisibility::Collapsed);
+			Widget->SetVisibility(Visibility);
 		}
 		return Widget;
 	}
@@ -101,6 +106,8 @@ private:
 	UPROPERTY()
 	UGateConfirmWidget* GateConfirmWidget;
 
+	FSimpleDelegate PendingGateConfirm;
+
 	UPROPERTY(EditDefaultsOnly, Category = Interaction)
 	TSubclassOf<UInteractionWidget> InteractionClass;
 
@@ -119,5 +126,9 @@ private:
 	UPROPERTY()
 	UInventoryPanelWidget* InventoryPanel;
 
-	FSimpleDelegate PendingGateConfirm;
+	UPROPERTY(EditDefaultsOnly, Category = Inventory)
+	TSubclassOf<UShopWidget> ShopWidgetClass;
+
+	UPROPERTY()
+	UShopWidget* ShopWidget;
 };

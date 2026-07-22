@@ -18,8 +18,13 @@ class ACTIONCOMBACT_API ASlashPlayerController : public APlayerController
 	GENERATED_BODY()
 	
 public:
+	void SetUIOnlyInputMode(TSharedPtr<SWidget> InWidgetToFocus = nullptr);
+	void SetGameAndUIInputMode(TSharedPtr<SWidget> InWidgetToFocus = nullptr);
+	void RestoreGameInputMode();
+
 	void ShowGateConfirm(const FText& MapName, FSimpleDelegate OnConfirmed);
 	void HideGateConfirm();
+	void OpenShop(class AShopActor* Shop);
 
 protected:
 	virtual void BeginPlay() override;

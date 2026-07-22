@@ -5,16 +5,16 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/InteractableInterface.h"
-#include "GateActor.generated.h"
+#include "ShopActor.generated.h"
 
 UCLASS()
-class ACTIONCOMBACT_API AGateActor : public AActor, public IInteractableInterface
+class ACTIONCOMBACT_API AShopActor : public AActor, public IInteractableInterface
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
-	AGateActor();
+	AShopActor();
+	virtual void Tick(float DeltaTime) override;
 
 	virtual void BeginFocus() override;
 	virtual void EndFocus() override;
@@ -24,36 +24,29 @@ public:
 
 	virtual const FInteractableData& GetInteractableData() const override;
 
+	TArray<struct FShopSlotData> GetShopItems();
+
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
 	void UpdateWidgetPosition();
+	void TryPurchase(const FName& ItemID);
 
-	bool ShouldUpdateWidgetPosition = false;
+	bool bInFocus = false;
 
-	UPROPERTY(EditAnywhere)
-	class UBoxComponent* InteractCollision;
+	UPROPERTY(EditDefaultsOnly)
+	UStaticMeshComponent* ShopMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "Interaction")
 	TObjectPtr<class UWidgetComponent> InteractionWidgetComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Gate")
+	UPROPERTY(EditAnywhere, Category = "Interaction")
 	FInteractableData InteractableData;
 
-	UPROPERTY(EditAnywhere)
-	class UNiagaraComponent* PortalEffect;
+	UPROPERTY(EditDefaultsOnly, Category = "Item Data")
+	UDataTable* ItemDataTable;
 
-	UPROPERTY(EditAnywhere, Category = "Gate")
-	TSoftObjectPtr<UWorld> TargetLevel;
-
-	bool bWidgetInitialized = false;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	void HandleGateConfirm();
-	void SetDestination(TSoftObjectPtr<UWorld> Target, const FInteractableData& data);
+	UPROPERTY(EditAnywhere, Category = "Item Data")
+	TArray<struct FShopEntry> ShopItems;
 };

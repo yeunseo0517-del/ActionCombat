@@ -47,7 +47,7 @@ void ABattleGameMode::SetBattleMapConfig()
 	TargetKillCount = BattleMapConfig->TargetKillCount;
 	PortalSpawnPoint = BattleMapConfig->PortalSpawnPoint;
 	TargetLevel = BattleMapConfig->TargetLevel;
-	TargetLevelName = BattleMapConfig->TargetLevelName;
+	InteractData = BattleMapConfig->InteractableData;
 }
 
 void ABattleGameMode::FindBattleMapConfig()
@@ -120,7 +120,7 @@ void ABattleGameMode::SpawnPortalToTown()
 	ExitPortal = GetWorld()->SpawnActor<AGateActor>(ExitPortalClass, PortalSpawnPoint->GetActorLocation(), PortalSpawnPoint->GetActorRotation());
 	if (ExitPortal)
 	{
-		ExitPortal->SetDestination(TargetLevel, TargetLevelName);
+		ExitPortal->SetDestination(TargetLevel, InteractData);
 	}
 }
 

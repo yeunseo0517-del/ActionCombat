@@ -4,6 +4,7 @@
 #include "Components/Combat/CombatComponent.h"
 #include "Components/Combat/Skill/SkillBase.h"
 #include "Components/Status/StatusComponent.h"
+#include "Components/Attribute/AttributeComponent.h"
 #include "Components/Combat/AreaEffects/RadialShockwaves.h"
 #include "Components/Combat/Projectiles/BaseProjectile.h"
 #include "Data/CombatDataAsset.h"
@@ -339,10 +340,18 @@ bool UCombatComponent::ProcessDamageApplication(AActor* Target)
 {
 	if (!Target) return false;
 	if (!IsHostile(Target)) return false;
-	float Damage = CalculateDamage(CurHitContext.Damage);
+
+	float AttackPower = 0.f;
+	if (IStatusReceiverInterface* StatusReceiver = Cast<IStatusReceiverInterface>(CurHitContext.Instigator))
+	{
+		if (UAttributeComponent* Attribute = StatusReceiver->GetAttributeComponent())
+		{
+			AttackPower = Attribute->GetAttackPower();
+		}
+	}
+	float Damage = CalculateDamage(AttackPower);
 	AController* InstigatorController = nullptr;
-	if (APawn* Owner = Cast<APawn>(CurHitContext.Instigator))
-		InstigatorController = Owner->GetController();
+	if (APawn* Owner = Cast<APawn>(CurHitContext.Instigator)) InstigatorController = Owner->GetController();
 	UGameplayStatics::ApplyDamage(
 		Target,
 		Damage,

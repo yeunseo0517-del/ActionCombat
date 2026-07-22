@@ -9,9 +9,11 @@
 #include "HUD/Interaction/InteractionWidget.h"
 #include "HUD/Interaction/AcquiredNotificationWidget.h"
 #include "HUD/Inventory/InventoryPanelWidget.h"
+#include "HUD/Shop/ShopWidget.h"
+
 #include "Blueprint/WidgetLayoutLibrary.h"
-#include "Kismet/GameplayStatics.h"
 #include "Game/ActionGameInstance.h"
+#include "Player/SlashPlayerController.h"
 #include "Interfaces/InteractableInterface.h"
 
 void ASlashHUD::BeginPlay()
@@ -24,8 +26,7 @@ void ASlashHUD::BeginPlay()
 
 void ASlashHUD::CreateWidgets()
 {
-	if (!SlashOverlay) SlashOverlay = CreateHUDWidget<USlashOverlay>(SlashOverlayClass);
-	if (SlashOverlay) SetWidgetVisible(SlashOverlay, true);
+	if (!SlashOverlay) SlashOverlay = CreateHUDWidget<USlashOverlay>(SlashOverlayClass, ESlateVisibility::Visible);
 
 	if(!SkillHUD) SkillHUD = CreateHUDWidget<USkillHUDWidget>(SkillHUDClass);
 	if (!ResultWidget)
@@ -45,11 +46,26 @@ void ASlashHUD::CreateWidgets()
 	}
 
 	if(!InteractionWidget) InteractionWidget = CreateHUDWidget<UInteractionWidget>(InteractionClass);
+	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass, ESlateVisibility::Visible);
+	if (!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass, ESlateVisibility::Collapsed, 100);
+}
 
-	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
-	if (AcquiredNotification) SetWidgetVisible(AcquiredNotification, true);
+void ASlashHUD::SetTownHUD()
+{
+	HUDMode = ESlashHUDMode::Town;
+}
 
-	if(!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass, 100);
+void ASlashHUD::SetCombatHUD()
+{
+	HUDMode = ESlashHUDMode::Combat;
+}
+
+void ASlashHUD::ApplyHUDMode()
+{
+	const bool bCombat = HUDMode == ESlashHUDMode::Combat;
+
+	if (SlashOverlay) SetWidgetVisible(SlashOverlay, true);
+	if (SkillHUD) SetWidgetVisible(SkillHUD, bCombat);
 }
 
 void ASlashHUD::ShowBattleResult(const FBattleResult& Result)
@@ -58,15 +74,14 @@ void ASlashHUD::ShowBattleResult(const FBattleResult& Result)
 
 	ResultWidget->SetBattleResult(Result);
 	SetWidgetVisible(ResultWidget, true);
-
-	SetGameAndUIInputMode();
+	EnterGameAndUIMode(ResultWidget->TakeWidget());
 }
 
 void ASlashHUD::CloseBattleResult()
 {
 	if (!ResultWidget) return;
 	SetWidgetVisible(ResultWidget, false);
-	RestoreGameInputMode();
+	ExitUIInputMode();
 }
 
 void ASlashHUD::ShowGateConfirmWidget(const FText& MapName, FSimpleDelegate OnConfirmed)
@@ -78,8 +93,7 @@ void ASlashHUD::ShowGateConfirmWidget(const FText& MapName, FSimpleDelegate OnCo
 
 	GateConfirmWidget->SetMessage(MapName);
 	SetWidgetVisible(GateConfirmWidget, true);
-
-	SetGameAndUIInputMode();
+	EnterGameAndUIMode(GateConfirmWidget->TakeWidget());
 }
 
 void ASlashHUD::HideGateConfirmWidget()
@@ -90,7 +104,7 @@ void ASlashHUD::HideGateConfirmWidget()
 
 	SetWidgetVisible(GateConfirmWidget, false);
 
-	RestoreGameInputMode();
+	ExitUIInputMode();
 }
 
 void ASlashHUD::HideAcquiredWidget()
@@ -106,7 +120,6 @@ void ASlashHUD::ShowInteractionWidget(const FInteractableData& InteractableData)
 	{
 		SetWidgetVisible(InteractionWidget, true);
 	}
-
 	//InteractionWidget->UpdateWidget(InteractableData);
 }
 
@@ -120,21 +133,30 @@ void ASlashHUD::ToggleInventory()
 	}
 	if (!InventoryPanel->IsVisible())
 	{
-		const FVector2D ViewportSize =
-			UWidgetLayoutLibrary::GetViewportSize(this);
-
-		InventoryPanel->SetDesiredSizeInViewport(FVector2D(800.f, 600.f));
-		InventoryPanel->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
-		InventoryPanel->SetPositionInViewport(ViewportSize * 0.5f, true);
-		SetWidgetVisible(InventoryPanel, true);
-		SetGameAndUIInputMode();
+		ShowInventoryPanel();
 	}
 	else
 	{
-		InventoryPanel->HideChildWidgets();
-		SetWidgetVisible(InventoryPanel, false);
-		RestoreGameInputMode();
+		HideInventoryPanel();
 	}
+}
+
+void ASlashHUD::ShowInventoryPanel()
+{
+	const FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
+
+	InventoryPanel->SetDesiredSizeInViewport(FVector2D(800.f, 600.f));
+	InventoryPanel->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
+	InventoryPanel->SetPositionInViewport(ViewportSize * 0.5f, true);
+	SetWidgetVisible(InventoryPanel, true);
+	EnterGameAndUIMode(InventoryPanel->TakeWidget());
+}
+
+void ASlashHUD::HideInventoryPanel()
+{
+	InventoryPanel->HideChildWidgets();
+	SetWidgetVisible(InventoryPanel, false);
+	ExitUIInputMode();
 }
 
 void ASlashHUD::HandleGateConfirm()
@@ -149,82 +171,55 @@ void ASlashHUD::HandleGateCancel()
 	HideGateConfirmWidget();
 }
 
+ASlashPlayerController* ASlashHUD::GetSlashPC() const
+{
+	return Cast<ASlashPlayerController>(GetOwningPlayerController());
+}
+
+void ASlashHUD::EnterGameAndUIMode(TSharedPtr<SWidget> InWidgetToFocus = nullptr)
+{
+	if (ASlashPlayerController* PC = GetSlashPC()) PC->SetGameAndUIInputMode(InWidgetToFocus);
+}
+
+void ASlashHUD::ExitUIInputMode()
+{
+	if (ASlashPlayerController* PC = GetSlashPC()) PC->RestoreGameInputMode();
+}
+
 void ASlashHUD::SetWidgetVisible(UUserWidget* Widget, bool bVisible)
 {
 	if (!Widget) return;
 	Widget->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
 
-void ASlashHUD::SetUIOnlyInputMode()
-{
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PC) return;
-
-	PC->SetShowMouseCursor(true);
-
-	FInputModeUIOnly InputMode;
-	InputMode.SetWidgetToFocus(ResultWidget->TakeWidget());
-	PC->SetInputMode(InputMode);
-}
-
-void ASlashHUD::SetGameAndUIInputMode()
-{
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PC) return;
-
-	PC->SetShowMouseCursor(true);
-
-	FInputModeGameAndUI InputMode;
-	InputMode.SetWidgetToFocus(GateConfirmWidget->TakeWidget());
-	PC->SetInputMode(InputMode);
-}
-
-void ASlashHUD::RestoreGameInputMode()
-{
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PC) return;
-
-	PC->SetShowMouseCursor(false);
-
-	FInputModeGameOnly InputMode;
-	PC->SetInputMode(InputMode);
-}
-
-void ASlashHUD::ApplyHUDMode()
-{
-	const bool bCombat = HUDMode == ESlashHUDMode::Combat;
-
-	if (SlashOverlay) SetWidgetVisible(SlashOverlay, true);
-	if (SkillHUD)
-	{
-		SetWidgetVisible(SkillHUD, bCombat);
-	}
-}
-
-void ASlashHUD::SetTownHUD()
-{
-	HUDMode = ESlashHUDMode::Town;
-}
-
-void ASlashHUD::SetCombatHUD()
-{
-	HUDMode = ESlashHUDMode::Combat;
-}
-
 void ASlashHUD::BindInventory(UInventoryComponent* Inventory)
 {
 	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
-	if (!AcquiredNotification) return;
-	AcquiredNotification->BindInventory(Inventory);
+	if (AcquiredNotification)
+	{
+		AcquiredNotification->BindInventory(Inventory);
+	}
 
-	if (!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass, 100);
-	if (!InventoryPanel) return;
-	InventoryPanel->BindInventory(Inventory);
+	if (!InventoryPanel) InventoryPanel = CreateHUDWidget<UInventoryPanelWidget>(InventoryPanelClass, ESlateVisibility::Collapsed, 100);
+	if (InventoryPanel)
+	{
+		InventoryPanel->BindInventory(Inventory);
+	}
 }
 
 void ASlashHUD::BindAttribute(UAttributeComponent* Attribute)
 {
 	if (!SlashOverlay) SlashOverlay = CreateHUDWidget<USlashOverlay>(SlashOverlayClass);
-	if (!SlashOverlay) return;
-	SlashOverlay->BindAttribute(Attribute);
+	if (SlashOverlay)
+	{
+		SlashOverlay->BindAttribute(Attribute);
+	}
+}
+
+void ASlashHUD::OpenShopWidget(AShopActor* Shop)
+{
+	ShopWidget = CreateHUDWidget<UShopWidget>(ShopWidgetClass, ESlateVisibility::Visible);
+	if (!ShopWidget) return;
+
+	ShopWidget->BindShop(Shop);
 }
