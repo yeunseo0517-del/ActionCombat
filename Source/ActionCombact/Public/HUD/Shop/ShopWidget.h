@@ -8,6 +8,9 @@
 
 class AShopActor;
 class UShopItemSlot;
+class UTextBlock;
+
+DECLARE_MULTICAST_DELEGATE(FOnShopClosed);
 
 /**
  * 
@@ -20,12 +23,31 @@ class ACTIONCOMBACT_API UShopWidget : public UUserWidget
 public:
 	void BindShop(AShopActor* Shop);
 
+	FOnShopClosed OnShopClosed;
 private:
 	void RefreshShop();
+	void CreateEmptySlots();
+	void ClearEmptySlots();
+
+	void SetGoldInfo();
+
+	void HandleSlotSelected(const int32 idx);
+
+	UFUNCTION()
+	void HandleCloseRequest();
 
 	UPROPERTY()
 	TWeakObjectPtr<AShopActor> BoundShop;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UShopItemSlot> ShopSlotClass;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UShopItemSlot>> ShopSlots;
+
+	UPROPERTY(meta = (BindWidget))
+	class UUniformGridPanel* SlotGrid;
+
+	UPROPERTY(meta=(BindWidget))
+	class UButton* CloseButton;
 };

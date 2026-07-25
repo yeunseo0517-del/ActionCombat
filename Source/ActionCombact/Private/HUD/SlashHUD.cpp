@@ -176,7 +176,7 @@ ASlashPlayerController* ASlashHUD::GetSlashPC() const
 	return Cast<ASlashPlayerController>(GetOwningPlayerController());
 }
 
-void ASlashHUD::EnterGameAndUIMode(TSharedPtr<SWidget> InWidgetToFocus = nullptr)
+void ASlashHUD::EnterGameAndUIMode(TSharedPtr<SWidget> InWidgetToFocus)
 {
 	if (ASlashPlayerController* PC = GetSlashPC()) PC->SetGameAndUIInputMode(InWidgetToFocus);
 }
@@ -218,8 +218,22 @@ void ASlashHUD::BindAttribute(UAttributeComponent* Attribute)
 
 void ASlashHUD::OpenShopWidget(AShopActor* Shop)
 {
+	if (ShopWidget) CloseShopWidget();
 	ShopWidget = CreateHUDWidget<UShopWidget>(ShopWidgetClass, ESlateVisibility::Visible);
 	if (!ShopWidget) return;
 
+	ShopWidget->OnShopClosed.AddUObject(this, &ASlashHUD::CloseShopWidget);
+
 	ShopWidget->BindShop(Shop);
+
+	EnterGameAndUIMode(ShopWidget->TakeWidget());
+}
+
+void ASlashHUD::CloseShopWidget()
+{
+	if (!ShopWidget) return;
+	ShopWidget->RemoveFromParent();
+	ShopWidget = nullptr;
+
+	ExitUIInputMode();
 }

@@ -49,7 +49,7 @@ void ASlashPlayerController::InitializeHUD()
 	}
 }
 
-void ASlashPlayerController::SetUIOnlyInputMode(TSharedPtr<SWidget> InWidgetToFocus = nullptr)
+void ASlashPlayerController::SetUIOnlyInputMode(TSharedPtr<SWidget> InWidgetToFocus)
 {
 	SetShowMouseCursor(true);
 	FInputModeUIOnly InputMode;
@@ -57,7 +57,7 @@ void ASlashPlayerController::SetUIOnlyInputMode(TSharedPtr<SWidget> InWidgetToFo
 	SetInputMode(InputMode);
 }
 
-void ASlashPlayerController::SetGameAndUIInputMode(TSharedPtr<SWidget> InWidgetToFocus = nullptr)
+void ASlashPlayerController::SetGameAndUIInputMode(TSharedPtr<SWidget> InWidgetToFocus)
 {
 	SetShowMouseCursor(true);
 	FInputModeGameAndUI InputMode;

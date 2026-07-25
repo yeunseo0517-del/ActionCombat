@@ -64,6 +64,7 @@ private:
 	void HideAcquiredWidget();
 	void ShowInventoryPanel();
 	void HideInventoryPanel();
+	void CloseShopWidget();
 
 	template<typename TWidget>
 	TWidget* CreateHUDWidget(TSubclassOf<TWidget> WidgetClass, ESlateVisibility Visibility = ESlateVisibility::Collapsed, int32 order = 0)
