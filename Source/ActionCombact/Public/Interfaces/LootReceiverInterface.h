@@ -24,4 +24,5 @@ class ACTIONCOMBACT_API ILootReceiverInterface
 public:
 	virtual void AddGold(int32 Amount) = 0;
 	virtual struct FItemAddResult AddItem(class UItemBase* Item) = 0;
+	virtual struct FItemAddResult AddItemByID(FName ItemID, int32 Quantity = 1) = 0;
 };

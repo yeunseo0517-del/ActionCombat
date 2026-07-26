@@ -29,9 +29,8 @@ private:
 	void CreateEmptySlots();
 	void ClearEmptySlots();
 
-	void SetGoldInfo();
-
-	void HandleSlotSelected(const int32 idx);
+	void HandlePurchaseRequested(const FName& ID);
+	void HandleItemPurchased(const int32 Index);
 
 	UFUNCTION()
 	void HandleCloseRequest();

@@ -127,9 +127,12 @@ void AInteractItem::BeginPlay()
 
 	InitializePickup(ItemQauntity);
 
-	if (UInteractionWidget* Widget = Cast<UInteractionWidget>(InteractionWidgetComponent->GetUserWidgetObject()))
+	if (InteractionWidgetComponent)
 	{
-		Widget->UpdateWidget(InteractableData);
+		if (UInteractionWidget* Widget = Cast<UInteractionWidget>(InteractionWidgetComponent->GetUserWidgetObject()))
+		{
+			Widget->UpdateWidget(InteractableData);
+		}
 	}
 }
 

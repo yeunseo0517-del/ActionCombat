@@ -101,7 +101,7 @@ void ASlashCharacter::PerformInteractionCheck()
 
 	if (LookDirection > 0)
 	{
-		//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.f, 0, 2.f);
+		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.f, 0, 2.f);
 
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(this);
@@ -412,6 +412,11 @@ void ASlashCharacter::AddGold(int32 Amount)
 FItemAddResult ASlashCharacter::AddItem(UItemBase* Item)
 {
 	return Inventory->HandleAddItem(Item);
+}
+
+FItemAddResult ASlashCharacter::AddItemByID(FName ItemID, int32 Quantity)
+{
+	return Inventory->AddItemByID(ItemID, Quantity);
 }
 
 void ASlashCharacter::HandleEquipState()

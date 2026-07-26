@@ -7,10 +7,11 @@
 #include "Components/InventoryComponent.h"
 #include "Game/ActionGameInstance.h"
 #include "Components/TextBlock.h"
-#include "Components/WrapBox.h"
+#include "Components/UniformGridPanel.h"
 #include "Items/ItemBase/ItemBase.h"
 
-//OnInventoryUpdated
+constexpr int32 ColumnCount = 7;
+constexpr int32 TotalSlotCount = 100;
 
 void UInventoryPanelWidget::NativeOnInitialized()
 {
@@ -60,32 +61,49 @@ void UInventoryPanelWidget::UpdateTextInfo(const int32 Amount) const
 
 void UInventoryPanelWidget::HandleInventoryRefreshed(const TArray<TObjectPtr<UItemBase>>& Items)
 {
-	if (!SlotClass) return;
- 	InventoryPanel->ClearChildren();
+	if (!SlotClass || !SlotGrid) return;
+	SlotGrid->ClearChildren();
+	ItemSlots.Empty();
 
-	for (const TObjectPtr<UItemBase>& Item : Items)
+	CreateEmptySlots();
+
+	const int32 Count = FMath::Min(Items.Num(), ItemSlots.Num());
+	for (int i = 0; i < Count; ++i)
 	{
-		HandleInventoryAdded(Item);
+		ItemSlots[i]->SetItemInstance(Items[i]);
+	}
+}
+
+void UInventoryPanelWidget::CreateEmptySlots()
+{
+	if (!BoundInventory.IsValid()) return;
+	for (int i = 0; i < BoundInventory->GetCapacity(); ++i)
+	{
+		UInventoryItemSlot* ItemSlot = CreateWidget<UInventoryItemSlot>(this, SlotClass);
+		const int32 Row = i / ColumnCount;
+		const int32 Column = i % ColumnCount;
+		SlotGrid->AddChildToUniformGrid(ItemSlot, Row, Column);
+		ItemSlots.Add(ItemSlot);
+
+		ItemSlot->OnItemRightClicked.AddUObject(this, &UInventoryPanelWidget::HandleItemRightClicked);
 	}
 }
 
 void UInventoryPanelWidget::HandleInventoryAdded(UItemBase* Item)
 {
-	UInventoryItemSlot* ItemSlot = CreateWidget<UInventoryItemSlot>(this, SlotClass);
-	ItemSlot->SetItemInstance(Item);
-	ItemSlot->OnItemRightClicked.AddUObject(this, &UInventoryPanelWidget::HandleItemRightClicked);
-
-	InventoryPanel->AddChildToWrapBox(ItemSlot);
+	int32 Index = BoundInventory->GetInventoryContents().Num() - 1;
+	if (!ItemSlots.IsValidIndex(Index)) return;
+	ItemSlots[Index]->SetItemInstance(Item);
 }
 
 void UInventoryPanelWidget::HandleInventorRemoved(UItemBase* Item)
 {
-	for (int32 i = 0; i < InventoryPanel->GetChildrenCount(); ++i)
+	const int32 ItemCount = BoundInventory->GetInventoryContents().Num();
+	for (int32 i = 0; i < ItemCount; ++i)
 	{
-		UInventoryItemSlot* Widget = Cast< UInventoryItemSlot>(InventoryPanel->GetChildAt(i));
-		if (Widget && Widget->GetItemInstance() == Item)
+		if (ItemSlots[i]->GetItemInstance() == Item)
 		{
-			InventoryPanel->RemoveChildAt(i);
+			ItemSlots[i]->ClearSlot();
 			return;
 		}
 	}
@@ -93,12 +111,12 @@ void UInventoryPanelWidget::HandleInventorRemoved(UItemBase* Item)
 
 void UInventoryPanelWidget::HandleInventoryUpdated(UItemBase* Item)
 {
-	for (int32 i = 0; i < InventoryPanel->GetChildrenCount(); ++i)
+	const int32 ItemCount = BoundInventory->GetInventoryContents().Num();
+	for (int32 i = 0; i < ItemCount; ++i)
 	{
-		UInventoryItemSlot* Widget = Cast< UInventoryItemSlot>(InventoryPanel->GetChildAt(i));
-		if (Widget && Widget->GetItemInstance() == Item)
+		if (ItemSlots[i]->GetItemInstance() == Item)
 		{
-			Widget->UpdateInfo();
+			ItemSlots[i]->UpdateInfo();
 			return;
 		}
 	}
@@ -128,12 +146,12 @@ void UInventoryPanelWidget::HandleActionRequested()
 {
 	if (!BoundInventory.IsValid() || !PendingInstanceID.IsValid()) return;
 	BoundInventory->UseItem(PendingInstanceID);
-	BoundInventory->RemoveItemByInstanceID(PendingInstanceID);
+	BoundInventory->RemoveItemByInstanceID(PendingInstanceID, 1);
 	if (ItemContextMenu) ItemContextMenu->RemoveFromParent();
 }
 
 void UInventoryPanelWidget::HandleDropRequested()
 {
-	if (BoundInventory.IsValid() && PendingInstanceID.IsValid()) BoundInventory->RemoveItemByInstanceID(PendingInstanceID);
+	if (BoundInventory.IsValid() && PendingInstanceID.IsValid()) BoundInventory->RemoveItemByInstanceID(PendingInstanceID, 10);
 	if (ItemContextMenu) ItemContextMenu->RemoveFromParent();
 }

@@ -9,6 +9,7 @@
 #include "Components/UniformGridPanel.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Game/ActionGameInstance.h"
 
 constexpr int32 ColumnCount = 1;
 constexpr int32 TotalSlotCount = 6;
@@ -17,22 +18,25 @@ void UShopWidget::BindShop(AShopActor* Shop)
 {
 	BoundShop = Shop;
 	if (!BoundShop.IsValid()) return;
+
+	BoundShop->OnItemPurchased.AddUObject(this, &UShopWidget::HandleItemPurchased);
+	CreateEmptySlots();
+	RefreshShop();
+
 	if (CloseButton)
 	{
 		CloseButton->OnClicked.AddDynamic(this, &UShopWidget::HandleCloseRequest);
 	}
-	CreateEmptySlots();
-	RefreshShop();
 }
 
 void UShopWidget::RefreshShop()
 {
 	if (!BoundShop.IsValid()) return;
 	
-	for (int idx = 0; idx < FMath::Min(BoundShop->GetShopItems().Num(), ShopSlots.Num()); ++idx)
+	const TArray<FShopSlotData> ShopItems = BoundShop->GetShopItems();
+	for (int idx = 0; idx < FMath::Min(ShopItems.Num(), ShopSlots.Num()); ++idx)
 	{
-		const FShopSlotData& Data = BoundShop->GetShopItems()[idx];
-		ShopSlots[idx]->SetSlotData(Data, idx);
+		ShopSlots[idx]->SetSlotData(ShopItems[idx]);
 	}
 	ClearEmptySlots();
 }
@@ -47,7 +51,7 @@ void UShopWidget::CreateEmptySlots()
 		SlotGrid->AddChildToUniformGrid(ShopItemSlot, Row, Column);
 		ShopSlots.Add(ShopItemSlot);
 
-		ShopItemSlot->OnShopItemSelected.AddUObject(this, &UShopWidget::HandleSlotSelected);
+		ShopItemSlot->OnPurchaseRequested.AddUObject(this, &UShopWidget::HandlePurchaseRequested);
 	}
 }
 
@@ -60,15 +64,16 @@ void UShopWidget::ClearEmptySlots()
 	}
 }
 
-void UShopWidget::SetGoldInfo()
+void UShopWidget::HandlePurchaseRequested(const FName& ID)
 {
-	/*const int32 Item
-	if(TotalPrice) TotalPrice->SetText(ShopSlots[0])*/
+	APawn* Buyer = GetOwningPlayerPawn();
+	BoundShop->TryPurchase(Buyer, ID, 1);
 }
 
-void UShopWidget::HandleSlotSelected(const int32 idx)
+void UShopWidget::HandleItemPurchased(const int32 Index)
 {
-	
+	const TArray<FShopSlotData> ShopItems = BoundShop->GetShopItems();
+	ShopSlots[Index]->SetSlotData(ShopItems[Index]);
 }
 
 void UShopWidget::HandleCloseRequest()

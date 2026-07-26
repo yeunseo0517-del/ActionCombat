@@ -55,6 +55,7 @@ public:
 
 	virtual void AddGold(int32 Amount) override;
 	virtual struct FItemAddResult AddItem(class UItemBase* Item) override;
+	virtual struct FItemAddResult AddItemByID(FName ItemID, int32 Quantity = 1) override;
 
 	FORCEINLINE bool IsInteracting() const { return GetWorldTimerManager().IsTimerActive(InteractionTimer); }
 

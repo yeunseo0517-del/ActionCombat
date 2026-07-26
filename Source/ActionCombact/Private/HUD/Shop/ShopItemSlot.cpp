@@ -6,6 +6,7 @@
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Components/HorizontalBox.h"
+#include "Components/Button.h"
 
 void UShopItemSlot::NativeConstruct()
 {
@@ -18,22 +19,19 @@ void UShopItemSlot::NativeConstruct()
 		HandleGoldChanged(GI->GetCurrentGold());
 	}
 
-	SetItemContentVisible(false);
-}
+	if (PurchaseButton) PurchaseButton->OnClicked.AddDynamic(this, &UShopItemSlot::HandlePurchaseClicked);
 
-FReply UShopItemSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
-{
-	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
-	{
-		if (!SlotData.ItemID.IsNone()) OnShopItemSelected.Broadcast(SlotIndex);
-		return FReply::Handled();
-	}
-	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	SetItemContentVisible(false);
 }
 
 void UShopItemSlot::HandleGoldChanged(const int32 Amount)
 {
 	if (CurrentGold) CurrentGold->SetText(FText::AsNumber(Amount));
+}
+
+void UShopItemSlot::HandlePurchaseClicked()
+{
+	OnPurchaseRequested.Broadcast(SlotData.ItemID);
 }
 
 void UShopItemSlot::SetItemContentVisible(bool bVisible)
@@ -50,10 +48,9 @@ void UShopItemSlot::UpdateTextInfo()
 	if (PriceText) PriceText->SetText(FText::AsNumber(SlotData.Price));
 }
 
-void UShopItemSlot::SetSlotData(const FShopSlotData& Data, const int32 Index)
+void UShopItemSlot::SetSlotData(const FShopSlotData& Data)
 {
 	SlotData = Data;
-	SlotIndex = Index;
 
 	UpdateTextInfo();
 }

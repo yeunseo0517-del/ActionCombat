@@ -4,10 +4,13 @@
 #include "World/ShopActor.h"
 #include "Components/WidgetComponent.h"
 #include "Player/SlashPlayerController.h"
+#include "Game/ActionGameInstance.h"
 #include "HUD/Interaction/InteractionWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Types/Item/ItemDataStructs.h"
+#include "Types/Item/ItemAddResult.h"
 #include "Types/ShopTypes.h"
+#include "Interfaces/LootReceiverInterface.h"
 
 AShopActor::AShopActor()
 {
@@ -108,8 +111,7 @@ TArray<FShopSlotData> AShopActor::GetShopItems()
 		SlotData.DisplayName = ItemData->ItemTextData.Name;
 		SlotData.Icon = ItemData->ItemAssetData.Icon;
 		SlotData.Price = ItemData->ItemStatistics.SellValue * Entry.PriceMultiplier;
-		SlotData.Stock = Entry.Stock;
-		SlotData.bCanPurchase = (Entry.Stock != 0) ? true : false;
+		SlotData.bCanPurchase = true;
 
 		Result.Add(SlotData);
 	}
@@ -135,14 +137,64 @@ void AShopActor::UpdateWidgetPosition()
 	InteractionWidgetComponent->SetWorldLocation(WidgetLocation);
 }
 
-void AShopActor::TryPurchase(const FName& TargetID)
+FShopEntry* AShopActor::FindItemByID(const FName& TargetID, int32& Index)
 {
-	for (FShopEntry& Entry : ShopItems)
+	for (int i = 0; i < ShopItems.Num(); ++i)
 	{
+		FShopEntry& Entry = ShopItems[i];
 		if (Entry.ItemID == TargetID)
 		{
-			Entry.Stock--;
-			break;
+			Index = i;
+			return &Entry;
 		}
 	}
+	return nullptr;
+}
+
+void AShopActor::TryPurchase(APawn* Buyer, const FName& TargetID, int32 Quantity)
+{
+	int32 Index;
+	FShopEntry* Target = FindItemByID(TargetID, Index);
+	
+	if (!Target)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Target"));
+		return;
+	}
+
+	UActionGameInstance* GI = Cast<UActionGameInstance>(GetGameInstance());
+	if (!GI)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No GI"));
+		return;
+	}
+
+	const FItemData* ItemData = ItemDataTable->FindRow<FItemData>(Target->ItemID, Target->ItemID.ToString());
+	if (!ItemData)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No ItemData"));
+		return;
+	}
+
+	const int32 Price = Target->PriceMultiplier * ItemData->ItemStatistics.SellValue;
+	if (Target->PriceMultiplier * ItemData->ItemStatistics.SellValue > GI->GetCurrentGold())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Money"));
+		return;
+	}
+
+	ILootReceiverInterface* Receiver = Cast<ILootReceiverInterface>(Buyer);
+	if (!Receiver) {
+		UE_LOG(LogTemp, Warning, TEXT("No Receiver"));
+		return;
+	}
+	FItemAddResult Result = Receiver->AddItemByID(TargetID);
+	if (Result.OperationResult == EItemAddResult::IAR_NoItemAdded)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Added Item"))
+		return;
+	}
+
+	OnItemPurchased.Broadcast(Index);
+	GI->SpendGold(Price);
 }

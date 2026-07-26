@@ -194,7 +194,7 @@ void ASlashHUD::SetWidgetVisible(UUserWidget* Widget, bool bVisible)
 
 void ASlashHUD::BindInventory(UInventoryComponent* Inventory)
 {
-	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass);
+	if (!AcquiredNotification) AcquiredNotification = CreateHUDWidget<UAcquiredNotificationWidget>(AcquiredNotificationClass, ESlateVisibility::Visible);
 	if (AcquiredNotification)
 	{
 		AcquiredNotification->BindInventory(Inventory);

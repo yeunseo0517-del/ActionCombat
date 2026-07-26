@@ -27,10 +27,12 @@ public:
 
 	//int32 GetSlotsCapacity() const { return SlotsCapacity; }
 	TArray<TObjectPtr<UItemBase>> GetInventoryContents() const { return Items; }
+	int32 GetCapacity() const { return SlotsCapacity; }
 
+	FItemAddResult AddItemByID(FName ItemID, int32 Quantity);
 	FItemAddResult HandleAddItem(UItemBase* Item);
 	void SplitStack(UItemBase* Item, int32 Amount);
-	void RemoveItemByInstanceID(const FGuid& ID);
+	void RemoveItemByInstanceID(const FGuid& ID, const int32 Quantity);
 	//void RemoveAmountItemByID(const FGuid& ID, int32 RequestAmount);
 	void UseItem(const FGuid& InstanceID);
 

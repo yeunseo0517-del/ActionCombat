@@ -30,6 +30,13 @@ void UActionGameInstance::AddGoldData(int32 Amount)
 	OnGoldChanged.Broadcast(GetCurrentGold());
 }
 
+void UActionGameInstance::SpendGold(int32 Amount)
+{
+	if (!GameSave) return;
+	GameSave->SpendGold(Amount);
+	OnGoldChanged.Broadcast(GetCurrentGold());
+}
+
 void UActionGameInstance::AddStageID(int32 ID)
 {
 	if (!GameSave) return;

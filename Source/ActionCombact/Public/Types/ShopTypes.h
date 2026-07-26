@@ -12,10 +12,7 @@ struct FShopEntry
 	FName ItemID;
 
 	UPROPERTY(EditAnywhere)
-	int32 Stock = -1;
-
-	UPROPERTY(EditAnywhere)
-	float PriceMultiplier = 1.f;
+	float PriceMultiplier = 1.5f;
 };
 
 USTRUCT()

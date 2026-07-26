@@ -7,6 +7,10 @@
 #include "Interfaces/InteractableInterface.h"
 #include "ShopActor.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnItemPurchased, const int32)
+
+struct FShopEntry;
+
 UCLASS()
 class ACTIONCOMBACT_API AShopActor : public AActor, public IInteractableInterface
 {
@@ -25,13 +29,16 @@ public:
 	virtual const FInteractableData& GetInteractableData() const override;
 
 	TArray<struct FShopSlotData> GetShopItems();
+	void TryPurchase(APawn* Buyer, const FName& ItemID, int32 Quantity);
+
+	FOnItemPurchased OnItemPurchased;
 
 protected:
 	virtual void BeginPlay() override;
 
 private:
 	void UpdateWidgetPosition();
-	void TryPurchase(const FName& ItemID);
+	FShopEntry* FindItemByID(const FName& TargetID, int32& Index);
 
 	bool bInFocus = false;
 
@@ -48,5 +55,5 @@ private:
 	UDataTable* ItemDataTable;
 
 	UPROPERTY(EditAnywhere, Category = "Item Data")
-	TArray<struct FShopEntry> ShopItems;
+	TArray<FShopEntry> ShopItems;
 };

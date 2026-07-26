@@ -52,6 +52,16 @@ UItemBase* UInventoryComponent::FindNextPartialStack(UItemBase* Target) const
 	return Result ? Result->Get() : nullptr;
 }
 
+FItemAddResult UInventoryComponent::AddItemByID(FName ItemID, int32 Quantity)
+{
+	const int32 TotalAmount = Quantity;
+	const FItemData* Data = ItemDataTable->FindRow<FItemData>(ItemID, ItemID.ToString());
+	UItemBase* NewItem = NewObject<UItemBase>(this, Data->ItemClass);
+	NewItem->SetItemData(*Data, Quantity);
+
+	return HandleAddItem(NewItem);
+}
+
 FItemAddResult UInventoryComponent::HandleAddItem(UItemBase* Target)
 {
 	if (!Target) return FItemAddResult();
@@ -155,14 +165,14 @@ void UInventoryComponent::SplitStack(UItemBase* Target, int32 Amount)
 	AddItems(Target, Amount);
 }
 
-void UInventoryComponent::RemoveItemByInstanceID(const FGuid& ID)
+void UInventoryComponent::RemoveItemByInstanceID(const FGuid& ID, const int32 Quantity)
 {
 	UItemBase* Target = FindItemByInstanceID(ID);
 
 	if (!Target) return;
 	if (Target->IsStackable())
 	{
-		RemoveAmountItem(Target, 1);
+		RemoveAmountItem(Target, FMath::Min(Quantity, Target->GetQuantity()));
 	}
 	else
 	{

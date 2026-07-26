@@ -23,6 +23,7 @@ public:
 	
 private:
 	virtual void NativeOnInitialized() override;
+	void CreateEmptySlots();
 	void UpdateTextInfo(const int32 Amount) const;
 	void HandleInventoryRefreshed(const TArray<TObjectPtr<UItemBase>>& Items);
 	void HandleInventoryAdded(UItemBase* Item);
@@ -44,13 +45,16 @@ private:
 	UItemContextMenuWidget* ItemContextMenu;
 
 	UPROPERTY(meta = (BindWidget))
-	class UWrapBox* InventoryPanel;
+	class UUniformGridPanel* SlotGrid;
 
 	UPROPERTY(meta =(BindWidget))
 	class UTextBlock* GoldText;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class UInventoryItemSlot> SlotClass;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UInventoryItemSlot>> ItemSlots;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UItemContextMenuWidget> ContextMenuClass;

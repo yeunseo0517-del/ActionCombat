@@ -9,6 +9,11 @@ void UGameSave::AddGold(int32 Amount)
 	ProfileData.Gold += Amount;
 }
 
+void UGameSave::SpendGold(int32 Amount)
+{
+	ProfileData.Gold -= Amount;
+}
+
 void UGameSave::AddStageID(int32 ID)
 {
 	if (!ProfileData.ClearedStageIDs.Contains(ID)) ProfileData.ClearedStageIDs.Add(ID);

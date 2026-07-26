@@ -7,11 +7,35 @@
 #include "Components/Border.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Components/Overlay.h"
 
 void UInventoryItemSlot::NativeConstruct()
 {
 	Super::NativeConstruct();
-	if (!ItemInstance) return;
+
+	if (ItemOverlay) ItemOverlay->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void UInventoryItemSlot::SetItemInstance(UItemBase* ItemIn)
+{
+	if (!ItemIn) return;
+	ItemInstance = ItemIn;
+
+	if (ItemOverlay) ItemOverlay->SetVisibility(ESlateVisibility::Visible);
+
+	SetSlotToolTip();
+	SetBorderColor();
+	SetIconImage();
+	SetQuantityText();
+}
+
+void UInventoryItemSlot::ClearSlot()
+{
+	ItemInstance = nullptr;
+	if (ItemOverlay) ItemOverlay->SetVisibility(ESlateVisibility::Collapsed);
+}
+void UInventoryItemSlot::SetSlotToolTip()
+{
 	if (TooltipClass)
 	{
 		UInventoryTooltip* Tooltip = CreateWidget<UInventoryTooltip>(this, TooltipClass);
@@ -21,9 +45,6 @@ void UInventoryItemSlot::NativeConstruct()
 			ItemBorder->SetToolTip(Tooltip);
 		}
 	}
-	SetBorderColor();
-	SetIconImage();
-	SetQuantityText();
 }
 
 FReply UInventoryItemSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)

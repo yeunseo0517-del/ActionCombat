@@ -20,9 +20,11 @@ class ACTIONCOMBACT_API UInventoryItemSlot : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	void SetItemInstance(UItemBase* ItemIn) { ItemInstance = ItemIn; }
+	void SetItemInstance(UItemBase* ItemIn);
+	void SetSlotToolTip();
 	UItemBase* GetItemInstance() const { return ItemInstance; }
 	void UpdateInfo();
+	void ClearSlot();
 
 	FOnItemRightClicked OnItemRightClicked;
 
@@ -40,6 +42,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Item Slot")
 	TSubclassOf<UInventoryTooltip> TooltipClass;
+
+	UPROPERTY(meta = (BindWidget))
+	class UOverlay* ItemOverlay;
 
 	UPROPERTY(meta = (BindWidget))
 	class UBorder* ItemBorder;

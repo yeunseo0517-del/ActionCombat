@@ -21,6 +21,7 @@ public:
 	
 	void TravelToLevel(TSoftObjectPtr<UWorld> TargetLevel);
 	void AddGoldData(int32 Amount);
+	void SpendGold(int32 Amount);
 	void AddStageID(int32 ID);
 
 	int32 GetCurrentGold() const;

@@ -10,7 +10,7 @@
 class UTextBlock;
 class UHorizontalBox;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnShopItemSelected, const int32);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPurchaseRequested, const FName&);
 
 /**
  * 
@@ -21,24 +21,23 @@ class ACTIONCOMBACT_API UShopItemSlot : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	void SetSlotData(const FShopSlotData& Data, const int32 Index);
+	void SetSlotData(const FShopSlotData& Data);
 	void ClearSlot();
 
-	FOnShopItemSelected OnShopItemSelected;
+	FOnPurchaseRequested OnPurchaseRequested;
 
 protected:
 	virtual void NativeConstruct() override;
-	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 private:
 	void HandleGoldChanged(const int32 Amount);
+
+	UFUNCTION()
+	void HandlePurchaseClicked();
 	void SetItemContentVisible(bool bVisible);
 	void UpdateTextInfo();
 
-	int32 SlotIndex = INDEX_NONE;
 	FShopSlotData SlotData;
-
-	FName ItemID;
 
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* NameText;
@@ -57,4 +56,7 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UHorizontalBox* TextBox;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* PurchaseButton;
 };
