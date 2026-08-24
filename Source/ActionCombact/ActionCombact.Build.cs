@@ -9,7 +9,7 @@ public class ActionCombact : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "Niagara", "Slate", "SlateCore", "UMG", "AIModule", "GameplayTags" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "Niagara", "Slate", "SlateCore", "UMG", "AIModule", "GameplayTags", "BloodField" });
 
         PrivateDependencyModuleNames.AddRange(new string[] {  });
 

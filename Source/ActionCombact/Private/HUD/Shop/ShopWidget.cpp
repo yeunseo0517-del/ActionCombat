@@ -11,9 +11,6 @@
 #include "Components/TextBlock.h"
 #include "Game/ActionGameInstance.h"
 
-constexpr int32 ColumnCount = 1;
-constexpr int32 TotalSlotCount = 6;
-
 void UShopWidget::BindShop(AShopActor* Shop)
 {
 	BoundShop = Shop;

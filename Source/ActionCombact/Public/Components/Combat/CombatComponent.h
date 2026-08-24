@@ -36,7 +36,7 @@ public:
 	void ExecuteAttack(const FGameplayTag& Tag);
 	void ExecuteAction(const FGameplayTag& Tag);
 	void OnAttackWindow();
-	void TryProcessTarget(AActor* Target, FVector ImpactPoint);
+	void TryProcessTarget(AActor* Target, const FHitResult& Hit);
 
 protected:
 	virtual void BeginPlay() override;
@@ -62,8 +62,8 @@ private:
 	void SpawnRadialShockwave();
 	void SpawnProjectile();
 
-	void HandleHitResult(AActor* HitActor, FVector ImpactPoint);
-	void ExecuteGetHit(AActor* Hit, FVector ImpactPoint);
+	void HandleHitResult(AActor* HitActor, const FHitResult& Hit);
+	void ExecuteGetHit(AActor* HitActor, const FHitResult& Hit);
 	void SpawnHitSparkParticles(FVector ImpactPoint);
 	bool IsHostile(AActor* Actor);
 	float CalculateDamage(float DefaultDamage);

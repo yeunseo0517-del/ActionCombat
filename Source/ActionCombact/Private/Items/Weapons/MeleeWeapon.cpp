@@ -60,7 +60,7 @@ void AMeleeWeapon::ProcessOverlapResults(TArray<FHitResult>& HitResults)
 	{
 		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetInstigator()))
 		{
-			CombatInterface->GetCombatComponent()->TryProcessTarget(Hit.GetActor(), Hit.ImpactPoint);
+			CombatInterface->GetCombatComponent()->TryProcessTarget(Hit.GetActor(), Hit);
 		}
 	}
 }

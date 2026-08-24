@@ -23,7 +23,7 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	// Hit Interface function
-	virtual void GetHit(const FVector& ImpactPoint, class UHitEffectDataAsset* HitEffectData, AActor* Hitter) override;
+	virtual void GetHit(const FHitResult& ImpactPoint, class UHitEffectDataAsset* HitEffectData, AActor* Hitter) override;
 	//
 
 	virtual void AttackEnd() override;

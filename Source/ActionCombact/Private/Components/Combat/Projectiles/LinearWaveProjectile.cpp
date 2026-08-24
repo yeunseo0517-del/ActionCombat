@@ -66,7 +66,7 @@ void ALinearWaveProjectile::ProcessHitResults(const TArray<FHitResult>& Hits)
 	{
 		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner()))
 		{
-			CombatInterface->GetCombatComponent()->TryProcessTarget(Hit.GetActor(), Hit.ImpactPoint);
+			CombatInterface->GetCombatComponent()->TryProcessTarget(Hit.GetActor(), Hit);
 		}
 	}
 }

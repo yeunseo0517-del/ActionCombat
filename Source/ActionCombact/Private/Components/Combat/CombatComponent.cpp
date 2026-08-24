@@ -318,21 +318,21 @@ float UCombatComponent::CalculateDamage(float DefaultDamage)
 	return Damage;
 }
 
-void UCombatComponent::TryProcessTarget(AActor* Target, FVector ImpactPoint)
+void UCombatComponent::TryProcessTarget(AActor* Target, const FHitResult& Hit)
 {
 	if (!Target) return;
 	if (CurHitContext.AlreadyHitActors.Contains(Target)) return;
-	HandleHitResult(Target, ImpactPoint);
+	HandleHitResult(Target, Hit);
 	CurHitContext.AlreadyHitActors.Add(Target);
 }
 
-void UCombatComponent::HandleHitResult(AActor* HitActor, FVector ImpactPoint)
+void UCombatComponent::HandleHitResult(AActor* HitActor, const FHitResult& Hit)
 {
 	if (!HitActor) return;
 	if (ProcessDamageApplication(HitActor))
 	{
-		ExecuteGetHit(HitActor, ImpactPoint);
-		SpawnHitSparkParticles(ImpactPoint);
+		ExecuteGetHit(HitActor, Hit);
+		SpawnHitSparkParticles(Hit.ImpactPoint);
 	}
 }
 
@@ -362,11 +362,11 @@ bool UCombatComponent::ProcessDamageApplication(AActor* Target)
 	return true;
 }
 
-void UCombatComponent::ExecuteGetHit(AActor* Hit, FVector ImpactPoint)
+void UCombatComponent::ExecuteGetHit(AActor* HitActor, const FHitResult& Hit)
 {
-	if (IHitInterface* HitInterface = Cast<IHitInterface>(Hit))
+	if (IHitInterface* HitInterface = Cast<IHitInterface>(HitActor))
 	{
-		HitInterface->GetHit(ImpactPoint, CurHitEffectData, GetOwner());
+		HitInterface->GetHit(Hit, CurHitEffectData, GetOwner());
 	}
 }
 

@@ -109,7 +109,10 @@ void ARadialShockwaves::ProcessHitResults(const TArray<FOverlapResult>& OverlapR
 	{
 		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner()))
 		{
-			CombatInterface->GetCombatComponent()->TryProcessTarget(Overlap.GetActor(), Overlap.GetActor()->GetActorLocation());
+			FHitResult Hit;
+			Hit.ImpactPoint = Overlap.GetActor()->GetActorLocation();
+			Hit.ImpactNormal = FVector::ZeroVector;
+			CombatInterface->GetCombatComponent()->TryProcessTarget(Overlap.GetActor(), Hit);
 		}
 	}
 }

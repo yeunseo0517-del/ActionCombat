@@ -10,9 +10,6 @@
 #include "Components/UniformGridPanel.h"
 #include "Items/ItemBase/ItemBase.h"
 
-constexpr int32 ColumnCount = 7;
-constexpr int32 TotalSlotCount = 100;
-
 void UInventoryPanelWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();

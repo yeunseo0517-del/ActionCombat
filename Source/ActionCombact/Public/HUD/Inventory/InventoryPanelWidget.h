@@ -33,6 +33,9 @@ private:
 	void HandleActionRequested();
 	void HandleDropRequested();
 
+	int32 ColumnCount = 7;
+	int32 TotalSlotCount = 100;
+
 	UPROPERTY()
 	TWeakObjectPtr<class UInventoryComponent> BoundInventory;
 

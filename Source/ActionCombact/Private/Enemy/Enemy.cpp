@@ -37,7 +37,7 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 	return DamageAmount;
 }
 
-void AEnemy::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
+void AEnemy::GetHit(const FHitResult& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
 {
 	if (IsDead()) return;
 	Super::GetHit(ImpactPoint, HitEffectData, Hitter);

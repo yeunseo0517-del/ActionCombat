@@ -22,5 +22,5 @@ class ACTIONCOMBACT_API IHitInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void GetHit(const FVector& HitLocation, class UHitEffectDataAsset* HitEffectData, AActor* Hitter) = 0;
+	virtual void GetHit(const FHitResult& Hit, class UHitEffectDataAsset* HitEffectData, AActor* Hitter) = 0;
 };

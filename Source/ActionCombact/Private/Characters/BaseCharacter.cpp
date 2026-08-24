@@ -14,6 +14,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
+#include "BloodFieldSubSystem.h"
+#include "BloodBurstRequest.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -67,6 +69,23 @@ void ABaseCharacter::BeginPlay()
 	SpawnDefaultWeapon();
 	// 수정 필요
 	WeaponStance = EquippedWeapon ? EWeaponStance::EWS_OneHand : EWeaponStance::EWS_Unarmed;
+}
+
+void ABaseCharacter::MakeBlood(const FHitResult& Hit)
+{
+	UBloodFieldSubSystem* BloodFieldSubsystem = GetWorld()->GetSubsystem <UBloodFieldSubSystem>();
+	if (!BloodFieldSubsystem)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Fail to Find Blood Field Subsystem"));
+		return;
+	}
+	if (Hit.ImpactNormal.IsNearlyZero()) return;
+	FBloodBurstRequest Request;
+	Request.ImpactNormal = Hit.ImpactNormal;
+	Request.WorldLocation = Hit.ImpactPoint;
+	Request.Direction = (Hit.ImpactPoint - GetPawnViewLocation()).GetSafeNormal();
+
+	BloodFieldSubsystem->RequestBloodSplat(Request);
 }
 
 void ABaseCharacter::SpawnDefaultWeapon()
@@ -305,7 +324,7 @@ bool ABaseCharacter::IsSuperArmor()
 	return EffectTags.HasTag(FGameplayTags::Get().Effect_SuperArmor);
 }
 
-void ABaseCharacter::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
+void ABaseCharacter::GetHit(const FHitResult& Hit, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
 {
 	if (IsInvincible() || IsSuperArmor()) return;
 	StopMontage();
@@ -321,8 +340,9 @@ void ABaseCharacter::GetHit(const FVector& ImpactPoint, UHitEffectDataAsset* Hit
 		Die(Section);
 	}
 
-	PlayHitSound(HitEffectData, ImpactPoint);
-	SpawnHitParticles(ImpactPoint);
+	MakeBlood(Hit);
+	PlayHitSound(HitEffectData, Hit.ImpactPoint);
+	SpawnHitParticles(Hit.ImpactPoint);
 	EnterHitReact();
 }
 

@@ -35,6 +35,9 @@ private:
 	UFUNCTION()
 	void HandleCloseRequest();
 
+	int32 ColumnCount = 1;
+	int32 TotalSlotCount = 6;
+
 	UPROPERTY()
 	TWeakObjectPtr<AShopActor> BoundShop;
 
