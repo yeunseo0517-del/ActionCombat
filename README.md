@@ -74,7 +74,7 @@ Material은 자신의 World Position을 기준으로 Field를 조회하여 원�
 
 > 세부 설계 과정, 실패 사례 및 Compute Shader 구현은 별도 문서에서 확인할 수 있습니다.
 
-#### [상세 구현 문서](https://github.com/yeunseo0517-del/GPUBloodField/README.md)
+#### [상세 구현 문서](https://github.com/yeunseo0517-del/GPUBloodField)
 
 ---
 
