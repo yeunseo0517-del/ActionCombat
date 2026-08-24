@@ -14,11 +14,10 @@
   * [World-Space Blood Field](#World-Space-Blood-Field)
   * [Combat Pipeline](#combat-pipeline)
     * [1. Unified Hit Pipeline](#1-unified-hit-pipeline)
-    * [2. Data-driven 기반 Trace System](#2-data-driven-기반-trace-system)
-    * [3. Weapon 기반 근접 공격 통합 구조](#3-weapon-기반-근접-공격-통합-구조)
+    * [2. Weapon 기반 근접 공격 통합 구조](#3-weapon-기반-근접-공격-통합-구조)
   * [Skill System](#skill-system)
-    * [4. Runtime 기반 스킬 구성](#4-runtime-기반-스킬-구성)
-    * [5. 스킬 레이어 간 단방향 흐름](#5-스킬-레이어-간-단방향-흐름)
+    * [3. Runtime 기반 스킬 구성](#4-runtime-기반-스킬-구성)
+    * [4. 스킬 레이어 간 단방향 흐름](#5-스킬-레이어-간-단방향-흐름)
 * [트러블슈팅](./Docs/TroubleShooting.md)
 
 ---
@@ -101,24 +100,7 @@ Projectile을 추가하면서 팀 체크, 데미지 적용, 피격 반응 로직
 
 ---
 
-### 2. Data-driven 기반 Trace system
-> Data Asset 기반으로 공격 단위별 Trace 커스터마이징
-
-<img width="546" height="318" alt="image" src="https://github.com/user-attachments/assets/b014c09a-2a08-4b01-93d0-9bebcf026be6" />
-
-#### 설계 배경
-
-공격마다 필요한 판정 범위, 판정 위치 등 정보가 달랐습니다. 이를 코드에서 직접 관리하면 공격 설정 변경 시 판정 로직까지 함께 수정해야 했기 때문에 공격 설정을 **Data Asset**으로 분리했습니다.
-
-#### 장점
-- 공격 단위별 Trace 커스터마이징
-- 코드 수정 없는 공격 확장
-
-#### [상세 설계 문서](https://github.com/yeunseo0517-del/ActionCombat/blob/main/Docs/DataDrivenTrace.md)
-
----
-
-### 3. Weapon 기반 근접 공격 통합 구조
+### 2. Weapon 기반 근접 공격 통합 구조
 > 맨손 전투까지 확장한 Weapon Trace Pipeline 재사용 구조
 
 #### 설계 배경
@@ -138,7 +120,7 @@ Weapon Mesh가 없는 공격은 `Dummy Weapon Actor`를 사용하고 캐릭터�
 
 ## Skill System
 
-### 4. Runtime 기반 스킬 구성
+### 3. Runtime 기반 스킬 구성
 > 기획 변경이 AI 로직에 영향을 주지 않는 Runtime Skill 구조
 
 <img width="565" height="517" alt="image" src="https://github.com/user-attachments/assets/8e767150-cb48-4828-b5c0-a3c18155d85f" />
@@ -160,7 +142,7 @@ Weapon Mesh가 없는 공격은 `Dummy Weapon Actor`를 사용하고 캐릭터�
 
 ---
 
-### 5. 스킬 레이어 간 단방향 흐름
+### 4. 스킬 레이어 간 단방향 흐름
 > HUD가 스킬을 직접 조회하지 않는 이벤트 기반 실행 구조
 
 <img width="564" height="474" alt="image" src="https://github.com/user-attachments/assets/a7be2175-73a7-423f-b45e-21415262ba3a" />
