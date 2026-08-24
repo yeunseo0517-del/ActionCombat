@@ -11,6 +11,7 @@
 * [프로젝트 개요](#프로젝트-개요)
 * [조작 방법](#조작-방법)
 * [핵심 구현 요약](#핵심-구현-요약)
+  * [World-Space Blood Field](#World-Space-Blood-Field)
   * [Combat Pipeline](#combat-pipeline)
     * [1. Unified Hit Pipeline](#1-unified-hit-pipeline)
     * [2. Data-driven 기반 Trace System](#2-data-driven-기반-trace-system)
@@ -24,7 +25,7 @@
 
 ## 플레이 영상
 
-[Youtube](https://youtu.be/1aM2AIHFSLU)
+[Youtube](https://youtu.be/GW1Obw_CKx4)
 
 ---
 
@@ -53,6 +54,29 @@
 ---
 
 ## 핵심 구현 요약
+
+## World-Space Blood Field
+
+<img width="1074" height="347" alt="image" src="https://github.com/user-attachments/assets/27399ada-110d-4055-a928-cd7b84098f72" />
+
+기존 Decal 방식에서 발생하는 **모서리 왜곡, 굴곡진 표면, Foliage 표현 한계**를 보완하기 위해 별도의 World-Space Blood Field 시스템을 구현했습니다.
+
+Blood Texture를 여러 Sample로 분할한 뒤 각 Sample의 실제 표면 위치를 개별적으로 계산하고, 결과를 World-Space 3D Field에 기록합니다.  
+Material은 자신의 World Position을 기준으로 Field를 조회하여 원본 Blood Texture를 다시 Sampling합니다.
+
+### 주요 구현
+
+- Blood Texture를 Grid 기반 Sample로 사전 분석
+- Trace를 이용한 Sample별 실제 표면 위치 보정
+- Compute Shader 2-Pass로 Voxel별 Winner 선정 및 UV / Pattern 정보 기록
+- Material에서 World Position 기반 Blood Field 조회
+- Texture2DArray를 이용한 다중 Blood Pattern 지원
+
+> 세부 설계 과정, 실패 사례 및 Compute Shader 구현은 별도 문서에서 확인할 수 있습니다.
+
+#### [상세 구현 문서](README.md)
+
+---
 
 ## Combat Pipeline
 
