@@ -199,8 +199,8 @@ void UStatusComponent::RemoveStatus(EStatusType Status)
 - [UEnhanceSkill::ActivateSkill()](https://github.com/yeunseo0517-del/ActionCombat/blob/4ce91d7e94e1917d7b0c9b24e6491a656d037eaf/Source/ActionCombact/Private/Components/Combat/Skill/EnhanceSkill.cpp#L8)
 
 ### HUD
-- [SkillHUDWidget.cpp](https://github.com/yeunseo0517-del/ActionCombat/blob/main/Source/ActionCombact/Private/HUD/SkillHUDWidget.cpp)
-- [SkillWidget.cpp](https://github.com/yeunseo0517-del/ActionCombat/blob/main/Source/ActionCombact/Private/HUD/SkillWidget.cpp)
+- [SkillHUDWidget.cpp](Source/ActionCombact/Private/HUD/Battle/SkillHUDWidget.cpp)
+- [SkillWidget.cpp](Source/ActionCombact/Private/HUD/Battle/SkillWidget.cpp)
 
 ### Character / Combat
 - [ABaseCharacter::HandleStatusStart()](https://github.com/yeunseo0517-del/ActionCombat/blob/4ce91d7e94e1917d7b0c9b24e6491a656d037eaf/Source/ActionCombact/Private/Characters/BaseCharacter.cpp#L403)
