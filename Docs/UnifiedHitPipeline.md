@@ -170,7 +170,7 @@ void UCombatComponent::HandleHitResult(AActor* HitActor, FVector ImpactPoint)
 
 ### Hit Pipeline
 
-- [HitContext.h](https://github.com/yeunseo0517-del/ActionCombat/blob/main/Source/ActionCombact/Public/Types/HitContext.h)
+- [HitContext.h](Source/ActionCombact/Public/Types/Combat/HitContext.h)
 
 - [UCombatComponent::TryProcessTarget()](https://github.com/yeunseo0517-del/ActionCombat/blob/7f00e6764a3b4784d176d9216d999511b36b736d/Source/ActionCombact/Private/Components/Combat/CombatComponent.cpp#L320)
 
