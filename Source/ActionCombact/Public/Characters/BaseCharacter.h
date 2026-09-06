@@ -59,7 +59,7 @@ public:
 	/*
 		Hit Interface override function
 	*/
-	virtual void GetHit(const FHitResult& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter) override;
+	virtual void GetHit(const FHitInfo& HitInfo, UHitEffectDataAsset* HitEffectData, AActor* Hitter) override;
 	//
 
 	/*
@@ -139,7 +139,8 @@ protected:
 	float DefaultDamage = 10;
 
 private:
-	void MakeBlood(const FHitResult& Hit);
+	void MakeBlood(const struct FHitInfo& HitInfo);
+	bool FindBloodSurface(FHitResult& OutHit, const FHitInfo& HitInfo);
 	void SpawnDefaultWeapon();
 	AWeapon* GetActiveWeapon() const;
 	void StartCollisionTimer();

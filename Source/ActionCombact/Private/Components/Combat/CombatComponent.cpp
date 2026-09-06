@@ -187,7 +187,6 @@ void UCombatComponent::ExecuteAction(const FGameplayTag& Tag)
 void UCombatComponent::OnAttackWindow()
 {
 	if (!CurrentSkill) return;
-	CurHitContext = CurrentSkill->GetSkillHitContext();
 
 	if (HasShockwave()) SpawnRadialShockwave();
 	if (HasProjectile()) SpawnProjectile();
@@ -318,31 +317,31 @@ float UCombatComponent::CalculateDamage(float DefaultDamage)
 	return Damage;
 }
 
-void UCombatComponent::TryProcessTarget(AActor* Target, const FHitResult& Hit)
+void UCombatComponent::TryProcessTarget(AActor* Hitter, AActor* DamageCauser, AActor* Target, const FHitResult& Hit)
 {
 	if (!Target) return;
-	if (CurHitContext.AlreadyHitActors.Contains(Target)) return;
-	HandleHitResult(Target, Hit);
-	CurHitContext.AlreadyHitActors.Add(Target);
+	if (AlreadyHitActors.Contains(Target)) return;
+	HandleHitResult(Hitter, DamageCauser, Target, Hit);
+	AlreadyHitActors.Add(Target);
 }
 
-void UCombatComponent::HandleHitResult(AActor* HitActor, const FHitResult& Hit)
+void UCombatComponent::HandleHitResult(AActor* Hitter, AActor* DamageCauser, AActor* Target, const FHitResult& Hit)
 {
-	if (!HitActor) return;
-	if (ProcessDamageApplication(HitActor))
+	if (!Target) return;
+	if (ProcessDamageApplication(Hitter, DamageCauser, Target))
 	{
-		ExecuteGetHit(HitActor, Hit);
+		ExecuteGetHit(Target, Hit);
 		SpawnHitSparkParticles(Hit.ImpactPoint);
 	}
 }
 
-bool UCombatComponent::ProcessDamageApplication(AActor* Target)
+bool UCombatComponent::ProcessDamageApplication(AActor* Hitter, AActor* DamageCauser, AActor* Target)
 {
 	if (!Target) return false;
-	if (!IsHostile(Target)) return false;
+	if (!IsHostile(Hitter, Target)) return false;
 
 	float AttackPower = 0.f;
-	if (IStatusReceiverInterface* StatusReceiver = Cast<IStatusReceiverInterface>(CurHitContext.Instigator))
+	if (IStatusReceiverInterface* StatusReceiver = Cast<IStatusReceiverInterface>(Hitter))
 	{
 		if (UAttributeComponent* Attribute = StatusReceiver->GetAttributeComponent())
 		{
@@ -351,35 +350,40 @@ bool UCombatComponent::ProcessDamageApplication(AActor* Target)
 	}
 	float Damage = CalculateDamage(AttackPower);
 	AController* InstigatorController = nullptr;
-	if (APawn* Owner = Cast<APawn>(CurHitContext.Instigator)) InstigatorController = Owner->GetController();
+	if (APawn* Owner = Cast<APawn>(Hitter)) InstigatorController = Owner->GetController();
 	UGameplayStatics::ApplyDamage(
 		Target,
 		Damage,
 		InstigatorController,
-		CurHitContext.DamageCauser,
+		DamageCauser,
 		UDamageType::StaticClass()
 	);
 	return true;
 }
 
-void UCombatComponent::ExecuteGetHit(AActor* HitActor, const FHitResult& Hit)
+void UCombatComponent::ExecuteGetHit(AActor* Target, const FHitResult& Hit)
 {
-	if (IHitInterface* HitInterface = Cast<IHitInterface>(HitActor))
+	if (IHitInterface* HitInterface = Cast<IHitInterface>(Target))
 	{
-		HitInterface->GetHit(Hit, CurHitEffectData, GetOwner());
+		FHitInfo HitInfo;
+		HitInfo.ImpactPoint = Hit.ImpactPoint;
+		FVector HitDir = Hit.ImpactPoint - GetOwner()->GetActorLocation();
+		HitDir.Z = FMath::FRandRange(-0.5f, 0.2f);
+		HitDir.Normalize();
+		HitInfo.HitDir = HitDir;
+		HitInterface->GetHit(HitInfo, CurHitEffectData, GetOwner());
 	}
 }
 
-bool UCombatComponent::IsHostile(AActor* OtherActor)
+bool UCombatComponent::IsHostile(AActor* Hitter, AActor* Target)
 {
-	if (ITeamInterface* Hitter = Cast<ITeamInterface>(CurHitContext.Instigator))
+	if (ITeamInterface* Hit = Cast<ITeamInterface>(Hitter))
 	{
-		if (ITeamInterface* Other = Cast<ITeamInterface>(OtherActor))
+		if (ITeamInterface* GetHit = Cast<ITeamInterface>(Target))
 		{
-			FString HitName = UEnum::GetValueAsString(Hitter->GetTeamType());
-			FString OtherName = UEnum::GetValueAsString(Other->GetTeamType());
-			UE_LOG(LogTemp,Warning,TEXT("Hit Actor: %s, Get Hit Actor: %s"), *HitName, *OtherName)
-			return Hitter->GetTeamType() != Other->GetTeamType();
+			FString HitName = UEnum::GetValueAsString(Hit->GetTeamType());
+			FString OtherName = UEnum::GetValueAsString(GetHit->GetTeamType());
+			return Hit->GetTeamType() != GetHit->GetTeamType();
 		}
 	}
 	return false;

@@ -179,4 +179,7 @@ private:
 	float InteractionCheckFrequency = 0.1f;
 	float InteractionCheckDistance = 225.f;
 	FTimerHandle InteractionTimer;
+
+	UPROPERTY(EditAnywhere, Category = "SurroundSlot")
+	class USurroundSlotComponent* SlotComponent;
 };

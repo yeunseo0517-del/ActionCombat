@@ -28,8 +28,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void RequestBloodSplat(FBloodBurstRequest Request);
-	
 	void SetFieldOrigin(const FVector3f& InOrigin);
+	void SetFieldScale(const FVector3f& InScale);
+	void InitializeField(const FVector3f& InOrigin, const FVector3f& InScale);
 	class UTextureRenderTargetVolume* GetBloodFieldTarget() const { return BloodFieldTarget; }
 
 private:
@@ -51,7 +52,8 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<class UTextureRenderTargetVolume> BloodFieldTarget;
 
-	FIntVector Resolution = { 384,384,52 };
-	FVector3f FieldScale = FVector3f(3000.f, 3000.f, 500.f);
+	float VoxelSize = 10.f;
+	FIntVector Resolution;
+	FVector3f FieldScale;
 	FVector3f FieldOrigin = FVector3f::ZeroVector;
 };

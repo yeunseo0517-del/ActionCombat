@@ -41,12 +41,6 @@ void ARadialShockwaves::InitShockwave(double InMaxRadius, float InDuration)
 	ExpandImpactRadius();
 }
 
-void ARadialShockwaves::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
 double ARadialShockwaves::CalculateRadiusFromOwner()
 {
 	if (!GetOwner()) return 0.f;
@@ -112,7 +106,7 @@ void ARadialShockwaves::ProcessHitResults(const TArray<FOverlapResult>& OverlapR
 			FHitResult Hit;
 			Hit.ImpactPoint = Overlap.GetActor()->GetActorLocation();
 			Hit.ImpactNormal = FVector::ZeroVector;
-			CombatInterface->GetCombatComponent()->TryProcessTarget(Overlap.GetActor(), Hit);
+			CombatInterface->GetCombatComponent()->TryProcessTarget(GetOwner(), this, Overlap.GetActor(), Hit);
 		}
 	}
 }

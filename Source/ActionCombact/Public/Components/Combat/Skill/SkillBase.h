@@ -42,5 +42,4 @@ public:
 	const FDash& GetDashConfig() const { return SkillData.SubConfig.DashConfig; }
 	const FShockwave& GetShockConfig() const { return SkillData.SubConfig.ShockConfig; }
 	const FProjectile& GetProjectileConfig() const { return SkillData.SubConfig.ProjectileConfig; }
-	FHitContext GetSkillHitContext();
 };

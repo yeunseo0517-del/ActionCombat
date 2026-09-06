@@ -38,15 +38,11 @@ private:
 	FVector PrevCenter;
 	int32 CurrentTraceIndex = 0;
 
-	FHitContext CurHitContext = FHitContext();
-
 public:
 	virtual FVector GetTraceStart() const override;
 	virtual FVector GetTraceEnd() const override;
 	bool CanGetTrace() const;
 	virtual FName GetTraceStartName() override;
-
-	virtual FHitContext GetHitContext() override { return CurHitContext; }
 
 	virtual void ClearPrevLocation() override { bHasPrevLocation = false; }
 	virtual void SetTraceIndex(int32 Index) override { CurrentTraceIndex = Index; }

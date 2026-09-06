@@ -12,13 +12,18 @@
 #include "HUD/Battle/HealthBarComponent.h"
 #include "Game/BattleGameMode.h"
 #include "Kismet/GameplayStatics.h"
+#include "Types/Combat/HitContext.h"
 
 AEnemy::AEnemy()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	GetCharacterMovement()->bUseRVOAvoidance = false;
+	GetCharacterMovement()->AvoidanceConsiderationRadius = 100.f;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bRequestedMoveUseAcceleration = true;
+	GetCharacterMovement()->MaxAcceleration = 800.f;
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = false;
@@ -37,10 +42,10 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 	return DamageAmount;
 }
 
-void AEnemy::GetHit(const FHitResult& ImpactPoint, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
+void AEnemy::GetHit(const FHitInfo& HitInfo, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
 {
 	if (IsDead()) return;
-	Super::GetHit(ImpactPoint, HitEffectData, Hitter);
+	Super::GetHit(HitInfo, HitEffectData, Hitter);
 	EnterHitReact();
 }
 
@@ -48,7 +53,9 @@ void AEnemy::AttackEnd()
 {
 	if (IsDead()) return;
 	CurrentStateTag = FGameplayTag();
-	UpdateMovement();
+	const float ResumeTime = FMath::RandRange(MoveReMin, MoveReMax);
+	GetWorldTimerManager().SetTimer(MoveResumeTimer, ResumeTime, false);
+	StartAttackTimer();
 }
 
 bool AEnemy::CanStartAttack()
@@ -114,24 +121,20 @@ void AEnemy::StartAttackTimer()
 			return;
 		}
 	}
-	if (GetWorldTimerManager().IsTimerActive(AttackTimer)) return;
+	if (GetWorldTimerManager().IsTimerActive(AttackCooldownTimer)) return;
 
-	if (EnemyController) EnemyController->StopMovement();
-	GetCharacterMovement()->StopMovementImmediately();
-
-	SetCurrentState(FGameplayTags::Get().State_AI_Engaged);
 	const float AttackTime = FMath::RandRange(AttackMin, AttackMax);
-	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::TryAttack, AttackTime);
+	GetWorldTimerManager().SetTimer(AttackCooldownTimer, AttackTime, false);
 }
 
 void AEnemy::ClearAttackTimer()
 {
-	GetWorldTimerManager().ClearTimer(AttackTimer);
+	GetWorldTimerManager().ClearTimer(AttackCooldownTimer);
 }
 
 bool AEnemy::CanAttack()
 {
-	return CanStartAttack() && !IsEngaged();
+	return CanStartAttack() && !GetWorldTimerManager().IsTimerActive(AttackCooldownTimer);
 }
 
 bool AEnemy::IsEngaged()
@@ -144,12 +147,10 @@ bool AEnemy::IsChasing()
 	return CurrentStateTag == FGameplayTags::Get().State_AI_Chasing;
 }
 
-void AEnemy::ChaseTarget()
+void AEnemy::EnterChaseState()
 {
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	SetCurrentState(FGameplayTags::Get().State_AI_Chasing);
-	MoveToTarget(CombatTarget);
-	GetCharacterMovement()->MaxWalkSpeed = 200.f;
 }
 
 bool AEnemy::InTargetRange(AActor* Target, float Radius)
@@ -183,6 +184,11 @@ void AEnemy::FaceTarget()
 	LookAtRot.Roll = 0.f;
 
 	SetActorRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, GetWorld()->GetDeltaSeconds(), 20.f));
+}
+
+bool AEnemy::CanMove()
+{
+	return !GetWorldTimerManager().IsTimerActive(MoveResumeTimer);
 }
 
 void AEnemy::MoveToTarget(AActor* Target)

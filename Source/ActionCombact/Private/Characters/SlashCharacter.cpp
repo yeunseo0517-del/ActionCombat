@@ -20,6 +20,7 @@
 #include "Components/Attribute/AttributeComponent.h"
 #include "Components/Combat/CombatComponent.h"
 #include "Components/InventoryComponent.h"
+#include "Components/Combat/SurroundSlotComponent.h"
 
 #include "Game/ActionGameInstance.h"
 #include "DrawDebugHelpers.h"
@@ -44,6 +45,7 @@ ASlashCharacter::ASlashCharacter()
 	ViewCamera->SetupAttachment(SpringArm);
 
 	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+	SlotComponent = CreateDefaultSubobject<USurroundSlotComponent>(TEXT("Surround Slot"));
 
 	TeamType = ETeamType::Player;
 }

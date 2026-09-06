@@ -36,7 +36,8 @@ public:
 	void ExecuteAttack(const FGameplayTag& Tag);
 	void ExecuteAction(const FGameplayTag& Tag);
 	void OnAttackWindow();
-	void TryProcessTarget(AActor* Target, const FHitResult& Hit);
+	void TryProcessTarget(AActor* Hitter, AActor* DamageCauser, AActor* Target, const FHitResult& Hit);
+	void ClearAlreadyHitArray() { AlreadyHitActors.Empty(); }
 
 protected:
 	virtual void BeginPlay() override;
@@ -62,12 +63,12 @@ private:
 	void SpawnRadialShockwave();
 	void SpawnProjectile();
 
-	void HandleHitResult(AActor* HitActor, const FHitResult& Hit);
-	void ExecuteGetHit(AActor* HitActor, const FHitResult& Hit);
+	void HandleHitResult(AActor* Hitter, AActor* DamageCauser, AActor* Target, const FHitResult& Hit);
+	void ExecuteGetHit(AActor* Target, const FHitResult& Hit);
 	void SpawnHitSparkParticles(FVector ImpactPoint);
-	bool IsHostile(AActor* Actor);
+	bool IsHostile(AActor* Hitter, AActor* Target);
 	float CalculateDamage(float DefaultDamage);
-	bool ProcessDamageApplication(AActor* Target);
+	bool ProcessDamageApplication(AActor* Hitter, AActor* DamageCauser, AActor* Target);
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	UCombatDataAsset* OverrideCombatData;
@@ -104,7 +105,7 @@ private:
 	FGameplayTag CurrentCombatTag = FGameplayTag();
 
 	UPROPERTY()
-	FHitContext CurHitContext;
+	TSet<AActor*> AlreadyHitActors;
 
 public:
 	void SetbTracing(bool Value) { bTracing = Value; }
@@ -112,5 +113,4 @@ public:
 	FGameplayTag GetCurrentCombatTag() { return CurrentCombatTag; }
 	void SetCurrentSkill(USkillBase* NewSkill) { CurrentSkill = NewSkill; }
 	void SetHitEffectData(UHitEffectDataAsset* NewEffect) { CurHitEffectData = NewEffect; }
-	void SetHitContext(FHitContext& NewContext) { CurHitContext = NewContext; }
 };

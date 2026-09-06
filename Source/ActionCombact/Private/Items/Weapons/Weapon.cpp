@@ -138,17 +138,6 @@ void AWeapon::UseSkillR()
 	}
 }
 
-FHitContext AWeapon::BuildWeaponHitContext(const TSet<AActor*>& AlreadyHit)
-{
-	FHitContext HitContext;
-
-	HitContext.Instigator = GetInstigator() ? GetInstigator() : Cast<APawn>(GetOwner());
-	HitContext.DamageCauser = this;
-	HitContext.AttackTag = CurrentTraceData->AttackTag;
-
-	return HitContext;
-}
-
 TArray<AActor*> AWeapon::BuildActorsToIgnore()
 {
 	TArray<AActor*> Actors;

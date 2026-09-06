@@ -71,7 +71,7 @@ void ABaseCharacter::BeginPlay()
 	WeaponStance = EquippedWeapon ? EWeaponStance::EWS_OneHand : EWeaponStance::EWS_Unarmed;
 }
 
-void ABaseCharacter::MakeBlood(const FHitResult& Hit)
+void ABaseCharacter::MakeBlood(const FHitInfo& HitInfo)
 {
 	UBloodFieldSubSystem* BloodFieldSubsystem = GetWorld()->GetSubsystem <UBloodFieldSubSystem>();
 	if (!BloodFieldSubsystem)
@@ -79,13 +79,52 @@ void ABaseCharacter::MakeBlood(const FHitResult& Hit)
 		UE_LOG(LogTemp, Warning, TEXT("Fail to Find Blood Field Subsystem"));
 		return;
 	}
-	if (Hit.ImpactNormal.IsNearlyZero()) return;
+
+	FHitResult SurfaceHit;
+	if (!FindBloodSurface(SurfaceHit, HitInfo)) return;
+	
 	FBloodBurstRequest Request;
-	Request.ImpactNormal = Hit.ImpactNormal;
-	Request.WorldLocation = Hit.ImpactPoint;
-	Request.Direction = (Hit.ImpactPoint - GetPawnViewLocation()).GetSafeNormal();
+	Request.ImpactNormal = SurfaceHit.ImpactNormal;
+	Request.WorldLocation = SurfaceHit.ImpactPoint;
+	Request.Direction = HitInfo.HitDir;
 
 	BloodFieldSubsystem->RequestBloodSplat(Request);
+}
+
+bool ABaseCharacter::FindBloodSurface(FHitResult& OutHit, const FHitInfo& HitInfo)
+{
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.bTraceComplex = true;
+
+	FVector Current = HitInfo.ImpactPoint;
+	FVector Velocity = HitInfo.HitDir * 700.f;
+
+	const int32 Steps = 3;
+	const float DeltaTime = 0.25f;
+	const float DownAcceleration = 900.f;
+	bool bFound = false;
+	for (int32 i = 0; i < Steps; ++i)
+	{
+		FVector Next = Current + Velocity * DeltaTime;
+		const bool bHit = GetWorld()->LineTraceSingleByChannel(
+			OutHit,
+			Current,
+			Next,
+			ECC_Visibility,
+			Params
+		);
+		//DrawDebugLine(GetWorld(), Current, Next, FColor::Red, false, 4.f);
+		if (bHit)
+		{
+			bFound = true;
+			return true;
+		}
+
+		Current = Next;
+		Velocity.Z -= DownAcceleration * DeltaTime;
+	}
+	return false;
 }
 
 void ABaseCharacter::SpawnDefaultWeapon()
@@ -228,13 +267,13 @@ void ABaseCharacter::EnableTrace()
 {
 	if (Combat)
 	{
+		if (AWeapon* ActiveWeapon = GetActiveWeapon())
+		{
+			ActiveWeapon->ClearPrevLocation();
+			Combat->ClearAlreadyHitArray();
+		}
+
 		Combat->SetbTracing(true);
-	}
-	if (AWeapon* ActiveWeapon = GetActiveWeapon())
-	{
-		ActiveWeapon->ClearPrevLocation();
-		FHitContext HitContext = ActiveWeapon->GetHitContext();
-		Combat->SetHitContext(HitContext);
 	}
 }
 
@@ -324,7 +363,7 @@ bool ABaseCharacter::IsSuperArmor()
 	return EffectTags.HasTag(FGameplayTags::Get().Effect_SuperArmor);
 }
 
-void ABaseCharacter::GetHit(const FHitResult& Hit, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
+void ABaseCharacter::GetHit(const FHitInfo& HitInfo, UHitEffectDataAsset* HitEffectData, AActor* Hitter)
 {
 	if (IsInvincible() || IsSuperArmor()) return;
 	StopMontage();
@@ -340,9 +379,9 @@ void ABaseCharacter::GetHit(const FHitResult& Hit, UHitEffectDataAsset* HitEffec
 		Die(Section);
 	}
 
-	MakeBlood(Hit);
-	PlayHitSound(HitEffectData, Hit.ImpactPoint);
-	SpawnHitParticles(Hit.ImpactPoint);
+	MakeBlood(HitInfo);
+	PlayHitSound(HitEffectData, HitInfo.ImpactPoint);
+	SpawnHitParticles(HitInfo.ImpactPoint);
 	EnterHitReact();
 }
 

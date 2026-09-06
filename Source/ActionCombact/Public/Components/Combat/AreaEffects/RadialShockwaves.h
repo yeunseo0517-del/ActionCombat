@@ -18,9 +18,6 @@ public:
 	void InitShockwave(double MaxRadius, float Duration);
 	void ExpandImpactRadius();
 
-protected:
-	virtual void BeginPlay() override;
-
 private:
 	double CalculateRadiusFromOwner();
 	void SpawnShockwave(double Radius);

@@ -27,12 +27,12 @@ void AInteractItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	RunningTime += DeltaTime;
+	//RunningTime += DeltaTime;
 
-	const float rotationZ = DeltaTime * 100;
+	//const float rotationZ = DeltaTime * 100;
 
-	ItemMesh->AddLocalRotation(FRotator(0.f, rotationZ, 0.f));
-	ItemMesh->AddLocalOffset(FVector(0.f, 0.f, TransformedSin()));
+	//ItemMesh->AddLocalRotation(FRotator(0.f, rotationZ, 0.f));
+	//ItemMesh->AddLocalOffset(FVector(0.f, 0.f, TransformedSin()));
 
 	if (bInFocus) UpdateWidgetPosition();
 }

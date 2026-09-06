@@ -9,6 +9,7 @@
 #include "Components/Attribute/AttributeComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HUD/Battle/HealthBarComponent.h"
+#include "Components/Combat/SurroundSlotComponent.h"
 
 AMinionEnemy::AMinionEnemy()
 {
@@ -25,6 +26,23 @@ AMinionEnemy::AMinionEnemy()
 void AMinionEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (bShouldMoveLocation)
+	{
+		const float Threshold = 3000.f;
+
+		if (USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>())
+		{
+			FVector CurrentSlotLocation = SlotComp->GetSlotWorldLocation(SlotIndex);
+			if (FVector::Distance(CurrentSlotLocation, LastSlotLocation) > Threshold)
+			{
+				if (AAIController* AIController = Cast<AAIController>(GetController()))
+				{
+					AIController->MoveToLocation(CurrentSlotLocation);
+					LastSlotLocation = CurrentSlotLocation;
+				}
+			}
+		}
+	}
 	UpdateMovement();
 }
 
@@ -33,7 +51,7 @@ void AMinionEnemy::UpdateMovement()
 	if (IsDead()) return;
 	if (IsPatrolling())
 		CheckPatrolTarget();
-	else
+	else if(CanMove())
 	{
 		UpdateBattleStrategy();
 	}
@@ -62,7 +80,7 @@ void AMinionEnemy::BeginPlay()
 void AMinionEnemy::Die(const FName& Section)
 {
 	ClearPatrolTimer();
-	HideHealthBar();
+	LoseInterest();
 	Super::Die(Section);
 }
 
@@ -83,7 +101,15 @@ void AMinionEnemy::InitializeEnemy()
 {
 	EnemyController = Cast<AAIController>(GetController());
 	SetCurrentState(FGameplayTags::Get().State_AI_Patrolling);
-	MoveToTarget(PatrolTarget);
+	const int32 PatrolPointCount = FMath::RandRange(1, 4);
+	for (int32 Step = 0; Step < PatrolPointCount; ++Step)
+	{
+		FVector RandVector(FMath::RandRange(0.f, PatrolRadius), FMath::RandRange(0.f, PatrolRadius), 0.f);
+		PatrolPoints.AddUnique(GetActorLocation() + RandVector);
+		//DrawDebugSphere(GetWorld(), GetActorLocation() + RandVector, 12.f, 8, FColor::Blue, true);
+	}
+	PatrolTarget = PatrolPoints[0];
+	if(EnemyController) EnemyController->MoveToLocation(PatrolTarget);
 	HideHealthBar();
 }
 
@@ -100,14 +126,30 @@ void AMinionEnemy::UpdateBattleStrategy()
 				StartPatrolling();
 			}
 		}
-		else if (IsOutsideAttackRadius() && !IsChasing())
-		{
-			ClearAttackTimer();
-			ChaseTarget();
-		}
 		else if (CanAttack())
 		{
-			StartAttackTimer();
+			TryAttack();
+		}
+		else if (SlotIndex != INDEX_NONE && !IsAttacking() && !IsAtSlot())
+		{
+			if (AAIController* AIController = Cast<AAIController>(GetController()))
+			{
+				if (AIController->GetMoveStatus() != EPathFollowingStatus::Moving)
+				{
+					USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>();
+
+					if (SlotComp)
+					{
+						const FVector SlotLocation = SlotComp->GetSlotWorldLocation(SlotIndex);
+
+						AIController->MoveToLocation(SlotLocation, 50.f, false);
+					}
+				}
+			}
+		}
+		else if (IsOutsideAttackRadius() && !IsChasing() && !IsAttacking())
+		{
+			ChaseTarget();
 		}
 	}
 	else
@@ -124,13 +166,31 @@ void AMinionEnemy::TryAttack()
 	if (!CanStartAttack()) return;
 	if (EnemyController) EnemyController->StopMovement();
 	GetCharacterMovement()->StopMovementImmediately();
+	bShouldMoveLocation = false;
 	Attack(FGameplayTags::Get().Action_Attack_Basic);
 }
 
 void AMinionEnemy::ChaseTarget()
 {
 	ClearPatrolTimer();
-	Super::ChaseTarget();
+	EnterChaseState();
+	if (!CombatTarget) return;
+
+	if (SlotIndex != INDEX_NONE) return;
+	USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>();
+	if (!SlotComp) return;
+	SlotIndex = SlotComp->RequestSlot(this);
+	if (SlotIndex != INDEX_NONE)
+	{
+		FVector CurrentSlotLocation = SlotComp->GetSlotWorldLocation(SlotIndex);
+		if (AAIController* AIController = Cast<AAIController>(GetController()))
+		{
+			AIController->MoveToLocation(CurrentSlotLocation);
+		}
+		bShouldMoveLocation = true;
+	}
+	else return;
+
 	GetCharacterMovement()->MaxWalkSpeed = ChasingSpeed;
 }
 
@@ -144,12 +204,13 @@ void AMinionEnemy::StartPatrolling()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	SetCurrentState(FGameplayTags::Get().State_AI_Patrolling);
 	GetCharacterMovement()->MaxWalkSpeed = PatrollingSpeed;
-	MoveToTarget(PatrolTarget);
+	if(EnemyController) EnemyController->MoveToLocation(PatrolTarget);
 }
 
 void AMinionEnemy::CheckPatrolTarget()
 {
-	if (InTargetRange(PatrolTarget, PatrolRadius))
+	if (GetWorldTimerManager().IsTimerActive(PatrolTimer)) return;
+	if (FVector::DistSquared(GetActorLocation(), PatrolTarget) <= FMath::Square(50.f))
 	{
 		PatrolTarget = ChoosePatrolTarget();
 		const float WaitTime = FMath::RandRange(PatrolWaitMin, PatrolWaitMax);
@@ -157,30 +218,23 @@ void AMinionEnemy::CheckPatrolTarget()
 	}
 }
 
-AActor* AMinionEnemy::ChoosePatrolTarget()
+FVector AMinionEnemy::ChoosePatrolTarget()
 {
-	TArray<AActor*> ValidTargets;
-	if (PatrolTarget)
+	TArray<FVector> ValidPoints;
+	for (const FVector& Point : PatrolPoints)
 	{
-		for (AActor* Actor : PatrolTargets)
-			if (Actor != PatrolTarget)
-				ValidTargets.AddUnique(Actor);
+		if (Point != PatrolTarget) ValidPoints.Add(Point);
 	}
+	const int32 NumPatrolPoints = ValidPoints.Num();
+	if (NumPatrolPoints > 0) return ValidPoints[FMath::RandRange(0, NumPatrolPoints - 1)];
 
-	const int32 NumPatrolTargets = ValidTargets.Num();
-	if (NumPatrolTargets > 0)
-	{
-		const int32 TargetSelection = FMath::RandRange(0, NumPatrolTargets - 1);
-		return ValidTargets[TargetSelection];
-	}
-
-	return nullptr;
+	return FVector::ZeroVector;
 }
 
 void AMinionEnemy::PatrolTimerFinished()
 {
 	if (!IsPatrolling()) return;
-	MoveToTarget(PatrolTarget);
+	if (EnemyController) EnemyController->MoveToLocation(PatrolTarget);
 }
 
 void AMinionEnemy::ClearPatrolTimer()
@@ -202,6 +256,21 @@ void AMinionEnemy::LoseInterest()
 {
 	CombatTarget = nullptr;
 	HideHealthBar();
+	ReleaseSurroundSlot();
+	bShouldMoveLocation = false;
+}
+
+void AMinionEnemy::ReleaseSurroundSlot()
+{
+	if (CombatTarget && SlotIndex != INDEX_NONE)
+	{
+		USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>();
+		if (SlotComp)
+		{
+			SlotComp->ReleaseSlot(SlotIndex);
+			SlotIndex = INDEX_NONE;
+		}
+	}
 }
 
 void AMinionEnemy::ShowHealthBar()
@@ -218,6 +287,14 @@ void AMinionEnemy::HideHealthBar()
 	{
 		HealthBarWidget->SetVisibility(false);
 	}
+}
+
+bool AMinionEnemy::IsAtSlot()
+{
+	if (SlotIndex == INDEX_NONE || !CombatTarget) return false;
+	USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>();
+	if (!SlotComp) return false;
+	return FVector::DistSquared(GetActorLocation(), SlotComp->GetSlotWorldLocation(SlotIndex)) <= FMath::Square(50.f);
 }
 
 void AMinionEnemy::PawnSeen(APawn* SeenPawn)

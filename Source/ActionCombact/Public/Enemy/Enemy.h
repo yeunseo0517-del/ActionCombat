@@ -23,7 +23,7 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	// Hit Interface function
-	virtual void GetHit(const FHitResult& ImpactPoint, class UHitEffectDataAsset* HitEffectData, AActor* Hitter) override;
+	virtual void GetHit(const struct FHitInfo& HitInfo, class UHitEffectDataAsset* HitEffectData, AActor* Hitter) override;
 	//
 
 	virtual void AttackEnd() override;
@@ -44,9 +44,10 @@ protected:
 	void StartAttackTimer();
 	void ClearAttackTimer();
 	void FaceTarget();
+	bool CanMove();
 	bool IsEngaged();
 	bool IsChasing();
-	virtual void ChaseTarget();
+	void EnterChaseState();
 	virtual bool CanAttack();
 	virtual void TryAttack() {}
 
@@ -56,10 +57,14 @@ protected:
 	UPROPERTY(VisibleInstanceOnly)
 	AActor* CombatTarget;
 
-	FTimerHandle AttackTimer;
+	FTimerHandle AttackCooldownTimer;
+	FTimerHandle MoveResumeTimer;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float AttackMin = 0.5f, AttackMax = 1.f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float MoveReMin = 0.05f, MoveReMax = 0.5f;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	double AttackRadius = 300.f;

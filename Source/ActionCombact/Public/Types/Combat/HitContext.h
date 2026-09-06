@@ -4,15 +4,12 @@
 #include "Types/GameplayTags.h"
 #include "HitContext.generated.h"
 
+
 USTRUCT()
-struct FHitContext
+struct FHitInfo
 {
 	GENERATED_BODY()
 
-	AActor* Instigator = nullptr;
-	AActor* DamageCauser = nullptr;
-
-	FGameplayTag AttackTag;
-
-	TSet<AActor*> AlreadyHitActors;
+	FVector ImpactPoint;
+	FVector HitDir;
 };

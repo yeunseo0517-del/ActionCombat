@@ -17,17 +17,6 @@ void USkillBase::StartCoolDown(AActor* Owner)
 	StatusComp->ActivateSkill(SlotKey, SkillID, SkillData.Cooldown);
 }
 
-FHitContext USkillBase::GetSkillHitContext()
-{
-	if (!CachedOwner) return FHitContext();
-	FHitContext HitContext;
-	HitContext.Instigator = CachedOwner;
-	HitContext.DamageCauser = CachedOwner;
-	HitContext.AttackTag = AttackTag;
-
-	return HitContext;
-}
-
 void USkillBase::Init(const FSkillEntry& Config, int32 InSlotKey, int32 InSkillID)
 {
 	SkillData = Config;

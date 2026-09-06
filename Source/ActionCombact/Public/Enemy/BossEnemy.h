@@ -46,6 +46,7 @@ protected:
 	virtual void TryAttack() override;
 
 private:
+	void ChaseTarget();
 	void CreateHealthBarWidget();
 	void InitializeSkills();
 	USkillBase* SelectSkill(ESkillRange Range);

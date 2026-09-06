@@ -9,6 +9,7 @@
 #include "Components/Combat/Skill/SkillBase.h"
 #include "Components/Combat/CombatComponent.h"
 #include "Components/Attribute/AttributeComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 ABossEnemy::ABossEnemy()
 {
@@ -24,7 +25,7 @@ void ABossEnemy::Tick(float DeltaTime)
 void ABossEnemy::UpdateMovement()
 {
 	if (IsDead() || !CombatTarget) return;
-	if (CanAttack())
+	if (CanAttack() && CanMove())
 	{
 		UpdateBattleStrategy();
 	}
@@ -57,6 +58,13 @@ void ABossEnemy::InitializeEnemy()
 		CombatTarget = PlayerCharacter;
 		ChaseTarget();
 	}
+}
+
+void ABossEnemy::ChaseTarget()
+{
+	EnterChaseState();
+	MoveToTarget(CombatTarget);
+	GetCharacterMovement()->MaxWalkSpeed = 200.f;
 }
 
 void ABossEnemy::InitializeSkills()

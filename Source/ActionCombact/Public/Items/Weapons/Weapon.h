@@ -30,7 +30,6 @@ public:
 
 	void Equip(USceneComponent* InParent, const FName& InSocketName, AActor* NewOwner, APawn* NewInstigator);
 	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
-	virtual FHitContext GetHitContext() { return FHitContext(); }
 
 	virtual void DoTrace() {}
 	virtual void ResetTraceIndex() {}
@@ -50,7 +49,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void InitializeSkills();
-	FHitContext BuildWeaponHitContext(const TSet<AActor*>& AlreadyHit);
 	TArray<AActor*> BuildActorsToIgnore();
 
 	UPROPERTY()

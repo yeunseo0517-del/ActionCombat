@@ -25,10 +25,10 @@ protected:
 	virtual void EnterHitReact() override;
 	virtual void UpdateMovement() override;
 	virtual void TryAttack() override;
-	virtual void ChaseTarget() override;
 	virtual bool CanAttack() override;
 
 private:
+	void ChaseTarget();
 	void InitializeEnemy();
 	void UpdateBattleStrategy();
 	bool IsOutsideAttackRadius();
@@ -36,12 +36,14 @@ private:
 	bool IsPatrolling();
 	void StartPatrolling();
 	void CheckPatrolTarget();
-	AActor* ChoosePatrolTarget();
+	FVector ChoosePatrolTarget();
 	void PatrolTimerFinished();
 	void ClearPatrolTimer();
 	void LoseInterest();
+	void ReleaseSurroundSlot();
 	void ShowHealthBar();
 	void HideHealthBar();
+	bool IsAtSlot();
 
 	UPROPERTY(VisibleAnywhere)
 	UPawnSensingComponent* PawnSensing;
@@ -49,14 +51,11 @@ private:
 	/*
 	AI Navigation
 	*/
-	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	AActor* PatrolTarget;
-
-	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	TArray<AActor*> PatrolTargets;
+	FVector PatrolTarget;
+	TArray<FVector> PatrolPoints;
 
 	UPROPERTY(EditAnywhere)
-	double PatrolRadius = 250.f;
+	float PatrolRadius = 500.f;
 
 	FTimerHandle PatrolTimer;
 
@@ -64,11 +63,15 @@ private:
 	float PatrolWaitMin = 5.f, PatrolWaitMax = 10.f;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-	float PatrollingSpeed = 125.f, ChasingSpeed = 300.f;;
+	float PatrollingSpeed = 125.f, ChasingSpeed = 800.f;;
 
 	UPROPERTY(EditAnywhere)
-	double CombatRadius = 500.f;
+	double CombatRadius = 700.f;
 
 	UFUNCTION()
 	void PawnSeen(APawn* SeenPawn); // Callback for OnPawnSeen in UPawnSensingComponent
+
+	int32 SlotIndex = INDEX_NONE;
+	bool bShouldMoveLocation = false;
+	FVector LastSlotLocation;
 };

@@ -13,39 +13,6 @@
 void UBloodFieldSubSystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-
-	const UBloodFieldSettings* Settings = GetDefault<UBloodFieldSettings>();
-
-	const UMaterialParameterCollection* MPC = Settings->BloodFieldMPC.LoadSynchronous();
-	if (MPC)
-	{
-		UMaterialParameterCollectionInstance* MPCInstance = GetWorld()->GetParameterCollectionInstance(MPC);
-
-		if (MPCInstance)
-		{
-			MPCInstance->SetVectorParameterValue(TEXT("FieldOrigin"), FieldOrigin);
-			MPCInstance->SetVectorParameterValue(TEXT("FieldScale"), FieldScale);
-		}
-	}
-
-	BloodFieldTarget = Settings->BloodFieldRenderTarget.LoadSynchronous();
-
-	if (!BloodFieldTarget) return;
-
-	BloodFieldTarget->bCanCreateUAV = true;
-	// 혈흔 값은 선형 데이터
-	BloodFieldTarget->bForceLinearGamma = true;
-	// 초기값 0
-	BloodFieldTarget->ClearColor = FLinearColor::Transparent;
-	//BloodFieldTarget->Filter = TF_Nearest;
-	// 128 × 128 × 128, 복셀당 float 하나
-	BloodFieldTarget->Init(
-		Resolution.X,
-		Resolution.Y,
-		Resolution.Z,
-		PF_FloatRGBA);
-	// 리소스를 즉시 갱신하고 검은색으로 클리어
-	BloodFieldTarget->UpdateResourceImmediate(true);
 }
 
 void UBloodFieldSubSystem::Deinitialize()
@@ -97,7 +64,6 @@ void UBloodFieldSubSystem::RequestBloodSplat(FBloodBurstRequest Request)
 	GroupData.PatternID = PatternIndex;
 	const UBloodPatternData* BloodPattern = Settings->BloodPatternData[PatternIndex].LoadSynchronous();
 	const TArray<FVector2D> PatternSample = BloodPattern->SampleUVs;
-	UE_LOG(LogTemp, Warning, TEXT("0~%d - %d index, %d"), Settings->BloodPatternData.Num(), PatternIndex, PatternSample.Num());
 	for (int i = 0; i < PatternSample.Num(); ++i)
 	{
 		FSplatGPUData SplatData;
@@ -106,23 +72,6 @@ void UBloodFieldSubSystem::RequestBloodSplat(FBloodBurstRequest Request)
 		if (CalculateSplatLocation(SplatData, Basis, Request, PatternSample[i]))
 		{
 			BloodSplatGroup.BloodSplats.Add(SplatData);
-
-			const FBloodPatternSettings& PatternSetting = Settings->BloodPatternSettings;
-			const float PatternSize = PatternSetting.SplatRadius * PatternSetting.GridSize;
-
-			const FVector Delta = FVector(SplatData.Location) - Request.WorldLocation;
-
-			const float ReconstructedU =
-				0.5f + FVector::DotProduct(Delta, Basis.Tangent) / PatternSize;
-
-			const float ReconstructedV =
-				0.5f + FVector::DotProduct(Delta, Basis.Bitangent) / PatternSize;
-
-			//UE_LOG(LogTemp, Warning,
-			//	TEXT("%d : Sample=(%.3f %.3f) Reconstructed=(%.3f %.3f)"),
-			//	i, SplatData.SampleUV.X, SplatData.SampleUV.Y,
-			//	ReconstructedU, ReconstructedV);
-
 			//DrawDebugPoint(GetWorld(), FVector(SplatData.Location), 15.f, FColor::Green, false, 20.f);
 		}
 	}
@@ -142,9 +91,65 @@ void UBloodFieldSubSystem::SetFieldOrigin(const FVector3f& InOrigin)
 		if (MPCInstance)
 		{
 			MPCInstance->SetVectorParameterValue(TEXT("FieldOrigin"), FieldOrigin);
+		}
+	}
+}
+
+void UBloodFieldSubSystem::SetFieldScale(const FVector3f& InScale)
+{
+	FieldScale = InScale;
+	const UBloodFieldSettings* Settings = GetDefault<UBloodFieldSettings>();
+	const UMaterialParameterCollection* MPC = Settings->BloodFieldMPC.LoadSynchronous();
+	if (MPC)
+	{
+		UMaterialParameterCollectionInstance* MPCInstance = GetWorld()->GetParameterCollectionInstance(MPC);
+
+		if (MPCInstance)
+		{
 			MPCInstance->SetVectorParameterValue(TEXT("FieldScale"), FieldScale);
 		}
 	}
+}
+
+void UBloodFieldSubSystem::InitializeField(const FVector3f& InOrigin, const FVector3f& InScale)
+{
+	FieldOrigin = InOrigin;
+	FieldScale = InScale;
+	const UBloodFieldSettings* Settings = GetDefault<UBloodFieldSettings>();
+	const UMaterialParameterCollection* MPC = Settings->BloodFieldMPC.LoadSynchronous();
+	if (MPC)
+	{
+		UMaterialParameterCollectionInstance* MPCInstance = GetWorld()->GetParameterCollectionInstance(MPC);
+
+		if (MPCInstance)
+		{
+			MPCInstance->SetVectorParameterValue(TEXT("FieldOrigin"), FieldOrigin);
+			MPCInstance->SetVectorParameterValue(TEXT("FieldScale"), FieldScale);
+		}
+	}
+
+	Resolution = FIntVector(FMath::CeilToInt(FieldScale.X / VoxelSize),
+		FMath::CeilToInt(FieldScale.Y / VoxelSize),
+		FMath::CeilToInt(FieldScale.Z / VoxelSize));
+
+	BloodFieldTarget = Settings->BloodFieldRenderTarget.LoadSynchronous();
+
+	if (!BloodFieldTarget) return;
+
+	BloodFieldTarget->bCanCreateUAV = true;
+	// 혈흔 값은 선형 데이터
+	BloodFieldTarget->bForceLinearGamma = true;
+	// 초기값 0
+	BloodFieldTarget->ClearColor = FLinearColor::Transparent;
+	//BloodFieldTarget->Filter = TF_Nearest;
+	// 128 × 128 × 128, 복셀당 float 하나
+	BloodFieldTarget->Init(
+		Resolution.X,
+		Resolution.Y,
+		Resolution.Z,
+		PF_FloatRGBA);
+	// 리소스를 즉시 갱신하고 검은색으로 클리어
+	BloodFieldTarget->UpdateResourceImmediate(true);
 }
 
 bool UBloodFieldSubSystem::CalculateSplatLocation(FSplatGPUData& Splat, const FSurfaceBasis& Basis, const FBloodBurstRequest& Request, const FVector2D& SampleUV)
