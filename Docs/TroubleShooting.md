@@ -1,11 +1,67 @@
 # Troubleshooting
 
 ## 목차
+* [Combat Slot 좌표 갱신 개선](#Combat-Slot-좌표-갱신-개선)
 * [Blood Field 모서리 구간 Sample 위치 보정](#Blood-Field-모서리-구간-Sample-위치-보정)
 * [Skill System 설계 과정 트러블슈팅](#Skill-System-설계-과정-트러블슈팅)
 * [Niagara Weapon Trail 위치 오프셋 문제](#Niagara-Weapon-Trail-위치-오프셋-문제)
 
 ---
+
+## Combat Slot 좌표 갱신 개선
+
+### 문제
+
+플레이어의 진행 방향을 따라오지 않고 반대 방향으로 향하는 등 일부 적에게서 튀는 이동이 발생했습니다.
+
+
+
+
+### 원인 추적
+
+각 Enemy가 차지한 Slot을 Debug Draw로 시각화해 Enemy 이동 방향과 목적지 변화를 함께 확인했습니다.
+
+<img width="532" height="443" alt="image" src="https://github.com/user-attachments/assets/1e0d0b4a-77a1-4045-9364-79e3dcca564d" />
+
+적은 할당된 Slot을 정상적으로 추적하고 있었지만 Slot의 World 좌표 자체가 플레이어의 회전에 맞춰 함께 회전하고 있었다.
+
+플레이어가 회전하면 Slot 위치가 플레이어를 중심으로 원호를 그리며 이동했고 적은 계속 이동하는 Slot을 추적하면서 즉시 방향을 전환하지 못하고 크게 원을 그리듯 우회했습니다. 특히 플레이어가 연속해서 회전할수록 해당 현상이 더 두드러졌습니다.
+
+### 원인
+
+초기에는 적이 현재 Slot을 유지할 수 있는지 여부를 검사하고 필요에 따라 더 가까운 Slot에 재배정하는 방식으로 해결을 시도했습니다.
+
+하지만 다시 확인해보니 Slot이 플레이어의 회전에 종속되어 움직이고 있음을 깨달았습니다. Slot이 정면, 후면 등 방향에 의미가 있지 않았기 때문에 플레이어의 회전에 맞춰 함께 회전시킬 필요가 없었습니다.
+
+```cpp
+FVector USurroundSlotComponent::GetSlotWorldLocation(int32 Index) const
+{
+    const FVector WorldDirection =
+        GetOwner()->GetActorTransform().TransformVectorNoScale(SurroundSlots[Index].Direction);
+
+    return GetOwner()->GetActorLocation() + WorldDirection * Radius;
+}
+```
+
+### 개선
+
+Slot 위치가 Player의 이동은 따라가면서도 회전에는 종속되지 않도록 공간 기준을 분리했습니다.
+
+Player가 이동하면 기존 Slot 배치 전체를 같은 이동량만큼 갱신하고, Player의 회전만으로는 Slot 좌표가 변경되지 않도록 수정했습니다.
+
+```cpp
+FVector USurroundSlotComponent::GetSlotWorldLocation(int32 Index) const
+{
+    return GetOwner()->GetActorLocation() + SurroundSlots[Index].Direction * Radius;
+}
+```
+
+### 결과
+
+<img width="532" height="443" alt="image" src="https://github.com/yeunseo0517-del/ActionCombat/blob/main/Docs/Images/SurroundSlot_NearestGreedy_PairWise.gif" />
+
+---
+
 ## Blood Field 모서리 구간 Sample 위치 보정
 
 ### 문제
