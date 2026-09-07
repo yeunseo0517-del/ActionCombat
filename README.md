@@ -24,7 +24,7 @@
 
 ## 플레이 영상
 
-[Youtube](https://youtu.be/GW1Obw_CKx4)
+[Youtube](https://youtu.be/bdACHdRWFP0)
 
 ---
 
