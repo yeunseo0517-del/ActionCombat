@@ -10,37 +10,126 @@ USurroundSlotComponent::USurroundSlotComponent()
 	// ...
 }
 
-int32 USurroundSlotComponent::RequestSlot(AActor* Requester)
+void USurroundSlotComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	FVector Dir = (Requester->GetActorLocation() - GetOwner()->GetActorLocation()).GetSafeNormal();
-	FVector LocalDir = GetOwner()->GetActorTransform().InverseTransformVectorNoScale(Dir);
-	float Angle = FMath::RadiansToDegrees(FMath::Atan2(LocalDir.Y, LocalDir.X));
-	int32 CenterIndex = FMath::RoundToInt(Angle / (360.f / SlotCount));
-	for (int32 Step = 0; Step < SlotCount; ++Step)
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (bAssignSlots)
 	{
-		int32 Offset = (Step + 1) / 2 * (Step % 2 ? 1 : -1);
-		int32 Index = (CenterIndex + Offset + SlotCount) % SlotCount;
-		if (!SurroundSlots[Index].Occupant.IsValid())
+		bAssignSlots = false;
+		AssignSlots();
+	}
+}
+
+void USurroundSlotComponent::AssignSlots()
+{
+	SlotScores.Empty();
+
+	const float DistanceWeight = 0.01f;
+	for (int32 EnemyIndex = 0; EnemyIndex < PendingEnemies.Num(); ++EnemyIndex)
+	{
+		for (int32 SlotIndex = 0; SlotIndex < FreeSlotIndices.Num(); ++SlotIndex)
 		{
-			SurroundSlots[Index].Occupant = Requester;
-			return Index;
+			FEnemySlotScore Score;
+			Score.Enemy = PendingEnemies[EnemyIndex];
+			Score.SlotIndex = FreeSlotIndices[SlotIndex];
+
+			if (!Score.Enemy.IsValid()) continue;
+			FVector Dir = (Score.Enemy->GetActorLocation() - GetOwner()->GetActorLocation()).GetSafeNormal2D();
+			float EnemyAngle = FMath::RadiansToDegrees(FMath::Atan2(Dir.Y, Dir.X));
+			float SlotAngle = SurroundSlots[Score.SlotIndex].Angle;
+			float AngleCost = FMath::Abs(FMath::FindDeltaAngleDegrees(EnemyAngle, SlotAngle));
+			float DistanceCost = FVector::Dist2D(Score.Enemy->GetActorLocation(), GetSlotWorldLocation(Score.SlotIndex));
+			Score.Cost = AngleCost + DistanceCost * DistanceWeight;
+
+			SlotScores.Add(Score);
 		}
+	}
+
+	SlotScores.Sort([](const FEnemySlotScore& A, const FEnemySlotScore& B)
+		{
+			return A.Cost < B.Cost;
+		});
+
+	for (int32 Step = 0; Step < SlotScores.Num(); ++Step)
+	{
+		int32 Index = SlotScores[Step].SlotIndex;
+		TWeakObjectPtr<AActor> Enemy = SlotScores[Step].Enemy;
+		if (PendingEnemies.Find(Enemy) == INDEX_NONE || SurroundSlots[Index].Occupant.IsValid()) continue;
+		SurroundSlots[Index].Occupant = Enemy;
+		PendingEnemies.Remove(Enemy);
+		FreeSlotIndices.Remove(Index);
+	}
+}
+
+int32 USurroundSlotComponent::FindAssignedSlotIndex(AActor* Requester) const
+{
+	for (int32 Index = 0; Index < SurroundSlots.Num(); ++Index)
+	{
+		if (SurroundSlots[Index].Occupant == Requester) return Index;
 	}
 	return INDEX_NONE;
 }
 
-FVector USurroundSlotComponent::GetSlotWorldLocation(int32 Index)
+void USurroundSlotComponent::RequestSlot(AActor* Requester)
 {
-	FVector WorldOffset = GetOwner()->GetActorTransform().TransformVectorNoScale(SurroundSlots[Index].Direction) * Radius;
-	FVector WorldLocation = GetOwner()->GetActorLocation() + WorldOffset;
-	DrawDebugSphere(GetWorld(), WorldLocation, 12, 8, FColor::Red, false, 2.f);
+	if (!Requester || PendingEnemies.Contains(Requester) || FindAssignedSlotIndex(Requester) != INDEX_NONE) return;
+	PendingEnemies.AddUnique(Requester);
+	bAssignSlots = true;
+}
+
+bool USurroundSlotComponent::GetAssignedSlotLocation(AActor* Requester, FVector& OutLocation) const
+{
+	const int32 Index = FindAssignedSlotIndex(Requester);
+	if (Index == INDEX_NONE) return false;
+
+	OutLocation = GetSlotWorldLocation(Index);
+	return true;
+}
+
+FVector USurroundSlotComponent::GetSlotWorldLocation(int32 Index) const
+{
+	FVector WorldLocation = GetOwner()->GetActorLocation() + SurroundSlots[Index].Direction * Radius;
+	//DrawDebugSphere(GetWorld(), WorldLocation, 12, 8, FColor::Red, false, 2.f);
 	return WorldLocation;
 }
 
-void USurroundSlotComponent::ReleaseSlot(int32 Index)
+void USurroundSlotComponent::ReleaseSlot(AActor* Requester)
 {
+	if (!Requester) return;
+
+	PendingEnemies.Remove(Requester);
+
+	const int32 Index = FindAssignedSlotIndex(Requester);
+	if (Index == INDEX_NONE) return;
+
 	SurroundSlots[Index].Occupant = nullptr;
+	FreeSlotIndices.AddUnique(Index);
+
+	if (!PendingEnemies.IsEmpty()) bAssignSlots = true;
 }
+
+//bool USurroundSlotComponent::CanKeepSlot(AActor* Requester)
+//{
+//	const int32 Index = FindAssignedSlotIndex(Requester);
+//	if (Index == INDEX_NONE) return false;
+//
+//	const float SlotAngle = SurroundSlots[Index].Angle;
+//	const float ReleaseAngleThreshold = (360.f / SlotCount) * 0.5f;
+//
+//	FVector Dir = (Requester->GetActorLocation() - GetOwner()->GetActorLocation()).GetSafeNormal2D();
+//	const float RequesterAngle = FMath::RadiansToDegrees(FMath::Atan2(Dir.Y, Dir.X));
+//
+//	const float AngleDelta = FMath::Abs(FMath::FindDeltaAngleDegrees(SlotAngle, RequesterAngle));
+//
+//	if(AngleDelta > ReleaseAngleThreshold)
+//	{
+//		ReleaseSlot(Requester);
+//		RequestSlot(Requester);
+//		return false;
+//	}
+//	return true;
+//}
 
 void USurroundSlotComponent::BeginPlay()
 {
@@ -49,10 +138,12 @@ void USurroundSlotComponent::BeginPlay()
 	SurroundSlots.Empty();
 	for (int32 i = 0; i < SlotCount; ++i)
 	{
-		float AngleRad = FMath::DegreesToRadians((360.f / SlotCount) * i);
 		FSurroundSlot Slot;
+		Slot.Angle = (360.f / SlotCount) * i;
+		float AngleRad = FMath::DegreesToRadians(Slot.Angle);
 		Slot.Direction = FVector(FMath::Cos(AngleRad), FMath::Sin(AngleRad), 0.f);
 		SurroundSlots.Add(Slot);
+		FreeSlotIndices.Add(i);
 	}
 }
 
@@ -61,4 +152,3 @@ void USurroundSlotComponent::PostEditChangeProperty(FPropertyChangedEvent& Prope
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 	DrawDebugCircle(GetWorld(), GetOwner()->GetActorLocation(), Radius, 64, FColor::Green, false, 5.f, 0, 2.f, FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
 }
-

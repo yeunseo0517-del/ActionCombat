@@ -44,6 +44,7 @@ private:
 	void ShowHealthBar();
 	void HideHealthBar();
 	bool IsAtSlot();
+	bool HasAssignedSlot();
 
 	UPROPERTY(VisibleAnywhere)
 	UPawnSensingComponent* PawnSensing;
@@ -66,12 +67,11 @@ private:
 	float PatrollingSpeed = 125.f, ChasingSpeed = 800.f;;
 
 	UPROPERTY(EditAnywhere)
-	double CombatRadius = 700.f;
+	double CombatRadius = 1000.f;
 
 	UFUNCTION()
 	void PawnSeen(APawn* SeenPawn); // Callback for OnPawnSeen in UPawnSensingComponent
 
-	int32 SlotIndex = INDEX_NONE;
 	bool bShouldMoveLocation = false;
 	FVector LastSlotLocation;
 };

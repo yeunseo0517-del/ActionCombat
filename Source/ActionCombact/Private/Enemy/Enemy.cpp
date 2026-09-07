@@ -20,7 +20,6 @@ AEnemy::AEnemy()
 	PrimaryActorTick.bCanEverTick = true;
 
 	GetCharacterMovement()->bUseRVOAvoidance = false;
-	GetCharacterMovement()->AvoidanceConsiderationRadius = 100.f;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->bRequestedMoveUseAcceleration = true;
 	GetCharacterMovement()->MaxAcceleration = 800.f;

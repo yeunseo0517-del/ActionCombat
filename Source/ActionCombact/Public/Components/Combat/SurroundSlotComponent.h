@@ -12,10 +12,18 @@ struct FSurroundSlot
 {
 	GENERATED_BODY()
 
+	float Angle;
 	FVector Direction;
 
 	UPROPERTY()
 	TWeakObjectPtr<AActor> Occupant = nullptr;
+};
+
+struct FEnemySlotScore
+{
+	TWeakObjectPtr<AActor> Enemy;
+	int32 SlotIndex = INDEX_NONE;
+	float Cost = 0.f;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -27,21 +35,38 @@ public:
 	// Sets default values for this component's properties
 	USurroundSlotComponent();
 
-	int32 RequestSlot(AActor* Requester);
-	FVector GetSlotWorldLocation(int32 Index);
-	void ReleaseSlot(int32 Index);
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	void RequestSlot(AActor* Requester);
+	void ReleaseSlot(AActor* Requester);
+	//bool CanKeepSlot(AActor* Requester);
+	bool GetAssignedSlotLocation(AActor* Requester, FVector& OutLocation) const;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 
 private:
+	void AssignSlots();
+	int32 FindAssignedSlotIndex(AActor* Requester) const;
+	FVector GetSlotWorldLocation(int32 Index) const;
+
 	UPROPERTY(EditAnywhere, Category = "Slot")
 	int32 SlotCount;
 
 	UPROPERTY(EditAnywhere, Category = "Slot")
-	float Radius = 50.f;
+	float Radius = 250.f;
+
+	UPROPERTY(EditAnywhere, Category = "Slot")
+	float SlotReleaseMargin = 50.f;
 
 	UPROPERTY()
 	TArray<FSurroundSlot> SurroundSlots;
+
+	bool bAssignSlots = false;
+	TArray<int32> FreeSlotIndices;
+	TArray<FEnemySlotScore> SlotScores;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> PendingEnemies;
 };

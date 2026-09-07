@@ -26,19 +26,26 @@ AMinionEnemy::AMinionEnemy()
 void AMinionEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (bShouldMoveLocation)
+	if (bShouldMoveLocation && CombatTarget)
 	{
-		const float Threshold = 3000.f;
-
 		if (USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>())
 		{
-			FVector CurrentSlotLocation = SlotComp->GetSlotWorldLocation(SlotIndex);
-			if (FVector::Distance(CurrentSlotLocation, LastSlotLocation) > Threshold)
+			FVector CurrentSlotLocation;
+			if (!SlotComp->GetAssignedSlotLocation(this, CurrentSlotLocation))
 			{
-				if (AAIController* AIController = Cast<AAIController>(GetController()))
+				bShouldMoveLocation = false;
+			}
+			else
+			{
+				const float MoveThreshold = FMath::Square(10.f);
+
+				if (FVector::DistSquared2D(CurrentSlotLocation, LastSlotLocation) > MoveThreshold)
 				{
-					AIController->MoveToLocation(CurrentSlotLocation);
-					LastSlotLocation = CurrentSlotLocation;
+					if (AAIController* AIController = Cast<AAIController>(GetController()))
+					{
+						AIController->MoveToLocation(CurrentSlotLocation, 50.f, false);
+						LastSlotLocation = CurrentSlotLocation;
+					}
 				}
 			}
 		}
@@ -130,24 +137,26 @@ void AMinionEnemy::UpdateBattleStrategy()
 		{
 			TryAttack();
 		}
-		else if (SlotIndex != INDEX_NONE && !IsAttacking() && !IsAtSlot())
+		else if (HasAssignedSlot() && !IsAttacking() && !IsAtSlot())
 		{
 			if (AAIController* AIController = Cast<AAIController>(GetController()))
 			{
 				if (AIController->GetMoveStatus() != EPathFollowingStatus::Moving)
 				{
-					USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>();
-
-					if (SlotComp)
+					if (USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>())
 					{
-						const FVector SlotLocation = SlotComp->GetSlotWorldLocation(SlotIndex);
-
-						AIController->MoveToLocation(SlotLocation, 50.f, false);
+						FVector SlotLocation;
+						if (SlotComp->GetAssignedSlotLocation(this, SlotLocation))
+						{
+							AIController->MoveToLocation(SlotLocation, 50.f, false);
+							LastSlotLocation = SlotLocation;
+							bShouldMoveLocation = true;
+						}
 					}
 				}
 			}
 		}
-		else if (IsOutsideAttackRadius() && !IsChasing() && !IsAttacking())
+		else if (!IsAttacking() && !IsHitReacting() && (!HasAssignedSlot() || !IsChasing()))
 		{
 			ChaseTarget();
 		}
@@ -172,26 +181,25 @@ void AMinionEnemy::TryAttack()
 
 void AMinionEnemy::ChaseTarget()
 {
+	if (!CombatTarget) return;
 	ClearPatrolTimer();
 	EnterChaseState();
-	if (!CombatTarget) return;
+	GetCharacterMovement()->MaxWalkSpeed = ChasingSpeed;
 
-	if (SlotIndex != INDEX_NONE) return;
+	if (HasAssignedSlot()) return;
 	USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>();
 	if (!SlotComp) return;
-	SlotIndex = SlotComp->RequestSlot(this);
-	if (SlotIndex != INDEX_NONE)
+	SlotComp->RequestSlot(this);
+
+	FVector CurrentSlotLocation;
+	if (SlotComp->GetAssignedSlotLocation(this, CurrentSlotLocation))
 	{
-		FVector CurrentSlotLocation = SlotComp->GetSlotWorldLocation(SlotIndex);
 		if (AAIController* AIController = Cast<AAIController>(GetController()))
 		{
 			AIController->MoveToLocation(CurrentSlotLocation);
 		}
 		bShouldMoveLocation = true;
 	}
-	else return;
-
-	GetCharacterMovement()->MaxWalkSpeed = ChasingSpeed;
 }
 
 bool AMinionEnemy::IsPatrolling()
@@ -262,13 +270,12 @@ void AMinionEnemy::LoseInterest()
 
 void AMinionEnemy::ReleaseSurroundSlot()
 {
-	if (CombatTarget && SlotIndex != INDEX_NONE)
+	if (CombatTarget && HasAssignedSlot())
 	{
 		USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>();
 		if (SlotComp)
 		{
-			SlotComp->ReleaseSlot(SlotIndex);
-			SlotIndex = INDEX_NONE;
+			SlotComp->ReleaseSlot(this);
 		}
 	}
 }
@@ -291,10 +298,22 @@ void AMinionEnemy::HideHealthBar()
 
 bool AMinionEnemy::IsAtSlot()
 {
-	if (SlotIndex == INDEX_NONE || !CombatTarget) return false;
+	if (!HasAssignedSlot() || !CombatTarget) return false;
 	USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>();
 	if (!SlotComp) return false;
-	return FVector::DistSquared(GetActorLocation(), SlotComp->GetSlotWorldLocation(SlotIndex)) <= FMath::Square(50.f);
+
+	FVector SlotLocation;
+	if (!SlotComp->GetAssignedSlotLocation(this, SlotLocation)) return false;
+	return FVector::DistSquared(GetActorLocation(), SlotLocation) <= FMath::Square(50.f);
+}
+
+bool AMinionEnemy::HasAssignedSlot()
+{
+	USurroundSlotComponent* SlotComp = CombatTarget->FindComponentByClass<USurroundSlotComponent>();
+	if (!SlotComp) return false;
+
+	FVector Location;
+	return SlotComp->GetAssignedSlotLocation(this, Location);
 }
 
 void AMinionEnemy::PawnSeen(APawn* SeenPawn)
