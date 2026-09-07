@@ -8,15 +8,14 @@
 ## 목차
 
 - [설계 배경](#설계-배경)
-- [구조 다이어그램](#구조-다이어그램)
 - [핵심 구현](#핵심-구현)
-  - [1. 플레이어 주변 Combat Slot 구성](#1-플레이어-주변-combat-slot-구성)
-  - [2. Enemy-Slot 배정 기준](#2-enemy-slot-배정-기준)
-  - [3. Cost 기반 Greedy 배정](#3-cost-기반-greedy-배정)
-  - [4. Slot 유지 및 재배정](#4-slot-유지-및-재배정)
-- [검토한 배정 방식](#검토한-배정-방식)
-- [트러블슈팅 - 플레이어 회전에 따른 Slot 위치 변화](#트러블슈팅---플레이어-회전에-따른-slot-위치-변화)
-- [트레이드오프 및 한계](#트레이드오프-및-한계)
+  - [게임 규칙](#게임-규칙)
+  - [Combat Slot 배정 설계](#Combat-Slot-배정-설계)
+  	- [1. 적 위치를 어떻게 반영할 것인가?](#1.-적-위치를-어떻게-반영할-것인가?)
+  	- [2. 여러 Slot 중 적합한 후보를 어떻게 판별할 것인가?](#2.-여러-Slot-중-적합한-후보를-어떻게-판별할-것인가?)
+   	- [3. 다수 후보 존재 시 우선순위를 어떻게 결정할 것인가?](#3.-다수-후보-존재-시-우선순위를-어떻게-결정할-것인가?)
+	- [최종 선택](#최종-선택-Cost-기반-Greedy-배정)
+- [관련 코드](#관련-코드)
 
 ---
 
@@ -24,11 +23,15 @@
 
 다수의 적이 동시에 플레이어를 추적할 때 모든 적이 플레이어의 현재 위치를 그대로 목적지로 사용하면 한쪽에 몰리고 서로 겹치는 현상이 발생했습니다.
 
-<img width="500" height="350" alt="image" src="https://github.com/user-attachments/assets/5cb74484-6ba6-45a6-8ca4-300dfbaaa37d" />
+<img width="500" height="350" alt="image" src="https://github.com/user-attachments/assets/5cb74484-6ba6-45a6-8ca4-300dfbaaa37d" /> <img width="500" height="350" alt="image" src="https://github.com/user-attachments/assets/c6edf8ed-8717-4d99-b22a-4f395ab84ec0" />
+
 
 ---
 
 ## 핵심 구현
+
+<img src="https://github.com/yeunseo0517-del/ActionCombat/blob/main/Docs/Images/SurroundSlot_Fin.gif" width="500"> <img src="https://github.com/yeunseo0517-del/ActionCombat/blob/main/Docs/Images/SurroundSlot_Wandering.gif" width="500">
+
 
 이를 해결하기 위해 플레이어를 중심으로 일정 반경의 원을 만들고, 원 위를 일정 간격으로 나누어 Enemy별 전투 위치인 Combat Slot을 배치했습니다. 각 Enemy는 하나의 Slot을 점유해 해당 위치를 기준으로 전투하도록 구성했습니다.
 
@@ -118,7 +121,6 @@ int32 USurroundSlotComponent::RequestSlot(AActor* Requester)
 }
 ```
 
-GIF
 
 이 방식으로 적의 접근 방향을 배정에 반영할 수 있었지만 여전히 각 Enemy가 자신의 요청 시점에 Slot을 하나씩 확정하는 구조였습니다.
 
@@ -129,6 +131,13 @@ GIF
 #### 2. 여러 Slot 중 적합한 후보를 어떻게 판별할 것인가?
 
 #### 각도 구간 기반 후보 제한 검토
+
+<img width="427" height="372" alt="image" src="https://github.com/user-attachments/assets/b31f43dc-5e97-477a-b77d-40521b93c43f" />
+
+```cpp
+- 초록색: 플레이어
+- 노란색: 플레이어와 지나치게 가까워지는 문제
+```
 
 적이 현재 위치에서 지나치게 먼 Slot까지 이동하면서 플레이어 앞을 가로질러 다른 적들과 겹치고 플레이어와 지나치게 가까워지는 등 이동 경로가 뒤엉키는 문제가 있었습니다.
 
