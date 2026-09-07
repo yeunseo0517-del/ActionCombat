@@ -14,7 +14,7 @@
 
 플레이어의 진행 방향을 따라오지 않고 반대 방향으로 향하는 등 일부 적에게서 튀는 이동이 발생했습니다.
 
-
+<img width="532" height="443" alt="image" src="https://github.com/yeunseo0517-del/ActionCombat/blob/main/Docs/Images/SurroundSlot_NearestGreedy_Bug_Release.gif" />
 
 
 ### 원인 추적
