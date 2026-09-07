@@ -128,7 +128,7 @@ int32 USurroundSlotComponent::RequestSlot(AActor* Requester)
 
 ---
 
-#### 2. 여러 Slot 중 적합한 후보를 어떻게 판별할 것인가?
+### 2. 여러 Slot 중 적합한 후보를 어떻게 판별할 것인가?
 
 #### 각도 구간 기반 후보 제한 검토
 
