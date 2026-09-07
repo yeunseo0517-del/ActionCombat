@@ -111,7 +111,7 @@ bool ABaseCharacter::FindBloodSurface(FHitResult& OutHit, const FHitInfo& HitInf
 			OutHit,
 			Current,
 			Next,
-			ECC_Visibility,
+			ECC_GameTraceChannel2,
 			Params
 		);
 		//DrawDebugLine(GetWorld(), Current, Next, FColor::Red, false, 4.f);

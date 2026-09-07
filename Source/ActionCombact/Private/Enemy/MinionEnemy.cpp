@@ -43,7 +43,7 @@ void AMinionEnemy::Tick(float DeltaTime)
 				{
 					if (AAIController* AIController = Cast<AAIController>(GetController()))
 					{
-						AIController->MoveToLocation(CurrentSlotLocation, 50.f, false);
+						AIController->MoveToLocation(CurrentSlotLocation, 40.f, false);
 						LastSlotLocation = CurrentSlotLocation;
 					}
 				}
@@ -108,7 +108,7 @@ void AMinionEnemy::InitializeEnemy()
 {
 	EnemyController = Cast<AAIController>(GetController());
 	SetCurrentState(FGameplayTags::Get().State_AI_Patrolling);
-	const int32 PatrolPointCount = FMath::RandRange(1, 4);
+	const int32 PatrolPointCount = FMath::RandRange(MinPatrolPoint, MaxPatrolPoint);
 	for (int32 Step = 0; Step < PatrolPointCount; ++Step)
 	{
 		FVector RandVector(FMath::RandRange(0.f, PatrolRadius), FMath::RandRange(0.f, PatrolRadius), 0.f);
@@ -116,7 +116,7 @@ void AMinionEnemy::InitializeEnemy()
 		//DrawDebugSphere(GetWorld(), GetActorLocation() + RandVector, 12.f, 8, FColor::Blue, true);
 	}
 	PatrolTarget = PatrolPoints[0];
-	if(EnemyController) EnemyController->MoveToLocation(PatrolTarget);
+	if(EnemyController) EnemyController->MoveToLocation(PatrolTarget, 40.f, false);
 	HideHealthBar();
 }
 
@@ -148,7 +148,7 @@ void AMinionEnemy::UpdateBattleStrategy()
 						FVector SlotLocation;
 						if (SlotComp->GetAssignedSlotLocation(this, SlotLocation))
 						{
-							AIController->MoveToLocation(SlotLocation, 50.f, false);
+							AIController->MoveToLocation(SlotLocation, 40.f, false);
 							LastSlotLocation = SlotLocation;
 							bShouldMoveLocation = true;
 						}
@@ -196,7 +196,7 @@ void AMinionEnemy::ChaseTarget()
 	{
 		if (AAIController* AIController = Cast<AAIController>(GetController()))
 		{
-			AIController->MoveToLocation(CurrentSlotLocation);
+			AIController->MoveToLocation(CurrentSlotLocation, 40.f, false);
 		}
 		bShouldMoveLocation = true;
 	}
@@ -212,7 +212,7 @@ void AMinionEnemy::StartPatrolling()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	SetCurrentState(FGameplayTags::Get().State_AI_Patrolling);
 	GetCharacterMovement()->MaxWalkSpeed = PatrollingSpeed;
-	if(EnemyController) EnemyController->MoveToLocation(PatrolTarget);
+	if(EnemyController) EnemyController->MoveToLocation(PatrolTarget, 40.f, false);
 }
 
 void AMinionEnemy::CheckPatrolTarget()
@@ -242,7 +242,7 @@ FVector AMinionEnemy::ChoosePatrolTarget()
 void AMinionEnemy::PatrolTimerFinished()
 {
 	if (!IsPatrolling()) return;
-	if (EnemyController) EnemyController->MoveToLocation(PatrolTarget);
+	if (EnemyController) EnemyController->MoveToLocation(PatrolTarget, 40.f, false);
 }
 
 void AMinionEnemy::ClearPatrolTimer()

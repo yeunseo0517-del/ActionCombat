@@ -52,7 +52,10 @@ private:
 	/*
 	AI Navigation
 	*/
+	UPROPERTY(VisibleInstanceOnly, Category = "AI Navigation")
 	FVector PatrolTarget;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "AI Navigation")
 	TArray<FVector> PatrolPoints;
 
 	UPROPERTY(EditAnywhere)
@@ -61,7 +64,16 @@ private:
 	FTimerHandle PatrolTimer;
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	float PatrolWaitMin = 5.f, PatrolWaitMax = 10.f;
+	float PatrolWaitMin = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	float PatrolWaitMax = 10.f;
+
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	int32 MinPatrolPoint = 2;
+
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	int32 MaxPatrolPoint = 4;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float PatrollingSpeed = 125.f, ChasingSpeed = 800.f;;
