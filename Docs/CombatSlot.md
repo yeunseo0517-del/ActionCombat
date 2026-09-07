@@ -170,7 +170,7 @@ int32 USurroundSlotComponent::RequestSlot(AActor* Requester)
 
 ### 최종 선택 - Cost 기반 Greedy 배정
 
-Slot 배정이 필요한 적과 비어있는 Slot의 모든 조합에 대해 거리와 방향 관계(공간 적합도)를 Cost로 계산하고 낮은 Cost부터 Greedy하게 배정했습니다.
+Slot 배정이 필요한 적과 비어있는 Slot의 모든 조합에 대해 거리와 방향 관계(공간 적합도)를 Cost로 계산하고 **낮은 Cost부터 Greedy**하게 배정했습니다.
 
 거리만 사용할 경우 가까운 Slot이라도 현재 접근 방향과 크게 어긋날 수 있고 각도만 사용할 경우 방향은 비슷하지만 실제 이동 거리가 먼 Slot이 선택될 수 있어 두 값을 함께 사용했습니다.
 
